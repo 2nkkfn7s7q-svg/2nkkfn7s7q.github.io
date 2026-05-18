@@ -213,6 +213,7 @@
   }
   .btn-primary:hover { opacity: .88; }
   .btn-primary:active { transform: scale(.98); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
   .btn-danger {
     background: none; border: 1px solid var(--accent2);
     color: var(--accent2); cursor: pointer;
@@ -307,6 +308,16 @@
   }
   #toast.show { opacity: 1; transform: translateY(0); }
 
+  /* ── Firebase loading indicator ── */
+  #fb-status {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: rgba(0,229,197,.12); border-bottom: 1px solid var(--accent);
+    color: var(--accent); font-family: var(--font-d); font-size: 11px;
+    padding: 6px 16px; text-align: center; z-index: 9999;
+    display: none; letter-spacing: 0.05em;
+  }
+  #fb-status.show { display: block; }
+
   /* Responsive */
   @media (max-width: 700px) {
     header { padding: 16px 16px 0; flex-direction: column; align-items: flex-start; }
@@ -318,6 +329,8 @@
 </style>
 </head>
 <body>
+
+<div id="fb-status">Conectando con Firebase...</div>
 
 <header>
   <div class="logo">FAST<span>STATS</span></div>
@@ -445,7 +458,7 @@
   </div>
 
   <br>
-  <button class="btn-primary" onclick="agregarEncuestado()">+ Agregar encuestado</button>
+  <button class="btn-primary" id="btn-agregar" onclick="agregarEncuestado()">+ Agregar encuestado</button>
 </div>
 
 <!-- ═══════════════════ TAB 2: TABLA ═══════════════════ -->
@@ -501,7 +514,35 @@
 
 <div id="toast">✓ Encuestado agregado</div>
 
-<script>
+<script type="module">
+// ═══════════════════════════════════════════════════
+//  FIREBASE SETUP (modular SDK via CDN)
+// ═══════════════════════════════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  getDocs,
+  writeBatch
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCeN-OL6KaihtYaETzTDFDPhhL-DMPnDjE",
+  authDomain: "faststats-90071.firebaseapp.com",
+  projectId: "faststats-90071",
+  storageBucket: "faststats-90071.firebasestorage.app",
+  messagingSenderId: "439304544464",
+  appId: "1:439304544464:web:cf1cbe7668b1f893023ed5"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const COLL = "encuestados";
+
 // ═══════════════════════════════════════════════════
 //  CONSTANTES
 // ═══════════════════════════════════════════════════
@@ -531,25 +572,13 @@ const FACTOR_LABELS = { muy_poco: "Muy poco (33%)", medio: "Medio (50%)", mucho:
 
 let encuestados = [];
 let chartInstances = {};
-const STORAGE_KEY = 'faststats_encuestados';
 const ADMIN_KEY = 'faststats_admin_mode';
 const ADMIN_PASS = 'lucasestudia';
 let adminMode = false;
 
-function saveEncuestados() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(encuestados));
-}
-
-function loadEncuestados() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try { encuestados = JSON.parse(saved) || []; }
-    catch (error) { encuestados = []; }
-  }
-  adminMode = localStorage.getItem(ADMIN_KEY) === 'true';
-  updateAdminView();
-}
-
+// ═══════════════════════════════════════════════════
+//  ADMIN MODE (mantiene localStorage solo para la sesión admin)
+// ═══════════════════════════════════════════════════
 function setAdminMode(enabled) {
   adminMode = enabled;
   localStorage.setItem(ADMIN_KEY, enabled ? 'true' : 'false');
@@ -557,29 +586,28 @@ function setAdminMode(enabled) {
 }
 
 function updateAdminView() {
-  const adminBtn = document.getElementById('admin-btn');
+  const adminBtn      = document.getElementById('admin-btn');
   const adminClearBtn = document.getElementById('admin-clear-btn');
-  const adminStatus = document.getElementById('admin-status');
+  const adminStatus   = document.getElementById('admin-status');
   if (!adminBtn) return;
   if (adminMode) {
     adminBtn.textContent = 'Salir de administrador';
     adminBtn.classList.add('admin-active');
     if (adminClearBtn) adminClearBtn.style.display = 'inline-flex';
-    if (adminStatus) adminStatus.textContent = 'Modo administrador activo';
+    if (adminStatus)   adminStatus.textContent = 'Modo administrador activo';
   } else {
     adminBtn.textContent = 'Acceder como administrador';
     adminBtn.classList.remove('admin-active');
     if (adminClearBtn) adminClearBtn.style.display = 'none';
-    if (adminStatus) adminStatus.textContent = '';
+    if (adminStatus)   adminStatus.textContent = '';
   }
+  // Re-render tabla to show/hide delete buttons
   actualizarTabla();
 }
 
-function showAdminLogin() {
+window.showAdminLogin = function() {
   if (adminMode) {
-    if (confirm('¿Cerrar sesión de administrador?')) {
-      setAdminMode(false);
-    }
+    if (confirm('¿Cerrar sesión de administrador?')) setAdminMode(false);
     return;
   }
   const pass = prompt('Contraseña de administrador:');
@@ -590,18 +618,26 @@ function showAdminLogin() {
   } else {
     alert('Contraseña incorrecta');
   }
-}
+};
 
-function clearAllEncuestados() {
+window.clearAllEncuestados = async function() {
   if (!adminMode) return;
   if (!confirm('Borrar todas las encuestas guardadas? Esta acción no se puede deshacer.')) return;
-  encuestados = [];
-  saveEncuestados();
-  actualizarBadge();
-  actualizarTabla();
-  showToast('Todas las encuestas han sido borradas');
-}
+  try {
+    const snapshot = await getDocs(collection(db, COLL));
+    const batch = writeBatch(db);
+    snapshot.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    showToast('Todas las encuestas han sido borradas');
+  } catch(e) {
+    console.error('Error borrando encuestas:', e);
+    alert('Error al borrar encuestas: ' + e.message);
+  }
+};
 
+// ═══════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════
 function showToast(message = '✓ Encuestado agregado') {
   const t = document.getElementById('toast');
   t.textContent = message;
@@ -641,10 +677,9 @@ function initForm() {
   }
 }
 
-function updateDestino(changedKey) {
+window.updateDestino = function(changedKey) {
   const keys = Object.keys(DESTINOS);
 
-  // Clamp the moved slider so total can't exceed 100
   let sumOthers = 0;
   for (const k of keys) {
     if (k !== changedKey) sumOthers += parseInt(document.getElementById('d-'+k).value) || 0;
@@ -653,7 +688,6 @@ function updateDestino(changedKey) {
   const el = document.getElementById('d-'+changedKey);
   if (parseInt(el.value) > maxAllowed) el.value = maxAllowed;
 
-  // Update every slider's max so it can't go beyond what's left for it
   const vals = {};
   for (const k of keys) vals[k] = parseInt(document.getElementById('d-'+k).value) || 0;
 
@@ -664,7 +698,6 @@ function updateDestino(changedKey) {
     document.getElementById('dv-'+k).textContent = vals[k] + '%';
   }
 
-  // Update remaining badge
   const total = Object.values(vals).reduce((a,b)=>a+b,0);
   const rem   = 100 - total;
   const badge = document.getElementById('pct-remaining-badge');
@@ -672,9 +705,8 @@ function updateDestino(changedKey) {
     badge.textContent = rem === 0 ? '✓ 100% distribuido' : rem + '% restante';
     badge.style.color  = rem === 0 ? 'var(--accent)' : 'var(--accent3)';
   }
-}
+};
 
-// Keep checkPctSum as alias used at validation time
 function checkPctSum() {
   const keys = Object.keys(DESTINOS);
   let sum = 0;
@@ -686,7 +718,6 @@ function checkPctSum() {
 //  CÁLCULOS
 // ═══════════════════════════════════════════════════
 function calcularStats(enc) {
-  // Peso y cantidad por tipo en 30 días
   let total30dCant = 0, total30dPeso = 0;
   const pesoPorTipo = {};
   for (const [key, val] of Object.entries(TIPOS)) {
@@ -696,22 +727,17 @@ function calcularStats(enc) {
     total30dPeso += q * val.peso;
   }
 
-  // Peso promedio por prenda (distribución del mes)
   const pesoPromedio = total30dCant > 0 ? total30dPeso / total30dCant : 200;
 
-  // Cantidades anuales
   const totalAnualCant = (enc.estaciones.verano + enc.estaciones.otono +
                           enc.estaciones.invierno + enc.estaciones.primavera);
 
-  // Peso total anual estimado
   const pesoTotalAnual = totalAnualCant * pesoPromedio;
 
-  // Factor descarte
   const factor = FACTORES[enc.descarte];
   const pesoDescartado = pesoTotalAnual * factor;
   const pesoConservado = pesoTotalAnual - pesoDescartado;
 
-  // Peso por destino
   const pesoDest = {};
   for (const key of Object.keys(DESTINOS)) {
     pesoDest[key] = pesoDescartado * (enc.destino[key] / 100);
@@ -730,32 +756,28 @@ function calcularStats(enc) {
     pesoPromedio, totalAnualCant, pesoTotalAnual,
     factor, pesoDescartado, pesoConservado, pesoDest,
     pesoSintetico, pesoNatural,
-    // CO2: factor interpolado según % sintético
-    // Algodón/natural: ~5.5 kg CO2/kg | Poliéster/sintético: ~8.5 kg CO2/kg
     co2Factor,
     co2PorMaterial,
-    co2Anual:    co2PorMaterial.sintetico + co2PorMaterial.natural,
+    co2Anual:      co2PorMaterial.sintetico + co2PorMaterial.natural,
     co2Descartado: (pesoDescartado / 1000) * co2Factor,
-    // Gasto y ciclo de vida
-    gastoAnual:  (enc.gastoMensual || 0) * 12,
-    costoXUso:   (enc.gastoMensual > 0 && enc.usosPromedio > 0 && totalAnualCant > 0)
-                   ? ((enc.gastoMensual * 12) / (totalAnualCant * enc.usosPromedio))
-                   : null,
+    gastoAnual:    (enc.gastoMensual || 0) * 12,
+    costoXUso:     (enc.gastoMensual > 0 && enc.usosPromedio > 0 && totalAnualCant > 0)
+                     ? ((enc.gastoMensual * 12) / (totalAnualCant * enc.usosPromedio))
+                     : null,
   };
 }
 
 // ═══════════════════════════════════════════════════
-//  AGREGAR ENCUESTADO
+//  AGREGAR ENCUESTADO → FIRESTORE
 // ═══════════════════════════════════════════════════
-function agregarEncuestado() {
-  // Validaciones básicas
+window.agregarEncuestado = async function() {
+  const btnAgregar = document.getElementById('btn-agregar');
   const edad = parseInt(document.getElementById('f-edad').value);
   if (isNaN(edad) || edad < 13 || edad > 21) {
     alert('Ingresá una edad entre 13 y 21 años.');
     return;
   }
 
-  // Comprobar suma destinos
   let sumDest = 0;
   for (const key of Object.keys(DESTINOS)) sumDest += parseInt(document.getElementById('d-'+key).value);
   if (sumDest !== 100) {
@@ -763,13 +785,11 @@ function agregarEncuestado() {
     return;
   }
 
-  // Leer prendas 30d
   const cant30d = {};
   for (const key of Object.keys(TIPOS)) {
     cant30d[key] = Math.max(0, parseInt(document.getElementById('p-'+key).value) || 0);
   }
 
-  // Leer estaciones
   const estaciones = {
     verano:    Math.max(0, parseInt(document.getElementById('f-verano').value) || 0),
     otono:     Math.max(0, parseInt(document.getElementById('f-otono').value) || 0),
@@ -777,17 +797,15 @@ function agregarEncuestado() {
     primavera: Math.max(0, parseInt(document.getElementById('f-primavera').value) || 0),
   };
 
-  // Leer descarte
   const descarte = document.querySelector('input[name="descarte"]:checked').value;
 
-  // Leer destinos
   const destino = {};
   for (const key of Object.keys(DESTINOS)) {
     destino[key] = parseInt(document.getElementById('d-'+key).value);
   }
 
   const enc = {
-    id: Date.now(),
+    createdAt: Date.now(),
     nombre: document.getElementById('f-nombre').value || `Encuestado ${encuestados.length + 1}`,
     edad,
     genero: document.getElementById('f-genero').value,
@@ -798,13 +816,20 @@ function agregarEncuestado() {
     vidaUtilMeses: parseInt(document.getElementById('f-meses').value)      || 1,
   };
 
-  encuestados.push(enc);
-  saveEncuestados();
-  actualizarBadge();
-  actualizarTabla();
-  showToast();
-  resetForm();
-}
+  // Disable button while saving
+  if (btnAgregar) { btnAgregar.disabled = true; btnAgregar.textContent = 'Guardando...'; }
+
+  try {
+    await addDoc(collection(db, COLL), enc);
+    showToast('✓ Encuestado agregado');
+    resetForm();
+  } catch(e) {
+    console.error('Error guardando encuestado:', e);
+    alert('Error al guardar en Firestore: ' + e.message);
+  } finally {
+    if (btnAgregar) { btnAgregar.disabled = false; btnAgregar.textContent = '+ Agregar encuestado'; }
+  }
+};
 
 function resetForm() {
   document.getElementById('f-nombre').value = '';
@@ -822,16 +847,64 @@ function resetForm() {
   document.getElementById('f-usos').value = '';
   document.getElementById('f-meses').value = '';
   document.getElementById('pct-sum-warning').style.display = 'none';
+  // Reset remaining badge
+  const badge = document.getElementById('pct-remaining-badge');
+  if (badge) { badge.textContent = '100% restante'; badge.style.color = 'var(--accent3)'; }
 }
 
-function eliminarEncuestado(id) {
+// ═══════════════════════════════════════════════════
+//  ELIMINAR ENCUESTADO → FIRESTORE
+// ═══════════════════════════════════════════════════
+window.eliminarEncuestado = async function(firestoreId) {
   if (!adminMode) return;
-  encuestados = encuestados.filter(e => e.id !== id);
-  saveEncuestados();
-  actualizarBadge();
-  actualizarTabla();
-  actualizarEstadisticas();
-  actualizarGraficos();
+  if (!confirm('¿Eliminar este encuestado?')) return;
+  try {
+    await deleteDoc(doc(db, COLL, firestoreId));
+    showToast('Encuestado eliminado');
+  } catch(e) {
+    console.error('Error eliminando encuestado:', e);
+    alert('Error al eliminar de Firestore: ' + e.message);
+  }
+};
+
+// ═══════════════════════════════════════════════════
+//  LISTENER EN TIEMPO REAL (onSnapshot)
+// ═══════════════════════════════════════════════════
+function iniciarListener() {
+  const fbStatus = document.getElementById('fb-status');
+  if (fbStatus) { fbStatus.textContent = 'Conectando con Firebase...'; fbStatus.classList.add('show'); }
+
+  onSnapshot(collection(db, COLL), (snapshot) => {
+    // Rebuild local array from Firestore snapshot
+    encuestados = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      encuestados.push({ ...data, firestoreId: docSnap.id });
+    });
+
+    // Sort by createdAt ascending so order is consistent
+    encuestados.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+
+    if (fbStatus) fbStatus.classList.remove('show');
+
+    actualizarBadge();
+    actualizarTabla();
+    // Also refresh stats/charts if those tabs are active
+    const activeTab = document.querySelector('.tab.active');
+    if (activeTab) {
+      if (activeTab.id === 'tab-estadisticas') actualizarEstadisticas();
+      if (activeTab.id === 'tab-graficos')     actualizarGraficos();
+    }
+  }, (error) => {
+    console.error('Firestore onSnapshot error:', error);
+    if (fbStatus) {
+      fbStatus.textContent = '⚠ Error de conexión con Firebase: ' + error.message;
+      fbStatus.style.background = 'rgba(255,83,112,.12)';
+      fbStatus.style.borderColor = 'var(--accent2)';
+      fbStatus.style.color = 'var(--accent2)';
+      fbStatus.classList.add('show');
+    }
+  });
 }
 
 // ═══════════════════════════════════════════════════
@@ -849,6 +922,7 @@ function actualizarTabla() {
   tbody.innerHTML = encuestados.map(enc => {
     const s = calcularStats(enc);
     const g = enc.genero;
+    const fid = enc.firestoreId || '';
     return `<tr>
       <td>${enc.nombre}</td>
       <td class="td-num">${enc.edad}</td>
@@ -867,7 +941,7 @@ function actualizarTabla() {
       <td class="td-num">${enc.vidaUtilMeses || '—'}</td>
       <td class="td-num" style="color:var(--accent3)">${s.costoXUso != null ? '$'+s.costoXUso.toFixed(2) : '—'}</td>
       <td class="td-num" style="color:#a78bfa">${s.co2Anual.toFixed(2)}</td>
-      <td>${adminMode ? `<button class="btn-danger" onclick="eliminarEncuestado(${enc.id})">✕</button>` : ''}</td>
+      <td>${adminMode && fid ? `<button class="btn-danger" onclick="eliminarEncuestado('${fid}')">✕</button>` : ''}</td>
     </tr>`;
   }).join('');
   actualizarEstadisticas();
@@ -904,11 +978,8 @@ function actualizarEstadisticas() {
   }
 
   const statsList = encuestados.map(e => ({...e, s: calcularStats(e)}));
-
-  // Helpers para extraer arrays
   const pick = fn => statsList.map(fn);
 
-  // Prendas por tipo (30 días)
   const tipoRows = Object.entries(TIPOS).map(([key, val]) =>
     statsRow(`Cant. ${val.nombre} — 30d`, pick(e => e.cant30d[key]), 1, ' prendas')
   ).join('');
@@ -991,7 +1062,7 @@ function actualizarGraficos() {
     return;
   }
 
-  // Limpiar gráficos previos
+  // Destroy previous chart instances
   ['c1','c2','c3','c4','c5','c6','c7'].forEach(destroyChart);
 
   cont.innerHTML = `
@@ -1232,25 +1303,27 @@ function actualizarGraficos() {
 // ═══════════════════════════════════════════════════
 //  UI HELPERS
 // ═══════════════════════════════════════════════════
-function showTab(tab, event) {
+window.showTab = function(tab, event) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   if (event && event.currentTarget) event.currentTarget.classList.add('active');
   if (tab === 'estadisticas') actualizarEstadisticas();
-  if (tab === 'graficos') actualizarGraficos();
-}
+  if (tab === 'graficos')     actualizarGraficos();
+};
 
 function actualizarBadge() {
   document.getElementById('badge-count').textContent = encuestados.length;
 }
 
-// Init
-loadEncuestados();
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+adminMode = localStorage.getItem(ADMIN_KEY) === 'true';
+updateAdminView();
 initForm();
-checkPctSum();
-actualizarBadge();
-actualizarTabla();
+iniciarListener();
+
 </script>
 </body>
 </html>
