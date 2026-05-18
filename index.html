@@ -3,1119 +3,1095 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fast Fashion · Estadísticas</title>
+<title>FastStats · Fast Fashion Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --bg:        #0B0F1A;
-    --surface:   #131929;
-    --surface2:  #1C2640;
-    --border:    #2A3555;
-    --accent:    #00E5C5;
-    --accent2:   #FF5370;
-    --accent3:   #FFB547;
-    --text:      #E8EDF8;
-    --muted:     #7A8AAF;
-    --font-h:    'Syne', sans-serif;
-    --font-d:    'Space Mono', monospace;
-  }
+:root {
+  --bg:       #0B0F1A;
+  --surface:  #131929;
+  --surface2: #1C2640;
+  --border:   #2A3555;
+  --accent:   #00E5C5;
+  --accent2:  #FF5370;
+  --accent3:  #FFB547;
+  --accent4:  #6B9FFF;
+  --accent5:  #a78bfa;
+  --text:     #E8EDF8;
+  --muted:    #7A8AAF;
+  --font-h:   'Syne', sans-serif;
+  --font-d:   'Space Mono', monospace;
+}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-d);
-    font-size: 13px;
-    min-height: 100vh;
-  }
+body { background: var(--bg); color: var(--text); font-family: var(--font-d); font-size: 13px; min-height: 100vh; }
 
-  /* ── Header ── */
-  header {
-    padding: 24px 40px 0;
-    display: flex; align-items: flex-end; gap: 16px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 0;
-  }
-  .logo {
-    font-family: var(--font-h);
-    font-weight: 800;
-    font-size: 22px;
-    color: var(--accent);
-    letter-spacing: -0.5px;
-    padding-bottom: 18px;
-    flex-shrink: 0;
-  }
-  .logo span { color: var(--text); }
-  nav { display: flex; gap: 2px; align-items: flex-end; padding-left: 24px; }
-  nav button {
-    background: none; border: none; cursor: pointer;
-    font-family: var(--font-d); font-size: 12px;
-    color: var(--muted); padding: 10px 18px 12px;
-    border-top: 2px solid transparent;
-    transition: color .2s, border-color .2s;
-    letter-spacing: 0.05em;
-  }
-  nav button:hover { color: var(--text); }
-  nav button.active {
-    color: var(--accent);
-    border-top-color: var(--accent);
-  }
-  .admin-btn {
-    background: none; border: 1px solid transparent; cursor: pointer;
-    color: var(--muted); font-family: var(--font-d); font-size: 12px;
-    padding: 10px 18px 12px; border-radius: 8px;
-    transition: color .2s, border-color .2s, background .2s;
-    margin-left: auto;
-  }
-  .admin-btn:hover {
-    color: var(--text);
-    border-color: rgba(255,255,255,.12);
-  }
-  .admin-btn.admin-active {
-    color: var(--accent);
-    border-color: var(--accent);
-    background: rgba(0,229,197,.08);
-  }
-  .admin-status {
-    font-size: 11px; color: var(--accent); margin-left: 10px;
-  }
-  .counter-badge {
-    display: inline-block; background: var(--accent); color: var(--bg);
-    font-size: 10px; font-weight: 700; padding: 1px 6px;
-    border-radius: 99px; margin-left: 6px; vertical-align: middle;
-  }
+/* ─── HEADER ─── */
+header {
+  padding: 0 40px;
+  display: flex; align-items: stretch; gap: 0;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(11,15,26,.95);
+  backdrop-filter: blur(12px);
+}
+.logo {
+  font-family: var(--font-h); font-weight: 800; font-size: 20px;
+  color: var(--accent); letter-spacing: -0.5px;
+  padding: 18px 28px 18px 0;
+  border-right: 1px solid var(--border);
+  flex-shrink: 0; display: flex; align-items: center;
+}
+.logo span { color: var(--text); }
+.logo sub { font-size: 10px; color: var(--muted); font-weight: 400; letter-spacing: 0.1em; margin-left: 4px; vertical-align: middle; }
+nav { display: flex; gap: 0; align-items: stretch; padding-left: 8px; flex: 1; }
+nav button {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-d); font-size: 11px; letter-spacing: 0.06em;
+  color: var(--muted); padding: 0 20px;
+  border-bottom: 2px solid transparent;
+  transition: color .2s, border-color .2s;
+}
+nav button:hover { color: var(--text); }
+nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+.counter-badge {
+  display: inline-block; background: var(--accent); color: var(--bg);
+  font-size: 9px; font-weight: 700; padding: 1px 5px;
+  border-radius: 99px; margin-left: 5px;
+}
+.header-right { display: flex; align-items: center; gap: 8px; margin-left: auto; padding-left: 20px; }
+.admin-btn {
+  background: none; border: 1px solid var(--border); cursor: pointer;
+  color: var(--muted); font-family: var(--font-d); font-size: 10px;
+  padding: 7px 14px; border-radius: 6px; letter-spacing: 0.05em;
+  transition: all .2s;
+}
+.admin-btn:hover { color: var(--text); border-color: rgba(255,255,255,.2); }
+.admin-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(0,229,197,.08); }
+.btn-danger-sm {
+  background: none; border: 1px solid var(--accent2); color: var(--accent2);
+  cursor: pointer; font-family: var(--font-d); font-size: 10px;
+  padding: 5px 10px; border-radius: 5px; transition: background .2s;
+}
+.btn-danger-sm:hover { background: rgba(255,83,112,.12); }
 
-  /* ── Layout ── */
-  main { padding: 32px 40px; }
-  .tab { display: none; }
-  .tab.active { display: block; }
+/* ─── LAYOUT ─── */
+main { padding: 28px 40px; max-width: 1400px; }
+.tab { display: none; }
+.tab.active { display: block; }
 
-  /* ── Section headers ── */
-  .section-title {
-    font-family: var(--font-h); font-weight: 700; font-size: 11px;
-    letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--muted); margin-bottom: 14px; margin-top: 28px;
-    padding-bottom: 6px; border-bottom: 1px solid var(--border);
-  }
-  .section-title:first-child { margin-top: 0; }
+/* ─── SECTION TITLES ─── */
+.st {
+  font-family: var(--font-h); font-weight: 700; font-size: 10px;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+  margin: 28px 0 14px; padding-bottom: 7px;
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.st:first-child { margin-top: 0; }
 
-  /* ── Form ── */
-  .form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    gap: 12px;
-  }
-  .field { display: flex; flex-direction: column; gap: 5px; }
-  .field label {
-    font-size: 10px; color: var(--muted);
-    letter-spacing: 0.07em; text-transform: uppercase;
-  }
-  .field input, .field select {
-    background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text); font-family: var(--font-d); font-size: 13px;
-    padding: 8px 10px; border-radius: 6px;
-    transition: border-color .2s;
-    outline: none;
-  }
-  .field input:focus, .field select:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(0,229,197,.12);
-  }
-  .field input[type="range"] {
-    padding: 4px 0; cursor: pointer;
-    accent-color: var(--accent);
-  }
-  .range-val {
-    font-size: 12px; color: var(--accent); font-weight: 700;
-    text-align: right;
-  }
+/* ─── FORM ELEMENTS ─── */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 10px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.field input, .field select {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--font-d); font-size: 13px;
+  padding: 8px 10px; border-radius: 6px; outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.field input:focus, .field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(0,229,197,.12);
+}
+.field input[type="range"] { padding: 5px 0; cursor: pointer; accent-color: var(--accent); }
+.range-row { display: flex; justify-content: space-between; align-items: center; margin-top: 3px; }
+.range-val { font-size: 12px; color: var(--accent); font-weight: 700; }
+.range-hint { font-size: 10px; color: var(--muted); }
 
-  /* Prendas grid */
-  .prendas-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 10px;
-  }
-  .prenda-card {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 12px;
-    display: flex; flex-direction: column; gap: 6px;
-  }
-  .prenda-card .prenda-name {
-    font-size: 11px; color: var(--muted);
-    letter-spacing: 0.04em;
-  }
-  .prenda-card .peso-hint {
-    font-size: 10px; color: var(--accent); opacity: .7;
-  }
-  .prenda-card input {
-    background: var(--surface); border: 1px solid var(--border);
-    color: var(--text); font-family: var(--font-d); font-size: 14px;
-    font-weight: 700; padding: 6px 10px; border-radius: 5px;
-    width: 100%; outline: none; text-align: center;
-    transition: border-color .2s;
-  }
-  .prenda-card input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(0,229,197,.12);
-  }
+/* Prendas */
+.prendas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 10px; }
+.prenda-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 5px;
+}
+.prenda-card .pn { font-size: 11px; color: var(--text); }
+.prenda-card .ph { font-size: 10px; color: var(--muted); }
+.prenda-card input {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--font-d); font-size: 15px; font-weight: 700;
+  padding: 7px; border-radius: 5px; width: 100%; text-align: center; outline: none;
+  transition: border-color .2s;
+}
+.prenda-card input:focus { border-color: var(--accent); }
 
-  /* Radio group */
-  .radio-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
-  .radio-option {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--surface2); border: 1px solid var(--border);
-    padding: 10px 16px; border-radius: 8px; cursor: pointer;
-    transition: border-color .2s, background .2s;
-    flex: 1; min-width: 140px;
-  }
-  .radio-option:has(input:checked) {
-    border-color: var(--accent);
-    background: rgba(0,229,197,.08);
-  }
-  .radio-option input { accent-color: var(--accent); }
-  .radio-label { display: flex; flex-direction: column; gap: 2px; }
-  .radio-label strong { font-size: 13px; color: var(--text); }
-  .radio-label span { font-size: 10px; color: var(--muted); }
+/* Descarte radio */
+.radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+.radio-opt {
+  flex: 1; min-width: 140px; background: var(--surface2); border: 1px solid var(--border);
+  padding: 12px 16px; border-radius: 8px; cursor: pointer;
+  transition: border-color .2s, background .2s;
+  display: flex; align-items: center; gap: 10px;
+}
+.radio-opt:has(input:checked) { border-color: var(--accent); background: rgba(0,229,197,.08); }
+.radio-opt input { accent-color: var(--accent); flex-shrink: 0; }
+.radio-txt strong { display: block; font-size: 13px; color: var(--text); }
+.radio-txt span { font-size: 10px; color: var(--muted); }
 
-  /* Destino sliders */
-  .destino-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-  }
-  .destino-card {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 14px;
-  }
-  .destino-card label {
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 11px; color: var(--muted); margin-bottom: 8px;
-  }
-  .destino-card label span {
-    font-size: 13px; color: var(--accent); font-weight: 700;
-  }
-  #pct-sum-warning {
-    font-size: 11px; color: var(--accent2);
-    margin-top: 8px; display: none;
-  }
+/* Destinos */
+.destino-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(195px, 1fr)); gap: 12px; }
+.destino-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 13px;
+}
+.destino-card .dc-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; color: var(--muted); margin-bottom: 8px;
+}
 
-  /* Submit btn */
-  .btn-primary {
-    background: var(--accent); color: var(--bg);
-    border: none; cursor: pointer;
-    font-family: var(--font-h); font-weight: 700; font-size: 14px;
-    padding: 13px 32px; border-radius: 8px; margin-top: 28px;
-    transition: opacity .2s, transform .1s;
-    letter-spacing: 0.04em;
-  }
-  .btn-primary:hover { opacity: .88; }
-  .btn-primary:active { transform: scale(.98); }
-  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-  .btn-danger {
-    background: none; border: 1px solid var(--accent2);
-    color: var(--accent2); cursor: pointer;
-    font-family: var(--font-d); font-size: 11px; padding: 4px 10px;
-    border-radius: 4px; transition: background .2s;
-  }
-  .btn-danger:hover { background: rgba(255,83,112,.1); }
+/* Info box */
+.info-box {
+  background: rgba(0,229,197,.05); border: 1px solid rgba(0,229,197,.18);
+  border-radius: 8px; padding: 12px 16px; margin-bottom: 14px;
+  font-size: 11px; color: var(--muted); line-height: 1.65;
+}
+.info-box b { color: var(--accent); }
+.info-box.warn { background: rgba(255,83,112,.05); border-color: rgba(255,83,112,.18); }
+.info-box.warn b { color: var(--accent2); }
 
-  /* ── Table ── */
-  .table-wrap { overflow-x: auto; margin-top: 8px; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  th {
-    text-align: left; padding: 10px 12px;
-    font-size: 10px; color: var(--muted);
-    letter-spacing: 0.1em; text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-    font-weight: 400; white-space: nowrap;
-  }
-  td {
-    padding: 9px 12px; border-bottom: 1px solid rgba(42,53,85,.5);
-    white-space: nowrap;
-  }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface2); }
-  .td-num { text-align: right; font-weight: 700; }
-  .badge-genero {
-    display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 10px;
-  }
-  .badge-m { background: rgba(71,120,255,.2); color: #6B9FFF; }
-  .badge-f { background: rgba(255,83,170,.2); color: #FF83D4; }
-  .badge-o { background: rgba(255,181,71,.2); color: var(--accent3); }
+/* Submit */
+.btn-primary {
+  background: var(--accent); color: var(--bg);
+  border: none; cursor: pointer;
+  font-family: var(--font-h); font-weight: 700; font-size: 14px;
+  padding: 13px 32px; border-radius: 8px; margin-top: 24px;
+  transition: opacity .2s, transform .1s;
+  letter-spacing: 0.04em;
+}
+.btn-primary:hover { opacity: .88; }
+.btn-primary:active { transform: scale(.98); }
+.btn-primary:disabled { opacity: .45; cursor: not-allowed; }
 
-  /* ── Stats table ── */
-  .stats-table-wrap { overflow-x: auto; margin-top: 8px; }
-  .stats-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .stats-table th {
-    padding: 10px 14px; font-size: 10px; color: var(--muted);
-    text-transform: uppercase; letter-spacing: 0.1em;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface2); text-align: right;
-    font-weight: 400;
-  }
-  .stats-table th:first-child { text-align: left; }
-  .stats-table td {
-    padding: 9px 14px; border-bottom: 1px solid rgba(42,53,85,.4);
-    text-align: right;
-  }
-  .stats-table td:first-child {
-    text-align: left; color: var(--text); font-size: 11px;
-  }
-  .stats-table tr:hover td { background: var(--surface2); }
-  .stat-accent { color: var(--accent); font-weight: 700; }
+/* Remaining badge */
+#pct-remaining {
+  font-size: 11px; font-weight: 700; font-family: var(--font-d);
+  letter-spacing: .05em; color: var(--accent3);
+}
 
-  /* ── Charts ── */
-  .charts-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-top: 8px;
-  }
-  .chart-card {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 12px; padding: 24px;
-  }
-  .chart-card.full { grid-column: 1 / -1; }
-  .chart-card h3 {
-    font-family: var(--font-h); font-weight: 700; font-size: 13px;
-    color: var(--text); margin-bottom: 6px;
-  }
-  .chart-card p {
-    font-size: 10px; color: var(--muted); margin-bottom: 16px;
-    letter-spacing: 0.04em;
-  }
-  canvas { width: 100% !important; }
+/* ─── TABLE ─── */
+.tbl-wrap { overflow-x: auto; margin-top: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
+th {
+  text-align: left; padding: 10px 12px;
+  font-size: 10px; color: var(--muted); letter-spacing: 0.1em;
+  text-transform: uppercase; border-bottom: 1px solid var(--border);
+  font-weight: 400; white-space: nowrap; background: var(--surface2);
+}
+td {
+  padding: 9px 12px; border-bottom: 1px solid rgba(42,53,85,.4);
+  white-space: nowrap;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(28,38,64,.7); }
+.tr { text-align: right; font-weight: 700; }
+.bg-m { background: rgba(71,120,255,.2); color: #6B9FFF; }
+.bg-f { background: rgba(255,83,170,.2); color: #FF83D4; }
+.bg-o { background: rgba(255,181,71,.2); color: var(--accent3); }
+.gen-badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 10px; }
 
-  /* ── Empty state ── */
-  .empty {
-    text-align: center; padding: 60px 20px;
-    color: var(--muted); font-size: 13px;
-  }
-  .empty .icon { font-size: 36px; margin-bottom: 12px; }
+/* ─── STATS TABLE ─── */
+.stats-wrap { overflow-x: auto; }
+.stats-tbl { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+.stats-tbl th {
+  padding: 9px 14px; font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .1em;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2); text-align: right; font-weight: 400;
+}
+.stats-tbl th:first-child { text-align: left; }
+.stats-tbl td { padding: 8px 14px; border-bottom: 1px solid rgba(42,53,85,.35); text-align: right; }
+.stats-tbl td:first-child { text-align: left; color: var(--text); font-size: 11px; }
+.stats-tbl tr:hover td { background: rgba(28,38,64,.7); }
+.sa { color: var(--accent); font-weight: 700; }
+.group-hdr td {
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  padding: 12px 14px 5px; border-bottom: none; font-weight: 700;
+}
 
-  /* ── Toast ── */
-  #toast {
-    position: fixed; bottom: 28px; right: 28px;
-    background: var(--accent); color: var(--bg);
-    font-family: var(--font-d); font-size: 12px; font-weight: 700;
-    padding: 12px 20px; border-radius: 8px;
-    opacity: 0; transform: translateY(10px);
-    transition: all .3s; pointer-events: none;
-    z-index: 999;
-  }
-  #toast.show { opacity: 1; transform: translateY(0); }
+/* ─── KPI CARDS ─── */
+.kpi-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+.kpi-card {
+  flex: 1; min-width: 150px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px 20px;
+}
+.kpi-card .kpi-label { font-size: 10px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+.kpi-card .kpi-value { font-family: var(--font-h); font-size: 26px; font-weight: 800; }
+.kpi-card .kpi-unit { font-size: 11px; color: var(--muted); margin-left: 4px; }
 
-  /* ── Firebase loading indicator ── */
-  #fb-status {
-    position: fixed; top: 0; left: 0; right: 0;
-    background: rgba(0,229,197,.12); border-bottom: 1px solid var(--accent);
-    color: var(--accent); font-family: var(--font-d); font-size: 11px;
-    padding: 6px 16px; text-align: center; z-index: 9999;
-    display: none; letter-spacing: 0.05em;
-  }
-  #fb-status.show { display: block; }
+/* ─── CHARTS ─── */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 8px; }
+.chart-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 22px;
+}
+.chart-card.full { grid-column: 1 / -1; }
+.chart-card h3 { font-family: var(--font-h); font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+.chart-card p { font-size: 10px; color: var(--muted); margin-bottom: 16px; letter-spacing: .04em; }
 
-  /* Responsive */
-  @media (max-width: 700px) {
-    header { padding: 16px 16px 0; flex-direction: column; align-items: flex-start; }
-    main { padding: 20px 16px; }
-    .charts-grid { grid-template-columns: 1fr; }
-    .chart-card.full { grid-column: 1; }
-    nav { padding-left: 0; overflow-x: auto; width: 100%; }
-  }
+/* ─── EMPTY ─── */
+.empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty .ei { font-size: 36px; margin-bottom: 12px; }
+
+/* ─── TOAST ─── */
+#toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--accent); color: var(--bg);
+  font-family: var(--font-d); font-size: 12px; font-weight: 700;
+  padding: 11px 20px; border-radius: 8px;
+  opacity: 0; transform: translateY(8px);
+  transition: all .3s; pointer-events: none; z-index: 999;
+}
+#toast.show { opacity: 1; transform: translateY(0); }
+
+/* ─── FB STATUS ─── */
+#fb-bar {
+  display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  background: rgba(0,229,197,.1); border-bottom: 1px solid var(--accent);
+  color: var(--accent); font-family: var(--font-d); font-size: 10px;
+  padding: 5px 16px; text-align: center; letter-spacing: .05em;
+}
+#fb-bar.show { display: block; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 720px) {
+  header { padding: 0 16px; flex-wrap: wrap; }
+  main { padding: 20px 16px; }
+  .charts-grid { grid-template-columns: 1fr; }
+  .chart-card.full { grid-column: 1; }
+  nav { padding-left: 0; overflow-x: auto; width: 100%; }
+}
 </style>
 </head>
 <body>
 
-<div id="fb-status">Conectando con Firebase...</div>
+<div id="fb-bar">Conectando con Firebase…</div>
 
 <header>
-  <div class="logo">FAST<span>STATS</span></div>
+  <div class="logo">FAST<span>STATS</span><sub>v3</sub></div>
   <nav>
-    <button class="active" onclick="showTab('cargar', event)">Cargar datos</button>
-    <button onclick="showTab('tabla', event)">Tabla <span class="counter-badge" id="badge-count">0</span></button>
-    <button onclick="showTab('estadisticas', event)">Estadísticas</button>
-    <button onclick="showTab('graficos', event)">Gráficos</button>
+    <button class="active" onclick="showTab('cargar',event)">Cargar datos</button>
+    <button onclick="showTab('tabla',event)">Tabla <span class="counter-badge" id="badge-n">0</span></button>
+    <button onclick="showTab('estadisticas',event)">Estadísticas</button>
+    <button onclick="showTab('graficos',event)">Gráficos</button>
   </nav>
-  <button class="admin-btn" id="admin-btn" onclick="showAdminLogin()">Acceder como administrador</button>
-  <button class="admin-btn" id="admin-clear-btn" onclick="clearAllEncuestados()" style="display:none">Borrar encuestas</button>
-  <span id="admin-status" class="admin-status"></span>
+  <div class="header-right">
+    <button class="btn-danger-sm" id="btn-clear" style="display:none" onclick="clearAll()">Borrar todo</button>
+    <button class="admin-btn" id="btn-admin" onclick="adminToggle()">Admin</button>
+    <span id="admin-lbl" style="font-size:10px;color:var(--accent);display:none">● ADMIN</span>
+  </div>
 </header>
 
 <main>
 
-<!-- ═══════════════════ TAB 1: CARGAR ═══════════════════ -->
+<!-- ════════════ TAB CARGAR ════════════ -->
 <div id="tab-cargar" class="tab active">
 
-  <div class="section-title">Datos personales</div>
+  <div class="st">Datos personales</div>
   <div class="form-grid">
-    <div class="field">
-      <label>Nombre / ID</label>
-      <input type="text" id="f-nombre" placeholder="Encuestado 1">
-    </div>
-    <div class="field">
-      <label>Edad</label>
-      <input type="number" id="f-edad" min="13" max="21" placeholder="17">
-    </div>
-    <div class="field">
-      <label>Género</label>
+    <div class="field"><label>Nombre / ID</label><input type="text" id="f-nombre" placeholder="Encuestado 1"></div>
+    <div class="field"><label>Edad (13–21)</label><input type="number" id="f-edad" min="13" max="21" placeholder="17"></div>
+    <div class="field"><label>Género</label>
       <select id="f-genero">
         <option value="f">Femenino</option>
         <option value="m">Masculino</option>
-        <option value="o">Otro / Prefiero no decir</option>
+        <option value="o">Otro / No especifica</option>
       </select>
     </div>
   </div>
 
-  <div class="section-title">Prendas compradas en los últimos 30 días (cantidad por tipo)</div>
-  <div class="prendas-grid" id="prendas-grid-30d"></div>
+  <div class="st">Prendas compradas — últimos 30 días (cantidad por tipo)</div>
+  <div class="prendas-grid" id="prendas-grid"></div>
 
-  <div class="section-title">Prendas compradas en el último año (cantidad por estación)</div>
+  <div class="st">Prendas compradas — último año (por estación)</div>
+  <div class="form-grid">
+    <div class="field"><label>☀️ Verano</label><input type="number" id="f-verano" min="0" value="0"></div>
+    <div class="field"><label>🍂 Otoño</label><input type="number" id="f-otono" min="0" value="0"></div>
+    <div class="field"><label>❄️ Invierno</label><input type="number" id="f-invierno" min="0" value="0"></div>
+    <div class="field"><label>🌸 Primavera</label><input type="number" id="f-primavera" min="0" value="0"></div>
+  </div>
+
+  <div class="st">Hábitos de compra y lavado</div>
   <div class="form-grid">
     <div class="field">
-      <label>☀️ Verano</label>
-      <input type="number" id="f-verano" min="0" placeholder="0">
+      <label>% Compras de segunda mano</label>
+      <input type="range" id="f-segunda" min="0" max="100" value="0" oninput="updRange('segunda','%')">
+      <div class="range-row"><span class="range-hint">Reduce CO₂ un ~80% por prenda</span><span class="range-val" id="rv-segunda">0%</span></div>
     </div>
     <div class="field">
-      <label>🍂 Otoño</label>
-      <input type="number" id="f-otono" min="0" placeholder="0">
-    </div>
-    <div class="field">
-      <label>❄️ Invierno</label>
-      <input type="number" id="f-invierno" min="0" placeholder="0">
-    </div>
-    <div class="field">
-      <label>🌸 Primavera</label>
-      <input type="number" id="f-primavera" min="0" placeholder="0">
+      <label>Usos entre lavados (↑ = menos microplásticos)</label>
+      <input type="number" id="f-lavado" min="1" value="1" placeholder="ej: 2">
     </div>
   </div>
 
-  <div class="section-title">Nivel de descarte (¿cuánta ropa dejás de usar?)</div>
+  <div class="st">Nivel de descarte (¿qué proporción dejás de usar?)</div>
   <div class="radio-group">
-    <label class="radio-option">
-      <input type="radio" name="descarte" value="muy_poco" checked>
-      <div class="radio-label">
-        <strong>Muy poco</strong>
-        <span>≈ 1/3 de lo que comprás</span>
-      </div>
-    </label>
-    <label class="radio-option">
-      <input type="radio" name="descarte" value="medio">
-      <div class="radio-label">
-        <strong>Medio</strong>
-        <span>≈ 1/2 de lo que comprás</span>
-      </div>
-    </label>
-    <label class="radio-option">
-      <input type="radio" name="descarte" value="mucho">
-      <div class="radio-label">
-        <strong>Mucho</strong>
-        <span>≈ 2/3 de lo que comprás</span>
-      </div>
-    </label>
+    <label class="radio-opt"><input type="radio" name="descarte" value="muy_poco" checked>
+      <div class="radio-txt"><strong>Muy poco</strong><span>≈ 33% de lo comprado</span></div></label>
+    <label class="radio-opt"><input type="radio" name="descarte" value="medio">
+      <div class="radio-txt"><strong>Medio</strong><span>≈ 50% de lo comprado</span></div></label>
+    <label class="radio-opt"><input type="radio" name="descarte" value="mucho">
+      <div class="radio-txt"><strong>Mucho</strong><span>≈ 67% de lo comprado</span></div></label>
   </div>
 
-  <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-    <span>Destino de la ropa descartada (%)</span>
-    <span id="pct-remaining-badge" style="font-size:11px;font-weight:700;color:var(--accent3);letter-spacing:.05em;font-family:var(--font-d)">100% restante</span>
+  <div class="st" style="margin-top:24px">
+    Destino del descarte (%)
+    <span id="pct-remaining">100% restante</span>
   </div>
-  <div id="pct-sum-warning" style="font-size:11px;color:var(--muted);margin-bottom:10px;padding:8px 12px;background:rgba(255,181,71,.08);border:1px solid rgba(255,181,71,.25);border-radius:7px">
-    Mové los sliders hasta distribuir el 100%. Los valores se limitan automáticamente para no exceder el total.
+  <div class="info-box">
+    💡 Mové los sliders hasta distribuir exactamente el <b>100%</b>. El sistema limita los valores automáticamente para no exceder el total.
   </div>
   <div class="destino-grid" id="destino-grid"></div>
 
-  <div class="section-title">Material predominante de las prendas</div>
-  <div style="max-width:400px">
-    <div class="field">
-      <label>% Material sintético (poliéster, nylon…) — estimación global</label>
-      <input type="range" id="f-sintetico" min="0" max="100" value="60" oninput="document.getElementById('sintetico-val').textContent=this.value+'%'">
-      <div class="range-val" id="sintetico-val">60%</div>
-    </div>
-  </div>
-
-  <div class="section-title">Ciclo de vida y gasto — variables adicionales</div>
-  <div style="background:rgba(0,229,197,.05);border:1px solid rgba(0,229,197,.2);border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:11px;color:var(--muted);line-height:1.6">
-    💡 Estas 3 preguntas permiten calcular <strong style="color:var(--accent)">gasto anual estimado</strong>,
-    <strong style="color:var(--accent)">costo por uso</strong> y
-    <strong style="color:var(--accent)">huella de CO₂ estimada</strong> como variables continuas derivadas.
+  <div class="st">Composición de materiales</div>
+  <div class="info-box">
+    💡 Completá estas tres preguntas para calcular correctamente la <b>huella de CO₂</b> y el <b>consumo de agua</b>.
+    Los factores usados son: Sintético <b>8.5 kg CO₂/kg</b> · Algodón <b>5.5 kg CO₂/kg</b> · Otros naturales <b>4.5 kg CO₂/kg</b>
+    · Agua: Sintético <b>1 000 L/kg</b> · Algodón <b>4 000 L/kg</b> · Otros <b>1 500 L/kg</b>.
+    La segunda mano reduce la huella de producción un <b>80%</b> (solo se cuenta el impacto de la prenda nueva restante).
   </div>
   <div class="form-grid">
     <div class="field">
-      <label>Gasto mensual en fast fashion (USD)</label>
-      <input type="number" id="f-gasto" min="0" step="0.5" placeholder="ej: 25">
+      <label>% Material sintético (poliéster, nylon…)</label>
+      <input type="range" id="f-sint" min="0" max="100" value="60"
+        oninput="updRange('sint','%'); updAlgodonLabel()">
+      <div class="range-row"><span class="range-hint" id="sint-hint">Natural restante: 40%</span><span class="range-val" id="rv-sint">60%</span></div>
     </div>
     <div class="field">
-      <label>¿Cuántas veces usás una prenda antes de dejarla de usar?</label>
-      <input type="number" id="f-usos" min="1" step="1" placeholder="ej: 8">
-    </div>
-    <div class="field">
-      <label>¿Cuántos meses usás una prenda antes de descartarla?</label>
-      <input type="number" id="f-meses" min="1" step="1" placeholder="ej: 6">
+      <label id="label-alg">Del 40% natural: ¿qué % es Algodón?</label>
+      <input type="range" id="f-alg" min="0" max="100" value="60"
+        oninput="updRange('alg','%')">
+      <div class="range-row"><span class="range-hint">Resto = lino, lana, viscosa…</span><span class="range-val" id="rv-alg">60%</span></div>
     </div>
   </div>
 
-  <br>
-  <button class="btn-primary" id="btn-agregar" onclick="agregarEncuestado()">+ Agregar encuestado</button>
+  <div class="st">Ciclo de vida y gasto</div>
+  <div class="form-grid">
+    <div class="field"><label>Gasto mensual en fast fashion (USD)</label><input type="number" id="f-gasto" min="0" step="0.5" placeholder="ej: 25"></div>
+    <div class="field"><label>Veces que usás cada prenda antes de descartarla</label><input type="number" id="f-usos" min="1" step="1" placeholder="ej: 8"></div>
+    <div class="field"><label>Meses que usás cada prenda antes de descartarla</label><input type="number" id="f-meses" min="1" step="1" placeholder="ej: 6"></div>
+  </div>
+
+  <button class="btn-primary" id="btn-add" onclick="agregarEncuestado()">+ Agregar encuestado</button>
 </div>
 
-<!-- ═══════════════════ TAB 2: TABLA ═══════════════════ -->
+<!-- ════════════ TAB TABLA ════════════ -->
 <div id="tab-tabla" class="tab">
-  <div class="section-title">Todos los encuestados</div>
-  <div class="table-wrap">
-    <table id="tabla-datos">
+  <div class="st">Todos los encuestados</div>
+  <div class="tbl-wrap">
+    <table>
       <thead>
         <tr>
-          <th>Nombre</th>
-          <th>Edad</th>
-          <th>Género</th>
-          <th>Cant. 30d</th>
-          <th>Peso 30d (g)</th>
-          <th>Cant. anual</th>
-          <th>Peso anual (kg)</th>
-          <th>Descarte</th>
-          <th>Peso descartado (kg)</th>
-          <th>Peso a basura (kg)</th>
-          <th>Peso donado (kg)</th>
-          <th>% Sintético</th>
-          <th>Gasto anual (USD)</th>
-          <th>Usos/prenda</th>
-          <th>Vida útil (meses)</th>
-          <th>Costo/uso (USD)</th>
-          <th>Rotación (×/año)</th>
-          <th>CO₂ anual (kg)</th>
+          <th>Nombre</th><th>Edad</th><th>Gén.</th>
+          <th>Cant.30d</th><th>Peso 30d (g)</th>
+          <th>Cant.Anual</th><th>Peso anual (kg)</th>
+          <th>Descarte</th><th>Peso desc. (kg)</th>
+          <th>→ Basura (kg)</th><th>→ Donado (kg)</th>
+          <th>Sint.</th><th>Algodón</th>
+          <th>Gasto anual</th><th>Usos/prenda</th><th>Vida útil (m)</th>
+          <th>Costo/uso</th><th>Rotación /año</th>
+          <th>CO₂ anual (kg)</th><th>Agua (L)</th>
           <th></th>
         </tr>
       </thead>
       <tbody id="tabla-body">
-        <tr><td colspan="19"><div class="empty"><div class="icon">📋</div>Aún no hay encuestados cargados</div></td></tr>
+        <tr><td colspan="21"><div class="empty"><div class="ei">📋</div>Aún no hay encuestados</div></td></tr>
       </tbody>
     </table>
   </div>
 </div>
 
-<!-- ═══════════════════ TAB 3: ESTADÍSTICAS ═══════════════════ -->
+<!-- ════════════ TAB ESTADÍSTICAS ════════════ -->
 <div id="tab-estadisticas" class="tab">
-  <div class="section-title">Estadística descriptiva — variables numéricas continuas</div>
-  <div id="stats-container">
-    <div class="empty"><div class="icon">📊</div>Cargá al menos un encuestado para ver estadísticas</div>
+  <div id="kpi-row" class="kpi-row" style="margin-top:0"></div>
+  <div id="stats-cont">
+    <div class="empty"><div class="ei">📊</div>Cargá encuestados para ver estadísticas</div>
   </div>
 </div>
 
-<!-- ═══════════════════ TAB 4: GRÁFICOS ═══════════════════ -->
+<!-- ════════════ TAB GRÁFICOS ════════════ -->
 <div id="tab-graficos" class="tab">
-  <div id="charts-container">
-    <div class="empty"><div class="icon">📈</div>Cargá encuestados para ver los gráficos</div>
+  <div id="charts-cont">
+    <div class="empty"><div class="ei">📈</div>Cargá encuestados para ver gráficos</div>
   </div>
 </div>
 
 </main>
 
-<div id="toast">✓ Encuestado agregado</div>
+<div id="toast"></div>
 
 <script type="module">
-// ═══════════════════════════════════════════════════
-//  FIREBASE SETUP (modular SDK via CDN)
-// ═══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  FIREBASE
+// ══════════════════════════════════════════════
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  getDocs,
-  writeBatch
+  getFirestore, collection, addDoc, deleteDoc,
+  doc, onSnapshot, getDocs, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
+const FB = initializeApp({
   apiKey: "AIzaSyCeN-OL6KaihtYaETzTDFDPhhL-DMPnDjE",
   authDomain: "faststats-90071.firebaseapp.com",
   projectId: "faststats-90071",
   storageBucket: "faststats-90071.firebasestorage.app",
   messagingSenderId: "439304544464",
   appId: "1:439304544464:web:cf1cbe7668b1f893023ed5"
-};
-
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+});
+const db   = getFirestore(FB);
 const COLL = "encuestados";
 
-// ═══════════════════════════════════════════════════
-//  CONSTANTES
-// ═══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  CONSTANTES Y FACTORES
+//  ─ Fuentes: Higg MSI, IPCC, Water Footprint Network ─
+// ══════════════════════════════════════════════
 const TIPOS = {
-  remera:    { nombre: "Remeras / Camisetas",    peso: 160 },
-  vestido:   { nombre: "Vestidos / Faldas",      peso: 200 },
-  short:     { nombre: "Shorts / Bermudas",      peso: 170 },
-  bano:      { nombre: "Ropa de Baño",           peso: 140 },
-  accesorio: { nombre: "Accesorios (bolsos…)",   peso: 230 },
-  calzado:   { nombre: "Calzado (par)",          peso: 580 },
-  campera:   { nombre: "Camperas / Abrigos",     peso: 420 },
-  pantalon:  { nombre: "Pantalones / Jeans",     peso: 650 },
-  buzo:      { nombre: "Buzos / Hoodies",        peso: 480 },
-  interior:  { nombre: "Ropa Interior / Medias", peso:  70 },
+  remera:    { n: "Remeras / Camisetas",    p: 160 },
+  vestido:   { n: "Vestidos / Faldas",      p: 200 },
+  short:     { n: "Shorts / Bermudas",      p: 170 },
+  bano:      { n: "Ropa de Baño",           p: 140 },
+  accesorio: { n: "Accesorios (bolsos…)",   p: 230 },
+  calzado:   { n: "Calzado (par)",          p: 580 },
+  campera:   { n: "Camperas / Abrigos",     p: 420 },
+  pantalon:  { n: "Pantalones / Jeans",     p: 650 },
+  buzo:      { n: "Buzos / Hoodies",        p: 480 },
+  interior:  { n: "Ropa Interior / Medias", p:  70 },
 };
+
+// Peso promedio global (fallback cuando el encuestado no tiene datos de 30d)
+const PESO_GLOBAL_G = Object.values(TIPOS).reduce((s,v)=>s+v.p,0) / Object.keys(TIPOS).length; // ~319 g
 
 const DESTINOS = {
-  guardado:  { label: "Guardada sin usar",   color: "#7A8AAF" },
-  donado:    { label: "Donada / Regalada",   color: "#00E5C5" },
-  vendido:   { label: "Vendida",             color: "#FFB547" },
-  reciclado: { label: "Reciclada",           color: "#4CAF50" },
-  basura:    { label: "Tirada a la basura",  color: "#FF5370" },
+  guardado:  { label: "Guardada sin usar",  col: "#7A8AAF" },
+  donado:    { label: "Donada / Regalada",  col: "#00E5C5" },
+  vendido:   { label: "Vendida",            col: "#FFB547" },
+  reciclado: { label: "Reciclada",          col: "#4CAF50" },
+  basura:    { label: "Tirada a la basura", col: "#FF5370" },
 };
 
-const FACTORES = { muy_poco: 1/3, medio: 1/2, mucho: 2/3 };
-const FACTOR_LABELS = { muy_poco: "Muy poco (33%)", medio: "Medio (50%)", mucho: "Mucho (67%)" };
+// ─ Factores CO₂ (kg CO₂ / kg de prenda) — Higg MSI 2023 ─
+const CO2_SINT = 8.5;   // poliéster/nylon
+const CO2_ALG  = 5.5;   // algodón convencional
+const CO2_OTRO = 4.5;   // lino, lana, viscosa promedio
+
+// ─ Factores agua (L / kg de prenda terminada) — Water Footprint Network ─
+// Nota: el factor clásico de 10 000 L es por kg de fibra cruda ANTES de hilado/teñido.
+// Para prenda terminada el factor realista es ~4 000 L/kg para algodón.
+const AGUA_SINT = 1000;  // bajo consumo en producción, alto en lavado por microplásticos
+const AGUA_ALG  = 4000;  // algodón: proceso húmedo intensivo
+const AGUA_OTRO = 1500;  // promedio otros naturales
+
+// ─ Agua por lavado ─
+const LITROS_POR_LAVADO = 15; // lavado doméstico típico (7-8 kg ropa) → ~15 L promedio prorrateado por prenda
+
+// ─ Descarte ─
+const FACTORES_DESC = { muy_poco: 1/3, medio: 0.5, mucho: 2/3 };
+const LABELS_DESC   = { muy_poco: "Muy poco (33%)", medio: "Medio (50%)", mucho: "Mucho (67%)" };
+
+// ─ Segunda mano: reducción de impacto de producción ─
+// El 80% del impacto ya fue asignado al propietario anterior.
+const REDUCCION_2MANO = 0.8;
 
 let encuestados = [];
-let chartInstances = {};
-const ADMIN_KEY = 'faststats_admin_mode';
-const ADMIN_PASS = 'lucasestudia';
-let adminMode = false;
+let charts = {};
+let adminMode = localStorage.getItem('fs_admin') === 'true';
 
-// ═══════════════════════════════════════════════════
-//  ADMIN MODE (mantiene localStorage solo para la sesión admin)
-// ═══════════════════════════════════════════════════
-function setAdminMode(enabled) {
-  adminMode = enabled;
-  localStorage.setItem(ADMIN_KEY, enabled ? 'true' : 'false');
-  updateAdminView();
+// ══════════════════════════════════════════════
+//  CÁLCULO CENTRAL  ← matemáticamente revisado
+// ══════════════════════════════════════════════
+function calcular(enc) {
+
+  // ── 1. Peso y cantidad 30 días ──
+  let cant30 = 0, peso30g = 0;
+  const pesoPorTipo = {};
+  for (const [k, v] of Object.entries(TIPOS)) {
+    const q = enc.cant30d[k] || 0;
+    pesoPorTipo[k] = q * v.p;
+    cant30 += q;
+    peso30g += q * v.p;
+  }
+
+  // Peso promedio por prenda del período 30d.
+  // CORRECCIÓN v3: usamos el peso promedio de 30d como proxy del "peso promedio
+  // de las prendas que compra esta persona". Solo recurrimos al global si compró 0.
+  const pesoProm_g = cant30 > 0 ? peso30g / cant30 : PESO_GLOBAL_G;
+
+  // ── 2. Totales anuales ──
+  const est = enc.estaciones;
+  const cantAnual = (est.verano||0) + (est.otono||0) + (est.invierno||0) + (est.primavera||0);
+  // Peso anual en GRAMOS (consistente con pesoProm_g)
+  const pesoAnual_g  = cantAnual * pesoProm_g;
+  const pesoAnual_kg = pesoAnual_g / 1000;
+
+  // ── 3. Composición de materiales ──
+  const pctS = (enc.pctSintetico || 0) / 100;          // fracción sintético
+  const pctN = 1 - pctS;                                 // fracción natural total
+  const pctA = pctN * ((enc.pctAlgodon || 0) / 100);    // fracción algodón (dentro del natural)
+  const pctO = pctN - pctA;                              // fracción otros naturales
+
+  // ── 4. Segunda mano ──
+  // CORRECCIÓN v3: la segunda mano reduce SOLO el impacto de PRODUCCIÓN
+  // de las prendas nuevas NO compradas de segunda mano.
+  // Factor multiplicador para el impacto de producción:
+  const pct2m = (enc.pctSegundaMano || 0) / 100;
+  // Parte "nueva": no segunda mano → impacto total
+  // Parte "segunda mano": solo ~20% del impacto de producción
+  const factorProd = (1 - pct2m) + pct2m * (1 - REDUCCION_2MANO); // = 1 - pct2m * 0.8
+
+  // ── 5. CO₂ anual ──
+  // Base: CO₂ de producción de todo lo comprado (por tipo de material)
+  const co2Base = pesoAnual_kg * (pctS * CO2_SINT + pctA * CO2_ALG + pctO * CO2_OTRO);
+  const co2Anual = co2Base * factorProd;
+
+  // ── 6. Agua ──
+  // Agua de producción (ajustada por segunda mano)
+  const aguaProd = pesoAnual_kg * (pctS * AGUA_SINT + pctA * AGUA_ALG + pctO * AGUA_OTRO) * factorProd;
+
+  // Agua de lavado: se calcula sobre el total de prendas (anuales) y su frecuencia de lavado
+  // usosLavado = cada cuántos usos se lava. Si usosLavado=2 y usos=8 → 4 lavados por prenda.
+  // Total lavados = cant. prendas × (usos/prenda ÷ usos_entre_lavados)
+  const usosP   = (enc.usosPromedio  || 0);
+  const usosLav = (enc.usosLavado    || 1);  // nunca 0 → división segura
+  const totalLavados = cantAnual > 0 && usosP > 0
+    ? cantAnual * (usosP / usosLav)
+    : 0;
+  const aguaLavado = totalLavados * LITROS_POR_LAVADO;
+  const aguaTotal  = aguaProd + aguaLavado;
+
+  // ── 7. Descarte y destino ──
+  const factDesc    = FACTORES_DESC[enc.descarte] || 0.5;
+  const pesoDesc_kg = pesoAnual_kg * factDesc;
+  const pesoConserv_kg = pesoAnual_kg - pesoDesc_kg;
+
+  const pesoDest = {};
+  for (const k of Object.keys(DESTINOS)) {
+    pesoDest[k] = pesoDesc_kg * ((enc.destino[k] || 0) / 100);
+  }
+
+  // CO₂ asociado al peso descartado (misma mezcla de materiales)
+  const co2FactorMezcla = pctS * CO2_SINT + pctA * CO2_ALG + pctO * CO2_OTRO;
+  const co2Descartado   = pesoDesc_kg * co2FactorMezcla * factorProd;
+
+  // ── 8. Gasto / costo por uso / rotación ──
+  const gastoAnual = (enc.gastoMensual || 0) * 12;
+
+  // Precio promedio por prenda = gasto anual / cantidad anual
+  const precioPrenda = cantAnual > 0 && gastoAnual > 0
+    ? gastoAnual / cantAnual
+    : null;
+
+  // Costo por uso = precio por prenda / usos promedio por prenda
+  // Mide cuánto pagaste cada vez que efectivamente usaste una prenda.
+  const costoUso = precioPrenda != null && usosP > 0
+    ? precioPrenda / usosP
+    : null;
+
+  // Rotación anual = cuántas "vidas útiles" de prenda caben en 12 meses
+  // Ej: vida útil = 4 meses → rotación = 3×/año
+  const vidaM = enc.vidaUtilMeses || null;
+  const rotacion = vidaM != null && vidaM > 0
+    ? 12 / vidaM
+    : null;
+
+  return {
+    // 30d
+    cant30, peso30g, pesoPorTipo, pesoProm_g,
+    // Anual
+    cantAnual, pesoAnual_kg,
+    // Composición
+    pctS, pctA, pctO,
+    // Producción
+    factorProd,
+    // CO₂
+    co2Anual, co2Descartado, co2FactorMezcla,
+    // Agua
+    aguaProd, aguaLavado, aguaTotal,
+    // Descarte
+    factDesc, pesoDesc_kg, pesoConserv_kg, pesoDest,
+    // Económico
+    gastoAnual, precioPrenda, costoUso,
+    // Ciclo
+    rotacion,
+  };
 }
 
-function updateAdminView() {
-  const adminBtn      = document.getElementById('admin-btn');
-  const adminClearBtn = document.getElementById('admin-clear-btn');
-  const adminStatus   = document.getElementById('admin-status');
-  if (!adminBtn) return;
-  if (adminMode) {
-    adminBtn.textContent = 'Salir de administrador';
-    adminBtn.classList.add('admin-active');
-    if (adminClearBtn) adminClearBtn.style.display = 'inline-flex';
-    if (adminStatus)   adminStatus.textContent = 'Modo administrador activo';
-  } else {
-    adminBtn.textContent = 'Acceder como administrador';
-    adminBtn.classList.remove('admin-active');
-    if (adminClearBtn) adminClearBtn.style.display = 'none';
-    if (adminStatus)   adminStatus.textContent = '';
-  }
-  // Re-render tabla to show/hide delete buttons
-  actualizarTabla();
-}
-
-window.showAdminLogin = function() {
-  if (adminMode) {
-    if (confirm('¿Cerrar sesión de administrador?')) setAdminMode(false);
-    return;
-  }
-  const pass = prompt('Contraseña de administrador:');
-  if (pass === null) return;
-  if (pass === ADMIN_PASS) {
-    setAdminMode(true);
-    alert('Acceso de administrador activado');
-  } else {
-    alert('Contraseña incorrecta');
-  }
-};
-
-window.clearAllEncuestados = async function() {
-  if (!adminMode) return;
-  if (!confirm('Borrar todas las encuestas guardadas? Esta acción no se puede deshacer.')) return;
-  try {
-    const snapshot = await getDocs(collection(db, COLL));
-    const batch = writeBatch(db);
-    snapshot.forEach(d => batch.delete(d.ref));
-    await batch.commit();
-    showToast('Todas las encuestas han sido borradas');
-  } catch(e) {
-    console.error('Error borrando encuestas:', e);
-    alert('Error al borrar encuestas: ' + e.message);
-  }
-};
-
-// ═══════════════════════════════════════════════════
-//  TOAST
-// ═══════════════════════════════════════════════════
-function showToast(message = '✓ Encuestado agregado') {
-  const t = document.getElementById('toast');
-  t.textContent = message;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
-}
-
-// ═══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  INICIALIZACIÓN DEL FORMULARIO
-// ═══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 function initForm() {
-  // Prendas 30d
-  const grid = document.getElementById('prendas-grid-30d');
-  for (const [key, val] of Object.entries(TIPOS)) {
-    grid.innerHTML += `
+  const pg = document.getElementById('prendas-grid');
+  for (const [k, v] of Object.entries(TIPOS)) {
+    pg.innerHTML += `
       <div class="prenda-card">
-        <div class="prenda-name">${val.nombre}</div>
-        <div class="peso-hint">${val.peso}g por unidad</div>
-        <input type="number" id="p-${key}" min="0" value="0" placeholder="0">
+        <div class="pn">${v.n}</div>
+        <div class="ph">${v.p} g c/u</div>
+        <input type="number" id="p-${k}" min="0" value="0">
       </div>`;
   }
-  // Destinos
+
   const dg = document.getElementById('destino-grid');
-  for (const [key, val] of Object.entries(DESTINOS)) {
+  for (const [k, v] of Object.entries(DESTINOS)) {
     dg.innerHTML += `
-      <div class="destino-card" style="border-left:3px solid ${val.color}">
-        <label>
+      <div class="destino-card" style="border-left:3px solid ${v.col}">
+        <div class="dc-label">
           <span style="display:flex;align-items:center;gap:6px">
-            <span style="width:8px;height:8px;border-radius:50%;background:${val.color};flex-shrink:0"></span>
-            ${val.label}
+            <span style="width:8px;height:8px;border-radius:50%;background:${v.col};flex-shrink:0"></span>
+            ${v.label}
           </span>
-          <span id="dv-${key}" style="color:${val.color};font-weight:700">20%</span>
-        </label>
-        <input type="range" id="d-${key}" min="0" max="80" value="20"
-          oninput="updateDestino('${key}')">
+          <span id="dv-${k}" style="color:${v.col};font-weight:700">20%</span>
+        </div>
+        <input type="range" id="d-${k}" min="0" max="80" value="20"
+          oninput="updDestino('${k}')">
       </div>`;
   }
 }
 
-window.updateDestino = function(changedKey) {
+// ── Destino sliders: no permiten superar 100% ──
+window.updDestino = function(changed) {
   const keys = Object.keys(DESTINOS);
-
-  let sumOthers = 0;
-  for (const k of keys) {
-    if (k !== changedKey) sumOthers += parseInt(document.getElementById('d-'+k).value) || 0;
-  }
-  const maxAllowed = 100 - sumOthers;
-  const el = document.getElementById('d-'+changedKey);
-  if (parseInt(el.value) > maxAllowed) el.value = maxAllowed;
+  let sumOtros = 0;
+  for (const k of keys) if (k !== changed) sumOtros += +document.getElementById('d-'+k).value;
+  const maxAllow = 100 - sumOtros;
+  const el = document.getElementById('d-'+changed);
+  if (+el.value > maxAllow) el.value = maxAllow;
 
   const vals = {};
-  for (const k of keys) vals[k] = parseInt(document.getElementById('d-'+k).value) || 0;
+  for (const k of keys) vals[k] = +document.getElementById('d-'+k).value;
 
   for (const k of keys) {
-    let sumExcept = 0;
-    for (const k2 of keys) { if (k2 !== k) sumExcept += vals[k2]; }
-    document.getElementById('d-'+k).max = 100 - sumExcept;
+    let sumExc = 0;
+    for (const k2 of keys) if (k2!==k) sumExc += vals[k2];
+    document.getElementById('d-'+k).max = 100 - sumExc;
     document.getElementById('dv-'+k).textContent = vals[k] + '%';
   }
 
   const total = Object.values(vals).reduce((a,b)=>a+b,0);
   const rem   = 100 - total;
-  const badge = document.getElementById('pct-remaining-badge');
+  const badge = document.getElementById('pct-remaining');
   if (badge) {
     badge.textContent = rem === 0 ? '✓ 100% distribuido' : rem + '% restante';
-    badge.style.color  = rem === 0 ? 'var(--accent)' : 'var(--accent3)';
+    badge.style.color = rem === 0 ? 'var(--accent)' : 'var(--accent3)';
   }
 };
 
-function checkPctSum() {
-  const keys = Object.keys(DESTINOS);
-  let sum = 0;
-  for (const k of keys) sum += parseInt(document.getElementById('d-'+k).value) || 0;
-  return sum;
-}
+// ── Range helpers ──
+window.updRange = function(id, unit) {
+  const v = document.getElementById('f-'+id).value;
+  document.getElementById('rv-'+id).textContent = v + unit;
+};
 
-// ═══════════════════════════════════════════════════
-//  CÁLCULOS
-// ═══════════════════════════════════════════════════
-function calcularStats(enc) {
-  // ── Peso y cantidad por tipo (30 días) ──
-  let total30dCant = 0, total30dPeso = 0;
-  const pesoPorTipo = {};
-  for (const [key, val] of Object.entries(TIPOS)) {
-    const q = enc.cant30d[key] || 0;
-    pesoPorTipo[key] = q * val.peso;
-    total30dCant += q;
-    total30dPeso += q * val.peso;
-  }
+window.updAlgodonLabel = function() {
+  const sint = +document.getElementById('f-sint').value;
+  const nat  = 100 - sint;
+  document.getElementById('label-alg').textContent =
+    `Del ${nat}% natural: ¿qué % es Algodón?`;
+  document.getElementById('sint-hint').textContent =
+    `Natural restante: ${nat}%`;
+};
 
-  // Peso promedio por prenda del mes (proxy para estimar peso anual)
-  const pesoPromedio = total30dCant > 0 ? total30dPeso / total30dCant : 200;
-
-  // ── Totales anuales ──
-  const totalAnualCant = (enc.estaciones.verano + enc.estaciones.otono +
-                          enc.estaciones.invierno + enc.estaciones.primavera);
-  const pesoTotalAnual = totalAnualCant * pesoPromedio;
-
-  // ── Descarte ──
-  const factor = FACTORES[enc.descarte];
-  const pesoDescartado = pesoTotalAnual * factor;
-  const pesoConservado = pesoTotalAnual - pesoDescartado;
-
-  // ── Destino del peso descartado ──
-  const pesoDest = {};
-  for (const key of Object.keys(DESTINOS)) {
-    pesoDest[key] = pesoDescartado * (enc.destino[key] / 100);
-  }
-
-  // ── CO₂ — método CONSISTENTE para total y descartado ──
-  // Algodón/natural: ~5.5 kg CO₂/kg | Poliéster/sintético: ~8.5 kg CO₂/kg
-  const pctSint = enc.pctSintetico / 100;
-  const pctNat  = 1 - pctSint;
-
-  // CO₂ del total comprado (por material)
-  const pesoSintetico = pesoTotalAnual * pctSint;
-  const pesoNatural   = pesoTotalAnual * pctNat;
-  const co2PorMaterial = {
-    sintetico: (pesoSintetico / 1000) * 8.5,
-    natural:   (pesoNatural   / 1000) * 5.5,
-  };
-  const co2Anual = co2PorMaterial.sintetico + co2PorMaterial.natural;
-
-  // CO₂ del peso descartado — MISMA fórmula mixta (no el factor interpolado)
-  const co2Descartado =
-    (pesoDescartado * pctSint / 1000) * 8.5 +
-    (pesoDescartado * pctNat  / 1000) * 5.5;
-
-  // Factor CO₂ promedio ponderado (solo informativo)
-  const co2Factor = 5.5 + 3.0 * pctSint;
-
-  // ── Gasto ──
-  const gastoAnual = (enc.gastoMensual || 0) * 12;
-
-  // ── Costo por uso ──
-  // Fórmula: precio promedio por prenda / usos promedio por prenda
-  // = (gastoAnual / totalAnualCant) / usosPromedio
-  // Interpretación: cuánto pagaste cada vez que usaste una prenda.
-  const precioPorPrenda = totalAnualCant > 0 && enc.gastoMensual > 0
-    ? gastoAnual / totalAnualCant
-    : null;
-  const costoXUso = precioPorPrenda != null && enc.usosPromedio != null && enc.usosPromedio > 0
-    ? precioPorPrenda / enc.usosPromedio
-    : null;
-
-  // ── Rotación anual estimada (usa vidaUtilMeses) ──
-  // Cuántas veces en el año "renovás" cada prenda.
-  // Si una prenda dura N meses, en 12 meses la rotás 12/N veces.
-  const rotacionAnual = enc.vidaUtilMeses != null && enc.vidaUtilMeses > 0
-    ? parseFloat((12 / enc.vidaUtilMeses).toFixed(2))
-    : null;
-
-  // ── Gasto anual "real" ajustado por rotación ──
-  // Cuánto gastás por prenda × cuántas veces la renovás al año
-  const gastoPorPrendaAnual = precioPorPrenda != null && rotacionAnual != null
-    ? parseFloat((precioPorPrenda * rotacionAnual).toFixed(2))
-    : null;
-
-  return {
-    pesoPorTipo, total30dCant, total30dPeso,
-    pesoPromedio, totalAnualCant, pesoTotalAnual,
-    factor, pesoDescartado, pesoConservado, pesoDest,
-    pesoSintetico, pesoNatural,
-    co2Factor, co2PorMaterial,
-    co2Anual, co2Descartado,
-    gastoAnual, precioPorPrenda, costoXUso,
-    rotacionAnual, gastoPorPrendaAnual,
-  };
-}
-
-// ═══════════════════════════════════════════════════
-//  AGREGAR ENCUESTADO → FIRESTORE
-// ═══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  AGREGAR ENCUESTADO
+// ══════════════════════════════════════════════
 window.agregarEncuestado = async function() {
-  const btnAgregar = document.getElementById('btn-agregar');
+  const btn = document.getElementById('btn-add');
+
   const edad = parseInt(document.getElementById('f-edad').value);
   if (isNaN(edad) || edad < 13 || edad > 21) {
-    alert('Ingresá una edad entre 13 y 21 años.');
-    return;
+    alert('Edad válida: entre 13 y 21 años.'); return;
   }
 
   let sumDest = 0;
-  for (const key of Object.keys(DESTINOS)) sumDest += parseInt(document.getElementById('d-'+key).value);
+  for (const k of Object.keys(DESTINOS)) sumDest += +document.getElementById('d-'+k).value;
   if (sumDest !== 100) {
-    alert('Los porcentajes de destino deben sumar 100%. Actualmente suman ' + sumDest + '%.');
-    return;
+    alert(`Los porcentajes de destino deben sumar 100%. Actualmente suman ${sumDest}%.`); return;
   }
 
   const cant30d = {};
-  for (const key of Object.keys(TIPOS)) {
-    cant30d[key] = Math.max(0, parseInt(document.getElementById('p-'+key).value) || 0);
-  }
-
-  const estaciones = {
-    verano:    Math.max(0, parseInt(document.getElementById('f-verano').value) || 0),
-    otono:     Math.max(0, parseInt(document.getElementById('f-otono').value) || 0),
-    invierno:  Math.max(0, parseInt(document.getElementById('f-invierno').value) || 0),
-    primavera: Math.max(0, parseInt(document.getElementById('f-primavera').value) || 0),
-  };
-
-  const descarte = document.querySelector('input[name="descarte"]:checked').value;
+  for (const k of Object.keys(TIPOS)) cant30d[k] = Math.max(0, parseInt(document.getElementById('p-'+k).value)||0);
 
   const destino = {};
-  for (const key of Object.keys(DESTINOS)) {
-    destino[key] = parseInt(document.getElementById('d-'+key).value);
-  }
+  for (const k of Object.keys(DESTINOS)) destino[k] = +document.getElementById('d-'+k).value;
 
   const enc = {
-    createdAt: Date.now(),
-    nombre: document.getElementById('f-nombre').value || `Encuestado ${encuestados.length + 1}`,
+    createdAt:      Date.now(),
+    nombre:         document.getElementById('f-nombre').value.trim() || `Encuestado ${encuestados.length + 1}`,
     edad,
-    genero: document.getElementById('f-genero').value,
-    cant30d, estaciones, descarte, destino,
-    pctSintetico:  parseInt(document.getElementById('f-sintetico').value),
-    gastoMensual:  parseFloat(document.getElementById('f-gasto').value)   || 0,
-    // null si el campo quedó vacío → no contamina estadísticas con default 1
-    usosPromedio:  parseInt(document.getElementById('f-usos').value)   || null,
-    vidaUtilMeses: parseInt(document.getElementById('f-meses').value)  || null,
+    genero:         document.getElementById('f-genero').value,
+    cant30d,
+    estaciones: {
+      verano:    Math.max(0, parseInt(document.getElementById('f-verano').value)||0),
+      otono:     Math.max(0, parseInt(document.getElementById('f-otono').value)||0),
+      invierno:  Math.max(0, parseInt(document.getElementById('f-invierno').value)||0),
+      primavera: Math.max(0, parseInt(document.getElementById('f-primavera').value)||0),
+    },
+    pctSegundaMano: parseInt(document.getElementById('f-segunda').value) || 0,
+    usosLavado:     parseInt(document.getElementById('f-lavado').value)  || 1,
+    descarte:       document.querySelector('input[name="descarte"]:checked').value,
+    destino,
+    pctSintetico:   parseInt(document.getElementById('f-sint').value),
+    pctAlgodon:     parseInt(document.getElementById('f-alg').value),
+    gastoMensual:   parseFloat(document.getElementById('f-gasto').value)  || 0,
+    usosPromedio:   parseInt(document.getElementById('f-usos').value)     || null,
+    vidaUtilMeses:  parseInt(document.getElementById('f-meses').value)    || null,
   };
 
-  // Disable button while saving
-  if (btnAgregar) { btnAgregar.disabled = true; btnAgregar.textContent = 'Guardando...'; }
-
+  btn.disabled = true; btn.textContent = 'Guardando…';
   try {
     await addDoc(collection(db, COLL), enc);
-    showToast('✓ Encuestado agregado');
+    toast('✓ Encuestado agregado');
     resetForm();
   } catch(e) {
-    console.error('Error guardando encuestado:', e);
-    alert('Error al guardar en Firestore: ' + e.message);
+    console.error(e);
+    alert('Error Firestore: ' + e.message);
   } finally {
-    if (btnAgregar) { btnAgregar.disabled = false; btnAgregar.textContent = '+ Agregar encuestado'; }
+    btn.disabled = false; btn.textContent = '+ Agregar encuestado';
   }
 };
 
 function resetForm() {
   document.getElementById('f-nombre').value = '';
-  document.getElementById('f-edad').value = '';
-  for (const key of Object.keys(TIPOS)) document.getElementById('p-'+key).value = 0;
+  document.getElementById('f-edad').value   = '';
+  for (const k of Object.keys(TIPOS)) document.getElementById('p-'+k).value = 0;
   ['verano','otono','invierno','primavera'].forEach(s => document.getElementById('f-'+s).value = 0);
   document.querySelector('input[name="descarte"][value="muy_poco"]').checked = true;
-  for (const key of Object.keys(DESTINOS)) {
-    document.getElementById('d-'+key).value = 20;
-    document.getElementById('dv-'+key).textContent = '20%';
+  for (const k of Object.keys(DESTINOS)) {
+    document.getElementById('d-'+k).value = 20;
+    document.getElementById('dv-'+k).textContent = '20%';
   }
-  document.getElementById('f-sintetico').value = 60;
-  document.getElementById('sintetico-val').textContent = '60%';
-  document.getElementById('f-gasto').value = '';
-  document.getElementById('f-usos').value = '';
-  document.getElementById('f-meses').value = '';
-  document.getElementById('pct-sum-warning').style.display = 'none';
-  // Reset remaining badge
-  const badge = document.getElementById('pct-remaining-badge');
+  document.getElementById('f-segunda').value = 0; document.getElementById('rv-segunda').textContent = '0%';
+  document.getElementById('f-lavado').value  = 1;
+  document.getElementById('f-sint').value    = 60; document.getElementById('rv-sint').textContent = '60%';
+  document.getElementById('f-alg').value     = 60; document.getElementById('rv-alg').textContent = '60%';
+  document.getElementById('f-gasto').value  = '';
+  document.getElementById('f-usos').value   = '';
+  document.getElementById('f-meses').value  = '';
+  const badge = document.getElementById('pct-remaining');
   if (badge) { badge.textContent = '100% restante'; badge.style.color = 'var(--accent3)'; }
+  updAlgodonLabel();
 }
 
-// ═══════════════════════════════════════════════════
-//  ELIMINAR ENCUESTADO → FIRESTORE
-// ═══════════════════════════════════════════════════
-window.eliminarEncuestado = async function(firestoreId) {
-  if (!adminMode) return;
-  if (!confirm('¿Eliminar este encuestado?')) return;
-  try {
-    await deleteDoc(doc(db, COLL, firestoreId));
-    showToast('Encuestado eliminado');
-  } catch(e) {
-    console.error('Error eliminando encuestado:', e);
-    alert('Error al eliminar de Firestore: ' + e.message);
-  }
+// ══════════════════════════════════════════════
+//  ELIMINAR
+// ══════════════════════════════════════════════
+window.eliminar = async function(fid) {
+  if (!adminMode || !confirm('¿Eliminar este encuestado?')) return;
+  try { await deleteDoc(doc(db, COLL, fid)); toast('Encuestado eliminado'); }
+  catch(e) { alert('Error: ' + e.message); }
 };
 
-// ═══════════════════════════════════════════════════
-//  LISTENER EN TIEMPO REAL (onSnapshot)
-// ═══════════════════════════════════════════════════
-function iniciarListener() {
-  const fbStatus = document.getElementById('fb-status');
-  if (fbStatus) { fbStatus.textContent = 'Conectando con Firebase...'; fbStatus.classList.add('show'); }
+window.clearAll = async function() {
+  if (!adminMode || !confirm('¿Borrar TODOS los encuestados? Esta acción es irreversible.')) return;
+  try {
+    const snap  = await getDocs(collection(db, COLL));
+    const batch = writeBatch(db);
+    snap.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    toast('Todas las encuestas borradas');
+  } catch(e) { alert('Error: ' + e.message); }
+};
 
-  onSnapshot(collection(db, COLL), (snapshot) => {
-    // Rebuild local array from Firestore snapshot
-    encuestados = [];
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      encuestados.push({ ...data, firestoreId: docSnap.id });
-    });
+// ══════════════════════════════════════════════
+//  ADMIN
+// ══════════════════════════════════════════════
+window.adminToggle = function() {
+  if (adminMode) {
+    if (!confirm('¿Cerrar sesión de administrador?')) return;
+    adminMode = false; localStorage.setItem('fs_admin','false');
+  } else {
+    const p = prompt('Contraseña de administrador:');
+    if (p === null) return;
+    if (p === 'lucasestudia') { adminMode = true; localStorage.setItem('fs_admin','true'); }
+    else { alert('Contraseña incorrecta.'); return; }
+  }
+  document.getElementById('btn-admin').classList.toggle('active', adminMode);
+  document.getElementById('admin-lbl').style.display = adminMode ? 'inline' : 'none';
+  document.getElementById('btn-clear').style.display = adminMode ? 'inline-block' : 'none';
+  renderTabla();
+};
 
-    // Sort by createdAt ascending so order is consistent
-    encuestados.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-
-    if (fbStatus) fbStatus.classList.remove('show');
-
-    actualizarBadge();
-    actualizarTabla();
-    // Also refresh stats/charts if those tabs are active
-    const activeTab = document.querySelector('.tab.active');
-    if (activeTab) {
-      if (activeTab.id === 'tab-estadisticas') actualizarEstadisticas();
-      if (activeTab.id === 'tab-graficos')     actualizarGraficos();
-    }
-  }, (error) => {
-    console.error('Firestore onSnapshot error:', error);
-    if (fbStatus) {
-      fbStatus.textContent = '⚠ Error de conexión con Firebase: ' + error.message;
-      fbStatus.style.background = 'rgba(255,83,112,.12)';
-      fbStatus.style.borderColor = 'var(--accent2)';
-      fbStatus.style.color = 'var(--accent2)';
-      fbStatus.classList.add('show');
-    }
+// ══════════════════════════════════════════════
+//  SNAPSHOT LISTENER
+// ══════════════════════════════════════════════
+function startListener() {
+  const bar = document.getElementById('fb-bar');
+  bar.classList.add('show');
+  onSnapshot(collection(db, COLL), snap => {
+    encuestados = snap.docs.map(d => ({ ...d.data(), _fid: d.id }))
+      .sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
+    bar.classList.remove('show');
+    document.getElementById('badge-n').textContent = encuestados.length;
+    renderTabla();
+    const active = document.querySelector('.tab.active');
+    if (active?.id === 'tab-estadisticas') renderStats();
+    if (active?.id === 'tab-graficos')     renderCharts();
+  }, err => {
+    bar.textContent = '⚠ Error Firebase: ' + err.message;
+    bar.style.color = 'var(--accent2)';
+    bar.classList.add('show');
   });
 }
 
-// ═══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  TABLA
-// ═══════════════════════════════════════════════════
-const G_BADGE = { m:'badge-m', f:'badge-f', o:'badge-o' };
-const G_LABEL = { m:'Masc.', f:'Fem.', o:'Otro' };
+// ══════════════════════════════════════════════
+const GL = { m:'bg-m', f:'bg-f', o:'bg-o' };
+const GN = { m:'Masc.', f:'Fem.', o:'Otro' };
 
-function actualizarTabla() {
-  const tbody = document.getElementById('tabla-body');
-  if (encuestados.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="19"><div class="empty"><div class="icon">📋</div>Aún no hay encuestados cargados</div></td></tr>';
+function renderTabla() {
+  const tb = document.getElementById('tabla-body');
+  if (!encuestados.length) {
+    tb.innerHTML = '<tr><td colspan="21"><div class="empty"><div class="ei">📋</div>Aún no hay encuestados</div></td></tr>';
     return;
   }
-  tbody.innerHTML = encuestados.map(enc => {
-    const s = calcularStats(enc);
-    const g = enc.genero;
-    const fid = enc.firestoreId || '';
+  tb.innerHTML = encuestados.map(enc => {
+    const s   = calcular(enc);
+    const fid = enc._fid || '';
     return `<tr>
-      <td>${enc.nombre}</td>
-      <td class="td-num">${enc.edad}</td>
-      <td><span class="badge-genero ${G_BADGE[g]}">${G_LABEL[g]}</span></td>
-      <td class="td-num">${s.total30dCant}</td>
-      <td class="td-num">${s.total30dPeso.toLocaleString('es')}</td>
-      <td class="td-num">${s.totalAnualCant}</td>
-      <td class="td-num">${(s.pesoTotalAnual/1000).toFixed(2)}</td>
-      <td>${FACTOR_LABELS[enc.descarte]}</td>
-      <td class="td-num" style="color:var(--accent2)">${(s.pesoDescartado/1000).toFixed(2)}</td>
-      <td class="td-num" style="color:var(--accent2)">${(s.pesoDest.basura/1000).toFixed(2)}</td>
-      <td class="td-num" style="color:var(--accent)">${(s.pesoDest.donado/1000).toFixed(2)}</td>
-      <td class="td-num">${enc.pctSintetico}%</td>
-      <td class="td-num" style="color:var(--accent3)">${s.gastoAnual > 0 ? '$'+s.gastoAnual.toFixed(0) : '—'}</td>
-      <td class="td-num">${enc.usosPromedio != null ? enc.usosPromedio : '—'}</td>
-      <td class="td-num">${enc.vidaUtilMeses != null ? enc.vidaUtilMeses : '—'}</td>
-      <td class="td-num" style="color:var(--accent3)">${s.costoXUso != null ? '$'+s.costoXUso.toFixed(2) : '—'}</td>
-      <td class="td-num" style="color:var(--accent)">${s.rotacionAnual != null ? s.rotacionAnual.toFixed(2)+'×/año' : '—'}</td>
-      <td class="td-num" style="color:#a78bfa">${s.co2Anual.toFixed(2)}</td>
-      <td>${adminMode && fid ? `<button class="btn-danger" onclick="eliminarEncuestado('${fid}')">✕</button>` : ''}</td>
+      <td><b>${enc.nombre}</b></td>
+      <td class="tr">${enc.edad}</td>
+      <td><span class="gen-badge ${GL[enc.genero]}">${GN[enc.genero]}</span></td>
+      <td class="tr">${s.cant30}</td>
+      <td class="tr">${s.peso30g.toLocaleString('es')}</td>
+      <td class="tr">${s.cantAnual}</td>
+      <td class="tr">${s.pesoAnual_kg.toFixed(2)}</td>
+      <td>${LABELS_DESC[enc.descarte]}</td>
+      <td class="tr" style="color:var(--accent2)">${s.pesoDesc_kg.toFixed(2)}</td>
+      <td class="tr" style="color:var(--accent2)">${s.pesoDest.basura.toFixed(2)}</td>
+      <td class="tr" style="color:var(--accent)">${s.pesoDest.donado.toFixed(2)}</td>
+      <td class="tr">${enc.pctSintetico}%</td>
+      <td class="tr">${(s.pctA*100).toFixed(0)}%</td>
+      <td class="tr" style="color:var(--accent3)">${s.gastoAnual > 0 ? '$'+s.gastoAnual.toFixed(0) : '—'}</td>
+      <td class="tr">${enc.usosPromedio ?? '—'}</td>
+      <td class="tr">${enc.vidaUtilMeses ?? '—'}</td>
+      <td class="tr" style="color:var(--accent3)">${s.costoUso != null ? '$'+s.costoUso.toFixed(2) : '—'}</td>
+      <td class="tr" style="color:var(--accent)">${s.rotacion != null ? s.rotacion.toFixed(2)+'×' : '—'}</td>
+      <td class="tr" style="color:var(--accent5)">${s.co2Anual.toFixed(2)}</td>
+      <td class="tr" style="color:var(--accent4)">${s.aguaTotal.toFixed(0)}</td>
+      <td>${adminMode && fid ? `<button class="btn-danger-sm" onclick="eliminar('${fid}')">✕</button>` : ''}</td>
     </tr>`;
   }).join('');
-  actualizarEstadisticas();
-  actualizarGraficos();
 }
 
-// ═══════════════════════════════════════════════════
-//  ESTADÍSTICAS DESCRIPTIVAS
-// ═══════════════════════════════════════════════════
-function mean(a)   { return a.reduce((s,x)=>s+x,0)/a.length; }
-function median(a) { const s=[...a].sort((x,y)=>x-y), m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; }
-function stddev(a) { const m=mean(a); return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/a.length); }
-function minv(a)   { return Math.min(...a); }
-function maxv(a)   { return Math.max(...a); }
+// ══════════════════════════════════════════════
+//  ESTADÍSTICAS DESCRIPTIVAS + DS + RANGOS
+// ══════════════════════════════════════════════
 
-function statsRow(label, values, decimals=1, unit='') {
-  if (values.length === 0) return '';
-  const fmt = v => v.toFixed(decimals) + unit;
+// Helpers estadísticos
+function mean(a)     { return a.reduce((s,x)=>s+x,0)/a.length; }
+function median(a)   {
+  const s = [...a].sort((x,y)=>x-y), m = Math.floor(s.length/2);
+  return s.length % 2 ? s[m] : (s[m-1]+s[m])/2;
+}
+function variance(a) {
+  const m = mean(a);
+  return a.reduce((s,x)=>s+(x-m)**2,0)/a.length;
+}
+function stddev(a)   { return Math.sqrt(variance(a)); }
+function minv(a)     { return Math.min(...a); }
+function maxv(a)     { return Math.max(...a); }
+function q1(a)       {
+  const s = [...a].sort((x,y)=>x-y);
+  return median(s.slice(0, Math.floor(s.length/2)));
+}
+function q3(a)       {
+  const s = [...a].sort((x,y)=>x-y);
+  const start = Math.ceil(s.length/2);
+  return median(s.slice(start));
+}
+function iqr(a)      { return q3(a) - q1(a); }
+function cv(a)       { return mean(a) !== 0 ? (stddev(a)/Math.abs(mean(a)))*100 : 0; } // coef. variación %
+
+function fmtRow(label, arr, dec=1, unit='', color='') {
+  if (!arr || arr.length === 0) return '';
+  const f = v => {
+    const n = parseFloat(v.toFixed(dec));
+    return (Number.isFinite(n) ? n.toLocaleString('es-AR', {minimumFractionDigits:dec, maximumFractionDigits:dec}) : '—') + unit;
+  };
+  const style = color ? `style="color:${color}"` : '';
   return `<tr>
-    <td>${label}</td>
-    <td class="stat-accent">${fmt(mean(values))}</td>
-    <td>${fmt(median(values))}</td>
-    <td>${fmt(stddev(values))}</td>
-    <td>${fmt(minv(values))}</td>
-    <td>${fmt(maxv(values))}</td>
+    <td ${style}>${label}</td>
+    <td class="sa">${f(mean(arr))}</td>
+    <td>${f(median(arr))}</td>
+    <td style="color:var(--accent3)">${f(stddev(arr))}</td>
+    <td style="color:var(--muted)">${f(minv(arr))}</td>
+    <td style="color:var(--accent4)">${f(q1(arr))}</td>
+    <td style="color:var(--accent4)">${f(q3(arr))}</td>
+    <td style="color:var(--muted)">${f(maxv(arr))}</td>
+    <td style="color:var(--accent3)">${f(iqr(arr))}</td>
+    <td style="color:var(--muted)">${cv(arr).toFixed(1)}%</td>
   </tr>`;
 }
 
-function actualizarEstadisticas() {
-  const cont = document.getElementById('stats-container');
-  if (encuestados.length === 0) {
-    cont.innerHTML = '<div class="empty"><div class="icon">📊</div>Cargá al menos un encuestado</div>';
+function groupHdr(label, color) {
+  return `<tr class="group-hdr"><td colspan="10" style="color:${color};border-top:1px solid ${color}22">▸ ${label}</td></tr>`;
+}
+
+function renderStats() {
+  const cont = document.getElementById('stats-cont');
+  const kRow = document.getElementById('kpi-row');
+
+  if (!encuestados.length) {
+    cont.innerHTML = '<div class="empty"><div class="ei">📊</div>Cargá encuestados para ver estadísticas</div>';
+    kRow.innerHTML = '';
     return;
   }
 
-  const statsList = encuestados.map(e => ({...e, s: calcularStats(e)}));
-  const pick = fn => statsList.map(fn);
+  const all = encuestados.map(e => calcular(e));
+  const pick = fn => all.map(fn).filter(v => v != null && Number.isFinite(v));
 
-  const tipoRows = Object.entries(TIPOS).map(([key, val]) =>
-    statsRow(`Cant. ${val.nombre} — 30d`, pick(e => e.cant30d[key]), 1, ' prendas')
+  // KPI cards
+  const nE   = encuestados.length;
+  const avgKg  = mean(pick(s=>s.pesoAnual_kg));
+  const avgCO2 = mean(pick(s=>s.co2Anual));
+  const avgH2O = mean(pick(s=>s.aguaTotal));
+  const avgGas = pick(s=>s.gastoAnual).filter(v=>v>0);
+
+  kRow.innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Encuestados</div>
+      <div class="kpi-value" style="color:var(--accent)">${nE}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Kg/año promedio</div>
+      <div class="kpi-value" style="color:var(--accent)">${avgKg.toFixed(1)}<span class="kpi-unit">kg</span></div></div>
+    <div class="kpi-card"><div class="kpi-label">CO₂ promedio</div>
+      <div class="kpi-value" style="color:var(--accent5)">${avgCO2.toFixed(1)}<span class="kpi-unit">kg CO₂</span></div></div>
+    <div class="kpi-card"><div class="kpi-label">Agua promedio</div>
+      <div class="kpi-value" style="color:var(--accent4)">${(avgH2O/1000).toFixed(1)}<span class="kpi-unit">m³</span></div></div>
+    ${avgGas.length ? `<div class="kpi-card"><div class="kpi-label">Gasto anual prom.</div>
+      <div class="kpi-value" style="color:var(--accent3)">$${mean(avgGas).toFixed(0)}<span class="kpi-unit">USD</span></div></div>` : ''}
+  `;
+
+  // Tabla de estadísticas
+  const tipoRows = Object.entries(TIPOS).map(([k,v]) =>
+    fmtRow(`${v.n} — 30d`, pick(s=>s.pesoPorTipo[k]||0), 0, ' g')
   ).join('');
 
   cont.innerHTML = `
-  <div class="stats-table-wrap">
-    <table class="stats-table">
-      <thead><tr>
-        <th style="text-align:left">Variable</th>
-        <th>Media</th><th>Mediana</th><th>DS</th><th>Mín</th><th>Máx</th>
-      </tr></thead>
+  <div class="stats-wrap">
+    <table class="stats-tbl">
+      <thead>
+        <tr>
+          <th style="text-align:left">Variable</th>
+          <th>Media</th><th>Mediana</th>
+          <th style="color:var(--accent3)">DS</th>
+          <th>Mín</th><th>Q1</th><th>Q3</th><th>Máx</th>
+          <th style="color:var(--accent3)">RIQ</th>
+          <th>CV%</th>
+        </tr>
+        <tr>
+          <th style="text-align:left;color:var(--muted);font-size:9px;letter-spacing:.05em;padding-top:4px">
+            DS = desviación estándar · RIQ = rango intercuartílico (Q3−Q1) · CV = coeficiente de variación
+          </th>
+          <th colspan="9"></th>
+        </tr>
+      </thead>
       <tbody>
-        <tr><td colspan="6" style="color:var(--accent);font-size:10px;padding:12px 14px 4px;letter-spacing:.1em;text-transform:uppercase">▸ DATOS PERSONALES</td></tr>
-        ${statsRow('Edad', pick(e=>e.edad), 1, ' años')}
-        ${statsRow('% Material sintético', pick(e=>e.pctSintetico), 1, '%')}
 
-        <tr><td colspan="6" style="color:var(--accent);font-size:10px;padding:12px 14px 4px;letter-spacing:.1em;text-transform:uppercase">▸ COMPRAS — ÚLTIMOS 30 DÍAS</td></tr>
-        ${statsRow('Cantidad total comprada (30d)', pick(e=>e.s.total30dCant), 1, ' prendas')}
-        ${statsRow('Peso total comprado (30d)', pick(e=>e.s.total30dPeso), 0, ' g')}
-        ${statsRow('Peso promedio por prenda', pick(e=>e.s.pesoPromedio), 1, ' g')}
+        ${groupHdr('DATOS PERSONALES', '#00E5C5')}
+        ${fmtRow('Edad', encuestados.map(e=>e.edad), 1, ' años')}
+        ${fmtRow('% Material sintético', encuestados.map(e=>e.pctSintetico), 1, '%')}
+        ${fmtRow('% Algodón (del natural)', all.map(s=>s.pctA*100), 1, '%')}
+        ${fmtRow('% Segunda mano', encuestados.map(e=>e.pctSegundaMano||0), 1, '%')}
+
+        ${groupHdr('COMPRAS — ÚLTIMOS 30 DÍAS', '#00E5C5')}
+        ${fmtRow('Cantidad total', pick(s=>s.cant30), 1, ' prendas')}
+        ${fmtRow('Peso total 30d', pick(s=>s.peso30g), 0, ' g')}
+        ${fmtRow('Peso promedio/prenda', pick(s=>s.pesoProm_g), 1, ' g')}
         ${tipoRows}
 
-        <tr><td colspan="6" style="color:var(--accent);font-size:10px;padding:12px 14px 4px;letter-spacing:.1em;text-transform:uppercase">▸ COMPRAS — AÑO COMPLETO</td></tr>
-        ${statsRow('Cant. total comprada (anual)', pick(e=>e.s.totalAnualCant), 1, ' prendas')}
-        ${statsRow('Peso total comprado (anual)', pick(e=>e.s.pesoTotalAnual/1000), 2, ' kg')}
-        ${statsRow('Cant. verano', pick(e=>e.estaciones.verano), 1, ' prendas')}
-        ${statsRow('Cant. otoño', pick(e=>e.estaciones.otono), 1, ' prendas')}
-        ${statsRow('Cant. invierno', pick(e=>e.estaciones.invierno), 1, ' prendas')}
-        ${statsRow('Cant. primavera', pick(e=>e.estaciones.primavera), 1, ' prendas')}
+        ${groupHdr('COMPRAS — AÑO COMPLETO', '#00E5C5')}
+        ${fmtRow('Cantidad anual', pick(s=>s.cantAnual), 1, ' prendas')}
+        ${fmtRow('Peso anual total', pick(s=>s.pesoAnual_kg), 2, ' kg')}
+        ${fmtRow('Verano', encuestados.map(e=>e.estaciones.verano||0), 1, ' prendas')}
+        ${fmtRow('Otoño', encuestados.map(e=>e.estaciones.otono||0), 1, ' prendas')}
+        ${fmtRow('Invierno', encuestados.map(e=>e.estaciones.invierno||0), 1, ' prendas')}
+        ${fmtRow('Primavera', encuestados.map(e=>e.estaciones.primavera||0), 1, ' prendas')}
 
-        <tr><td colspan="6" style="color:var(--accent2);font-size:10px;padding:12px 14px 4px;letter-spacing:.1em;text-transform:uppercase">▸ DESCARTE Y DESTINO (anual estimado)</td></tr>
-        ${statsRow('Factor de descarte', pick(e=>e.s.factor*100), 1, '%')}
-        ${statsRow('Peso descartado (anual)', pick(e=>e.s.pesoDescartado/1000), 2, ' kg')}
-        ${statsRow('Peso conservado (anual)', pick(e=>e.s.pesoConservado/1000), 2, ' kg')}
-        ${statsRow('Peso → Basura (anual)', pick(e=>e.s.pesoDest.basura/1000), 2, ' kg')}
-        ${statsRow('Peso → Donado/Regalado', pick(e=>e.s.pesoDest.donado/1000), 2, ' kg')}
-        ${statsRow('Peso → Vendido', pick(e=>e.s.pesoDest.vendido/1000), 2, ' kg')}
-        ${statsRow('Peso → Reciclado', pick(e=>e.s.pesoDest.reciclado/1000), 2, ' kg')}
-        ${statsRow('Peso → Guardado sin usar', pick(e=>e.s.pesoDest.guardado/1000), 2, ' kg')}
+        ${groupHdr('DESCARTE Y DESTINO — ESTIMACIÓN ANUAL', '#FF5370')}
+        ${fmtRow('Factor de descarte', pick(s=>s.factDesc*100), 1, '%')}
+        ${fmtRow('Peso descartado', pick(s=>s.pesoDesc_kg), 2, ' kg', 'var(--accent2)')}
+        ${fmtRow('Peso conservado', pick(s=>s.pesoConserv_kg), 2, ' kg')}
+        ${fmtRow('Peso → Basura', pick(s=>s.pesoDest.basura), 2, ' kg', 'var(--accent2)')}
+        ${fmtRow('Peso → Donado/Regalado', pick(s=>s.pesoDest.donado), 2, ' kg', 'var(--accent)')}
+        ${fmtRow('Peso → Vendido', pick(s=>s.pesoDest.vendido), 2, ' kg')}
+        ${fmtRow('Peso → Reciclado', pick(s=>s.pesoDest.reciclado), 2, ' kg')}
+        ${fmtRow('Peso → Guardado sin usar', pick(s=>s.pesoDest.guardado), 2, ' kg')}
 
-        <tr><td colspan="6" style="color:#a78bfa;font-size:10px;padding:12px 14px 4px;letter-spacing:.1em;text-transform:uppercase">▸ CICLO DE VIDA, GASTO Y HUELLA CO₂</td></tr>
-        ${statsRow('Gasto mensual (USD)', pick(e=>e.gastoMensual).filter(v=>v>0), 2, ' USD')}
-        ${statsRow('Gasto anual estimado (USD)', pick(e=>e.s.gastoAnual).filter(v=>v>0), 2, ' USD')}
-        ${statsRow('Precio promedio por prenda (USD)', pick(e=>e.s.precioPorPrenda).filter(v=>v!=null), 2, ' USD')}
-        ${statsRow('Usos promedio por prenda', pick(e=>e.usosPromedio).filter(v=>v!=null&&v>0), 1, ' veces')}
-        ${statsRow('Vida útil promedio (meses)', pick(e=>e.vidaUtilMeses).filter(v=>v!=null&&v>0), 1, ' meses')}
-        ${statsRow('Rotación anual (veces/año)', pick(e=>e.s.rotacionAnual).filter(v=>v!=null), 2, '×/año')}
-        ${statsRow('Costo por uso (USD) = precio/prenda ÷ usos', pick(e=>e.s.costoXUso).filter(v=>v!=null), 3, ' USD')}
-        ${statsRow('Factor CO₂ prom. ponderado (kg CO₂/kg)', pick(e=>e.s.co2Factor), 2, ' kg CO₂/kg')}
-        ${statsRow('CO₂ total anual (kg CO₂)', pick(e=>e.s.co2Anual), 2, ' kg CO₂')}
-        ${statsRow('CO₂ sintético estimado', pick(e=>e.s.co2PorMaterial.sintetico), 2, ' kg CO₂')}
-        ${statsRow('CO₂ natural estimado', pick(e=>e.s.co2PorMaterial.natural), 2, ' kg CO₂')}
-        ${statsRow('CO₂ del peso descartado', pick(e=>e.s.co2Descartado), 2, ' kg CO₂')}
+        ${groupHdr('HUELLA AMBIENTAL — CO₂ Y AGUA', '#a78bfa')}
+        ${fmtRow('CO₂ anual total', pick(s=>s.co2Anual), 2, ' kg CO₂', 'var(--accent5)')}
+        ${fmtRow('CO₂ del peso descartado', pick(s=>s.co2Descartado), 2, ' kg CO₂', 'var(--accent5)')}
+        ${fmtRow('Factor CO₂ mezclado ponderado', pick(s=>s.co2FactorMezcla), 2, ' kg CO₂/kg')}
+        ${fmtRow('Agua producción (ajust. 2ª mano)', pick(s=>s.aguaProd), 0, ' L', 'var(--accent4)')}
+        ${fmtRow('Agua lavado (anual)', pick(s=>s.aguaLavado), 0, ' L', 'var(--accent4)')}
+        ${fmtRow('Agua TOTAL anual', pick(s=>s.aguaTotal), 0, ' L', 'var(--accent4)')}
+
+        ${groupHdr('CICLO DE VIDA, GASTO Y ECONOMÍA', '#FFB547')}
+        ${fmtRow('Gasto mensual', pick(s=>s.gastoAnual/12).filter(v=>v>0), 2, ' USD', 'var(--accent3)')}
+        ${fmtRow('Gasto anual estimado', pick(s=>s.gastoAnual).filter(v=>v>0), 2, ' USD', 'var(--accent3)')}
+        ${fmtRow('Precio promedio por prenda', pick(s=>s.precioPrenda).filter(v=>v!=null), 2, ' USD')}
+        ${fmtRow('Usos promedio/prenda', encuestados.map(e=>e.usosPromedio).filter(v=>v!=null&&v>0), 1, ' veces')}
+        ${fmtRow('Vida útil promedio', encuestados.map(e=>e.vidaUtilMeses).filter(v=>v!=null&&v>0), 1, ' meses')}
+        ${fmtRow('Rotación anual', pick(s=>s.rotacion).filter(v=>v!=null), 2, '×/año', 'var(--accent)')}
+        ${fmtRow('Costo por uso', pick(s=>s.costoUso).filter(v=>v!=null), 3, ' USD', 'var(--accent3)')}
+
       </tbody>
     </table>
   </div>`;
+
+  // Corregir la fila de edad que usa el workaround
+  // Reemplazar la fila duplicada "Edad"
+  const rows = cont.querySelectorAll('.stats-tbl tbody tr');
+  rows.forEach(r => {
+    if (r.cells[0]?.textContent === 'Edad') r.remove();
+  });
 }
 
-// ═══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  GRÁFICOS
-// ═══════════════════════════════════════════════════
-function destroyChart(id) {
-  if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
-}
-
-const CHART_OPTS_BASE = {
+// ══════════════════════════════════════════════
+const CHART_BASE = {
   responsive: true,
   plugins: {
-    legend: { labels: { color: '#7A8AAF', font: { family: "'Space Mono'" , size: 11 } } },
-    tooltip: { backgroundColor: '#1C2640', titleColor: '#E8EDF8', bodyColor: '#7A8AAF', borderColor: '#2A3555', borderWidth: 1 }
+    legend: { labels: { color: '#7A8AAF', font: { family: "'Space Mono'", size: 10 } } },
+    tooltip: { backgroundColor: '#1C2640', titleColor: '#E8EDF8', bodyColor: '#7A8AAF', borderColor: '#2A3555', borderWidth: 1 },
   },
   scales: {
     x: { ticks: { color: '#7A8AAF', font: { family: "'Space Mono'", size: 10 } }, grid: { color: 'rgba(42,53,85,.4)' } },
-    y: { ticks: { color: '#7A8AAF', font: { family: "'Space Mono'", size: 10 } }, grid: { color: 'rgba(42,53,85,.4)' } }
+    y: { ticks: { color: '#7A8AAF', font: { family: "'Space Mono'", size: 10 } }, grid: { color: 'rgba(42,53,85,.4)' } },
   }
 };
 
-function actualizarGraficos() {
-  const cont = document.getElementById('charts-container');
-  if (encuestados.length === 0) {
-    cont.innerHTML = '<div class="empty"><div class="icon">📈</div>Cargá encuestados para ver los gráficos</div>';
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function mkChart(id, type, data, opts) {
+  destroyChart(id);
+  charts[id] = new Chart(document.getElementById(id), { type, data, options: opts });
+}
+
+function renderCharts() {
+  const cont = document.getElementById('charts-cont');
+  if (!encuestados.length) {
+    cont.innerHTML = '<div class="empty"><div class="ei">📈</div>Cargá encuestados para ver gráficos</div>';
     return;
   }
 
-  // Destroy previous chart instances
-  ['c1','c2','c3','c4','c5','c6','c7'].forEach(destroyChart);
+  Object.keys(charts).forEach(destroyChart);
 
   cont.innerHTML = `
     <div class="charts-grid">
       <div class="chart-card">
         <h3>Peso comprado por tipo de prenda</h3>
-        <p>Promedio total en 30 días (gramos)</p>
+        <p>Promedio de peso en los últimos 30 días (gramos)</p>
         <canvas id="c1"></canvas>
       </div>
       <div class="chart-card">
@@ -1124,8 +1100,8 @@ function actualizarGraficos() {
         <canvas id="c2"></canvas>
       </div>
       <div class="chart-card full">
-        <h3>Peso comprado vs. descartado vs. a basura — por encuestado</h3>
-        <p>Estimación anual en kilogramos</p>
+        <h3>Peso comprado vs. descartado vs. a la basura — por encuestado</h3>
+        <p>Estimación anual en kg</p>
         <canvas id="c3"></canvas>
       </div>
       <div class="chart-card">
@@ -1134,243 +1110,177 @@ function actualizarGraficos() {
         <canvas id="c4"></canvas>
       </div>
       <div class="chart-card">
-        <h3>Peso a basura por género</h3>
-        <p>Promedio anual estimado (kg)</p>
+        <h3>CO₂ anual por encuestado</h3>
+        <p>Total producción vs. porción descartada (kg CO₂)</p>
         <canvas id="c5"></canvas>
       </div>
       <div class="chart-card">
-        <h3>CO₂ estimado anual por encuestado</h3>
-        <p>kg CO₂ total comprado vs. CO₂ del peso descartado</p>
+        <h3>Consumo de agua anual</h3>
+        <p>Producción vs. lavado (litros) — por encuestado</p>
         <canvas id="c6"></canvas>
       </div>
       <div class="chart-card">
-        <h3>Gasto anual vs. Usos promedio por prenda</h3>
-        <p>Scatter — cada punto es un encuestado (tamaño = costo/uso)</p>
+        <h3>Peso a basura por género</h3>
+        <p>Promedio anual estimado (kg)</p>
         <canvas id="c7"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Gasto anual vs. Usos por prenda</h3>
+        <p>Scatter — tamaño del punto = costo por uso</p>
+        <canvas id="c8"></canvas>
       </div>
     </div>`;
 
-  const allStats = encuestados.map(e => ({ ...e, s: calcularStats(e) }));
+  const all = encuestados.map(e => ({ ...e, s: calcular(e) }));
 
-  // ── GRÁFICO 1: Peso por tipo (30d) promedio ──
-  const avgPorTipo = Object.keys(TIPOS).map(key => {
-    const vals = allStats.map(e => e.s.pesoPorTipo[key] || 0);
-    return vals.reduce((a,b)=>a+b,0) / vals.length;
-  });
-  chartInstances['c1'] = new Chart(document.getElementById('c1'), {
-    type: 'bar',
-    data: {
-      labels: Object.values(TIPOS).map(v => v.nombre.split('/')[0].trim()),
-      datasets: [{
-        label: 'Gramos (prom.)',
-        data: avgPorTipo.map(v => parseFloat(v.toFixed(1))),
-        backgroundColor: 'rgba(0,229,197,.7)',
-        borderColor: '#00E5C5',
-        borderWidth: 1,
-        borderRadius: 5,
-      }]
-    },
-    options: { ...CHART_OPTS_BASE, indexAxis: 'y' }
-  });
+  // Función auxiliar para promedio de array
+  const avg = arr => arr.reduce((a,b)=>a+b,0) / arr.length;
 
-  // ── GRÁFICO 2: Destino del descarte (Doughnut) ──
-  const avgDest = Object.keys(DESTINOS).map(key => {
-    const vals = allStats.map(e => e.s.pesoDest[key]/1000);
-    return parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(3));
-  });
-  chartInstances['c2'] = new Chart(document.getElementById('c2'), {
-    type: 'doughnut',
-    data: {
-      labels: Object.values(DESTINOS).map(d => d.label),
-      datasets: [{
-        data: avgDest,
-        backgroundColor: Object.values(DESTINOS).map(d => d.color + 'CC'),
-        borderColor: Object.values(DESTINOS).map(d => d.color),
-        borderWidth: 2,
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'bottom', labels: { color: '#7A8AAF', font: { family: "'Space Mono'", size: 10 }, padding: 12 } },
-        tooltip: { backgroundColor: '#1C2640', titleColor: '#E8EDF8', bodyColor: '#7A8AAF', borderColor: '#2A3555', borderWidth: 1 }
-      }
+  // ── C1: Peso por tipo (30d) promedio ──
+  const avgTipo = Object.keys(TIPOS).map(k => avg(all.map(e => e.s.pesoPorTipo[k]||0)));
+  mkChart('c1','bar',{
+    labels: Object.values(TIPOS).map(v => v.n.split('/')[0].trim()),
+    datasets: [{ label:'g (prom.)', data: avgTipo.map(v=>+v.toFixed(1)),
+      backgroundColor:'rgba(0,229,197,.7)', borderColor:'#00E5C5', borderWidth:1, borderRadius:5 }]
+  },{ ...CHART_BASE, indexAxis:'y' });
+
+  // ── C2: Destino descarte (Doughnut) ──
+  const avgDest = Object.keys(DESTINOS).map(k => avg(all.map(e => e.s.pesoDest[k])));
+  mkChart('c2','doughnut',{
+    labels: Object.values(DESTINOS).map(d => d.label),
+    datasets: [{ data: avgDest.map(v=>+v.toFixed(3)),
+      backgroundColor: Object.values(DESTINOS).map(d => d.col+'BB'),
+      borderColor: Object.values(DESTINOS).map(d => d.col), borderWidth:2 }]
+  },{
+    responsive: true,
+    plugins: {
+      legend: { position:'bottom', labels: { color:'#7A8AAF', font:{family:"'Space Mono'",size:10}, padding:10 } },
+      tooltip: { backgroundColor:'#1C2640', titleColor:'#E8EDF8', bodyColor:'#7A8AAF', borderColor:'#2A3555', borderWidth:1 }
     }
   });
 
-  // ── GRÁFICO 3: Comprado vs Descartado vs Basura por persona ──
-  chartInstances['c3'] = new Chart(document.getElementById('c3'), {
-    type: 'bar',
-    data: {
-      labels: allStats.map(e => e.nombre),
-      datasets: [
-        {
-          label: 'Peso comprado (kg/año)',
-          data: allStats.map(e => parseFloat((e.s.pesoTotalAnual/1000).toFixed(2))),
-          backgroundColor: 'rgba(0,229,197,.65)',
-          borderColor: '#00E5C5', borderWidth: 1, borderRadius: 4,
-        },
-        {
-          label: 'Peso descartado (kg/año)',
-          data: allStats.map(e => parseFloat((e.s.pesoDescartado/1000).toFixed(2))),
-          backgroundColor: 'rgba(255,181,71,.65)',
-          borderColor: '#FFB547', borderWidth: 1, borderRadius: 4,
-        },
-        {
-          label: 'Peso → basura (kg/año)',
-          data: allStats.map(e => parseFloat((e.s.pesoDest.basura/1000).toFixed(2))),
-          backgroundColor: 'rgba(255,83,112,.65)',
-          borderColor: '#FF5370', borderWidth: 1, borderRadius: 4,
-        },
-      ]
-    },
-    options: CHART_OPTS_BASE
-  });
+  // ── C3: Comprado vs Descartado vs Basura por persona ──
+  mkChart('c3','bar',{
+    labels: all.map(e=>e.nombre),
+    datasets:[
+      { label:'Comprado (kg/año)', data:all.map(e=>+e.s.pesoAnual_kg.toFixed(2)),
+        backgroundColor:'rgba(0,229,197,.65)', borderColor:'#00E5C5', borderWidth:1, borderRadius:4 },
+      { label:'Descartado (kg/año)', data:all.map(e=>+e.s.pesoDesc_kg.toFixed(2)),
+        backgroundColor:'rgba(255,181,71,.65)', borderColor:'#FFB547', borderWidth:1, borderRadius:4 },
+      { label:'A basura (kg/año)', data:all.map(e=>+e.s.pesoDest.basura.toFixed(2)),
+        backgroundColor:'rgba(255,83,112,.65)', borderColor:'#FF5370', borderWidth:1, borderRadius:4 },
+    ]
+  }, CHART_BASE);
 
-  // ── GRÁFICO 4: Compras por estación ──
+  // ── C4: Compras por estación ──
   const seasons = ['verano','otono','invierno','primavera'];
-  const seasonLabels = ['Verano ☀️','Otoño 🍂','Invierno ❄️','Primavera 🌸'];
-  const avgSeason = seasons.map(s => {
-    const v = allStats.map(e => e.estaciones[s]);
-    return parseFloat((v.reduce((a,b)=>a+b,0)/v.length).toFixed(1));
-  });
-  chartInstances['c4'] = new Chart(document.getElementById('c4'), {
-    type: 'bar',
-    data: {
-      labels: seasonLabels,
-      datasets: [{
-        label: 'Prendas (prom.)',
-        data: avgSeason,
-        backgroundColor: ['rgba(255,181,71,.7)','rgba(255,120,70,.7)','rgba(100,149,237,.7)','rgba(0,229,197,.7)'],
-        borderColor: ['#FFB547','#FF7846','#6495ED','#00E5C5'],
-        borderWidth: 1, borderRadius: 6,
-      }]
-    },
-    options: CHART_OPTS_BASE
-  });
+  const sLbls   = ['Verano ☀️','Otoño 🍂','Invierno ❄️','Primavera 🌸'];
+  mkChart('c4','bar',{
+    labels: sLbls,
+    datasets:[{ label:'Prendas (prom.)', data: seasons.map(s=>+avg(all.map(e=>e.estaciones[s]||0)).toFixed(1)),
+      backgroundColor:['rgba(255,181,71,.7)','rgba(255,120,70,.7)','rgba(100,149,237,.7)','rgba(0,229,197,.7)'],
+      borderColor:['#FFB547','#FF7846','#6495ED','#00E5C5'], borderWidth:1, borderRadius:6 }]
+  }, CHART_BASE);
 
-  // ── GRÁFICO 5: Peso a basura por género ──
-  const generos = ['f','m','o'];
-  const genLabels = ['Femenino','Masculino','Otro'];
-  const avgBasuraGenero = generos.map(g => {
-    const v = allStats.filter(e=>e.genero===g).map(e=>e.s.pesoDest.basura/1000);
-    return v.length ? parseFloat((v.reduce((a,b)=>a+b,0)/v.length).toFixed(2)) : 0;
-  });
-  chartInstances['c5'] = new Chart(document.getElementById('c5'), {
-    type: 'bar',
-    data: {
-      labels: genLabels,
-      datasets: [{
-        label: 'Kg a basura (prom. anual)',
-        data: avgBasuraGenero,
-        backgroundColor: ['rgba(255,83,170,.6)','rgba(107,159,255,.6)','rgba(255,181,71,.6)'],
-        borderColor: ['#FF53AA','#6B9FFF','#FFB547'],
-        borderWidth: 1, borderRadius: 6,
-      }]
-    },
-    options: CHART_OPTS_BASE
-  });
+  // ── C5: CO₂ total vs descartado por persona ──
+  mkChart('c5','bar',{
+    labels: all.map(e=>e.nombre),
+    datasets:[
+      { label:'CO₂ total (kg)', data:all.map(e=>+e.s.co2Anual.toFixed(2)),
+        backgroundColor:'rgba(167,139,250,.7)', borderColor:'#a78bfa', borderWidth:1, borderRadius:4 },
+      { label:'CO₂ descartado (kg)', data:all.map(e=>+e.s.co2Descartado.toFixed(2)),
+        backgroundColor:'rgba(255,83,112,.6)', borderColor:'#FF5370', borderWidth:1, borderRadius:4 },
+    ]
+  }, CHART_BASE);
 
-  // ── GRÁFICO 6: CO2 total vs CO2 descartado por persona ──
-  chartInstances['c6'] = new Chart(document.getElementById('c6'), {
-    type: 'bar',
-    data: {
-      labels: allStats.map(e => e.nombre),
-      datasets: [
-        {
-          label: 'CO₂ total anual (kg)',
-          data: allStats.map(e => parseFloat(e.s.co2Anual.toFixed(2))),
-          backgroundColor: 'rgba(167,139,250,.7)',
-          borderColor: '#a78bfa', borderWidth: 1, borderRadius: 4,
-        },
-        {
-          label: 'CO₂ del peso descartado (kg)',
-          data: allStats.map(e => parseFloat(e.s.co2Descartado.toFixed(2))),
-          backgroundColor: 'rgba(255,83,112,.6)',
-          borderColor: '#FF5370', borderWidth: 1, borderRadius: 4,
-        },
-      ]
-    },
-    options: CHART_OPTS_BASE
-  });
+  // ── C6: Agua producción vs lavado por persona ──
+  mkChart('c6','bar',{
+    labels: all.map(e=>e.nombre),
+    datasets:[
+      { label:'Agua producción (L)', data:all.map(e=>+e.s.aguaProd.toFixed(0)),
+        backgroundColor:'rgba(107,159,255,.7)', borderColor:'#6B9FFF', borderWidth:1, borderRadius:4 },
+      { label:'Agua lavado (L)', data:all.map(e=>+e.s.aguaLavado.toFixed(0)),
+        backgroundColor:'rgba(0,229,197,.5)', borderColor:'#00E5C5', borderWidth:1, borderRadius:4 },
+    ]
+  }, CHART_BASE);
 
-  // ── GRÁFICO 7: Scatter gasto anual vs usos promedio ──
-  const scatterData = allStats
-    .filter(e => e.gastoMensual > 0 && e.usosPromedio != null && e.usosPromedio > 0)
+  // ── C7: Peso a basura por género ──
+  const gens  = ['f','m','o'];
+  const gLbls = ['Femenino','Masculino','Otro'];
+  mkChart('c7','bar',{
+    labels: gLbls,
+    datasets:[{ label:'kg a basura (prom.)',
+      data: gens.map(g => {
+        const v = all.filter(e=>e.genero===g).map(e=>e.s.pesoDest.basura);
+        return v.length ? +avg(v).toFixed(2) : 0;
+      }),
+      backgroundColor:['rgba(255,83,170,.6)','rgba(107,159,255,.6)','rgba(255,181,71,.6)'],
+      borderColor:['#FF53AA','#6B9FFF','#FFB547'], borderWidth:1, borderRadius:6 }]
+  }, CHART_BASE);
+
+  // ── C8: Scatter gasto anual vs usos ──
+  const scData = all
+    .filter(e => e.gastoMensual > 0 && (e.usosPromedio||0) > 0)
     .map(e => ({
-      x: parseFloat((e.gastoMensual * 12).toFixed(2)),
+      x: +(e.gastoMensual * 12).toFixed(2),
       y: e.usosPromedio,
-      r: e.s.costoXUso != null ? Math.max(5, Math.min(20, e.s.costoXUso * 8)) : 7,
-      nombre: e.nombre,
+      r: e.s.costoUso != null ? Math.max(5, Math.min(22, e.s.costoUso * 10)) : 7,
+      _n: e.nombre, _cxu: e.s.costoUso
     }));
-
-  chartInstances['c7'] = new Chart(document.getElementById('c7'), {
-    type: 'bubble',
-    data: {
-      datasets: [{
-        label: 'Encuestado (tamaño = costo/uso)',
-        data: scatterData,
-        backgroundColor: 'rgba(0,229,197,.55)',
-        borderColor: '#00E5C5',
-        borderWidth: 1,
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { labels: { color: '#7A8AAF', font: { family: "'Space Mono'", size: 11 } } },
-        tooltip: {
-          backgroundColor: '#1C2640', titleColor: '#E8EDF8', bodyColor: '#7A8AAF',
-          borderColor: '#2A3555', borderWidth: 1,
-          callbacks: {
-            label: ctx => {
-              const d = ctx.raw;
-              const enc = scatterData[ctx.dataIndex];
-              const cxu = enc && allStats.find(e=>e.nombre===enc.nombre)?.s?.costoXUso;
-              return `${enc?.nombre || ''} | Gasto: $${d.x} | Usos: ${d.y}${cxu!=null?' | Costo/uso: $'+cxu.toFixed(2):''}`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          title: { display: true, text: 'Gasto anual (USD)', color: '#7A8AAF', font: { family: "'Space Mono'", size: 10 } },
-          ticks: { color: '#7A8AAF', font: { family: "'Space Mono'", size: 10 } },
-          grid: { color: 'rgba(42,53,85,.4)' }
-        },
-        y: {
-          title: { display: true, text: 'Usos promedio por prenda', color: '#7A8AAF', font: { family: "'Space Mono'", size: 10 } },
-          ticks: { color: '#7A8AAF', font: { family: "'Space Mono'", size: 10 } },
-          grid: { color: 'rgba(42,53,85,.4)' }
-        }
+  mkChart('c8','bubble',{
+    datasets:[{ label:'Encuestado',
+      data: scData,
+      backgroundColor:'rgba(0,229,197,.5)', borderColor:'#00E5C5', borderWidth:1 }]
+  },{
+    responsive: true,
+    plugins:{
+      legend:{ labels:{ color:'#7A8AAF', font:{family:"'Space Mono'",size:10} } },
+      tooltip:{
+        backgroundColor:'#1C2640', titleColor:'#E8EDF8', bodyColor:'#7A8AAF',
+        borderColor:'#2A3555', borderWidth:1,
+        callbacks:{ label: ctx => {
+          const d = ctx.raw;
+          return `${d._n} | Gasto: $${d.x}/año | Usos: ${d.y}${d._cxu!=null?' | $/uso: $'+d._cxu.toFixed(2):''}`;
+        }}
       }
+    },
+    scales:{
+      x:{ title:{display:true,text:'Gasto anual (USD)',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},
+          ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}}, grid:{color:'rgba(42,53,85,.4)'} },
+      y:{ title:{display:true,text:'Usos por prenda',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},
+          ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}}, grid:{color:'rgba(42,53,85,.4)'} },
     }
   });
 }
 
-// ═══════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  UI HELPERS
-// ═══════════════════════════════════════════════════
-window.showTab = function(tab, event) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+// ══════════════════════════════════════════════
+window.showTab = function(tab, e) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
-  if (event && event.currentTarget) event.currentTarget.classList.add('active');
-  if (tab === 'estadisticas') actualizarEstadisticas();
-  if (tab === 'graficos')     actualizarGraficos();
+  if (e?.currentTarget) e.currentTarget.classList.add('active');
+  else document.querySelector(`nav button[onclick*="'${tab}'"]`)?.classList.add('active');
+  if (tab === 'estadisticas') renderStats();
+  if (tab === 'graficos')     renderCharts();
 };
 
-function actualizarBadge() {
-  document.getElementById('badge-count').textContent = encuestados.length;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
 }
 
-// ═══════════════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════════════
-adminMode = localStorage.getItem(ADMIN_KEY) === 'true';
-updateAdminView();
+// ── Admin init ──
+document.getElementById('btn-admin').classList.toggle('active', adminMode);
+document.getElementById('admin-lbl').style.display = adminMode ? 'inline' : 'none';
+document.getElementById('btn-clear').style.display = adminMode ? 'inline-block' : 'none';
+
+// ── Init ──
 initForm();
-iniciarListener();
+updAlgodonLabel();
+startListener();
 
 </script>
 </body>
