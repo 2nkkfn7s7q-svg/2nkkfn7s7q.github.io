@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FastStats · Fast Fashion Dashboard</title>
+<title>FastStats · Fast Fashion Dashboard v3.1</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -41,10 +41,15 @@ header {
   color: var(--accent); letter-spacing: -0.5px;
   padding: 18px 28px 18px 0;
   border-right: 1px solid var(--border);
-  flex-shrink: 0; display: flex; align-items: center;
+  flex-shrink: 0; display: flex; align-items: center; gap: 8px;
 }
 .logo span { color: var(--text); }
 .logo sub { font-size: 10px; color: var(--muted); font-weight: 400; letter-spacing: 0.1em; margin-left: 4px; vertical-align: middle; }
+.version-chip {
+  font-size: 9px; background: rgba(0,229,197,.12); border: 1px solid rgba(0,229,197,.3);
+  color: var(--accent); padding: 2px 7px; border-radius: 99px; letter-spacing: .06em;
+  font-family: var(--font-d);
+}
 nav { display: flex; gap: 0; align-items: stretch; padding-left: 8px; flex: 1; }
 nav button {
   background: none; border: none; cursor: pointer;
@@ -159,6 +164,8 @@ main { padding: 28px 40px; max-width: 1400px; }
 .info-box b { color: var(--accent); }
 .info-box.warn { background: rgba(255,83,112,.05); border-color: rgba(255,83,112,.18); }
 .info-box.warn b { color: var(--accent2); }
+.info-box.amber { background: rgba(255,181,71,.05); border-color: rgba(255,181,71,.18); }
+.info-box.amber b { color: var(--accent3); }
 
 /* Submit */
 .btn-primary {
@@ -262,6 +269,7 @@ tr:hover td { background: rgba(28,38,64,.7); }
   padding: 5px 16px; text-align: center; letter-spacing: .05em;
 }
 #fb-bar.show { display: block; }
+#fb-bar.error { background: rgba(255,83,112,.1); border-color: var(--accent2); color: var(--accent2); }
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 720px) {
@@ -271,6 +279,19 @@ tr:hover td { background: rgba(28,38,64,.7); }
   .chart-card.full { grid-column: 1; }
   nav { padding-left: 0; overflow-x: auto; width: 100%; }
 }
+
+/* ─── METODOLOGÍA ─── */
+.metod-section { margin-top: 32px; }
+.metod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 12px; }
+.metod-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px;
+}
+.metod-card h4 { font-family: var(--font-h); font-size: 12px; font-weight: 700; margin-bottom: 8px; color: var(--accent); }
+.metod-card p, .metod-card li { font-size: 10px; color: var(--muted); line-height: 1.7; }
+.metod-card ul { padding-left: 14px; }
+.metod-card li { margin-bottom: 3px; }
+.metod-card .src { font-size: 9px; color: rgba(122,138,175,.5); margin-top: 8px; border-top: 1px solid var(--border); padding-top: 6px; }
 </style>
 </head>
 <body>
@@ -278,12 +299,13 @@ tr:hover td { background: rgba(28,38,64,.7); }
 <div id="fb-bar">Conectando con Firebase…</div>
 
 <header>
-  <div class="logo">FAST<span>STATS</span><sub>v3</sub></div>
+  <div class="logo">FAST<span>STATS</span><sub>v3.1</sub> <span class="version-chip">CIENTÍFICO</span></div>
   <nav>
     <button class="active" onclick="showTab('cargar',event)">Cargar datos</button>
     <button onclick="showTab('tabla',event)">Tabla <span class="counter-badge" id="badge-n">0</span></button>
     <button onclick="showTab('estadisticas',event)">Estadísticas</button>
     <button onclick="showTab('graficos',event)">Gráficos</button>
+    <button onclick="showTab('metodologia',event)">Metodología</button>
   </nav>
   <div class="header-right">
     <button class="btn-danger-sm" id="btn-clear" style="display:none" onclick="clearAll()">Borrar todo</button>
@@ -329,8 +351,9 @@ tr:hover td { background: rgba(28,38,64,.7); }
       <div class="range-row"><span class="range-hint">Reduce CO₂ un ~80% por prenda</span><span class="range-val" id="rv-segunda">0%</span></div>
     </div>
     <div class="field">
-      <label>Usos entre lavados (↑ = menos microplásticos)</label>
-      <input type="number" id="f-lavado" min="1" value="1" placeholder="ej: 2">
+      <label>Usos entre lavados (↑ = menos agua)</label>
+      <input type="number" id="f-lavado" min="1" value="3" placeholder="ej: 3">
+      <div class="range-row"><span class="range-hint">Promedio real: 2–4 usos</span></div>
     </div>
   </div>
 
@@ -355,10 +378,10 @@ tr:hover td { background: rgba(28,38,64,.7); }
 
   <div class="st">Composición de materiales</div>
   <div class="info-box">
-    💡 Completá estas tres preguntas para calcular correctamente la <b>huella de CO₂</b> y el <b>consumo de agua</b>.
-    Los factores usados son: Sintético <b>8.5 kg CO₂/kg</b> · Algodón <b>5.5 kg CO₂/kg</b> · Otros naturales <b>4.5 kg CO₂/kg</b>
-    · Agua: Sintético <b>1 000 L/kg</b> · Algodón <b>4 000 L/kg</b> · Otros <b>1 500 L/kg</b>.
-    La segunda mano reduce la huella de producción un <b>80%</b> (solo se cuenta el impacto de la prenda nueva restante).
+    💡 Completá estas preguntas para calcular <b>huella de CO₂</b> y <b>consumo de agua</b>.<br>
+    Factores CO₂ (Higg MSI 2023): Sintético <b>8.5 kg CO₂/kg</b> · Algodón <b>5.5 kg CO₂/kg</b> · Otros naturales <b>4.5 kg CO₂/kg</b><br>
+    Factores agua (Water Footprint Network): Sintético <b>300 L/kg</b> · Algodón <b>4 000 L/kg</b> · Otros <b>1 500 L/kg</b> — más <b>15 L</b> por lavado adicional.<br>
+    La segunda mano reduce el impacto de producción un <b>80%</b> (solo rige sobre producción, no sobre lavado).
   </div>
   <div class="form-grid">
     <div class="field">
@@ -400,12 +423,13 @@ tr:hover td { background: rgba(28,38,64,.7); }
           <th>Sint.</th><th>Algodón</th>
           <th>Gasto anual</th><th>Usos/prenda</th><th>Vida útil (m)</th>
           <th>Costo/uso</th><th>Rotación /año</th>
-          <th>CO₂ anual (kg)</th><th>Agua (L)</th>
+          <th>CO₂ anual (kg)</th><th>CO₂/uso (g)</th>
+          <th>Agua prod. (L)</th><th>Agua lav. (L)</th><th>Agua total (L)</th><th>Agua/uso (L)</th>
           <th></th>
         </tr>
       </thead>
       <tbody id="tabla-body">
-        <tr><td colspan="21"><div class="empty"><div class="ei">📋</div>Aún no hay encuestados</div></td></tr>
+        <tr><td colspan="25"><div class="empty"><div class="ei">📋</div>Aún no hay encuestados</div></td></tr>
       </tbody>
     </table>
   </div>
@@ -426,13 +450,104 @@ tr:hover td { background: rgba(28,38,64,.7); }
   </div>
 </div>
 
+<!-- ════════════ TAB METODOLOGÍA ════════════ -->
+<div id="tab-metodologia" class="tab">
+  <div class="st">Fundamentos científicos y supuestos del modelo</div>
+
+  <div class="info-box amber">
+    ⚠️ <b>Limitaciones importantes:</b> Este modelo usa factores promedio globales. Los valores reales dependen de la región de producción, el proceso exacto de fabricación, el tipo de cultivo de algodón (irrigado vs. lluvia), y el mix energético. Las estimaciones son orientativas para educación y comparación relativa.
+  </div>
+
+  <div class="metod-grid">
+    <div class="metod-card">
+      <h4>💨 CO₂ — Factores de emisión</h4>
+      <ul>
+        <li>Sintético (poliéster/nylon): <b style="color:var(--text)">8.5 kg CO₂/kg</b></li>
+        <li>Algodón convencional: <b style="color:var(--text)">5.5 kg CO₂/kg</b></li>
+        <li>Otros naturales (lino, lana, viscosa): <b style="color:var(--text)">4.5 kg CO₂/kg</b></li>
+        <li>El factor se pondera según la mezcla declarada por el encuestado</li>
+        <li>Segunda mano reduce el impacto de <i>producción</i> un 80% (el 20% restante cubre transporte y acondicionamiento)</li>
+      </ul>
+      <div class="src">Fuente: Higg Materials Sustainability Index (MSI) 2023 · Quantis Measuring Fashion Report</div>
+    </div>
+
+    <div class="metod-card">
+      <h4>💧 Agua — Producción (corregido v3.1)</h4>
+      <ul>
+        <li>Sintético: <b style="color:var(--text)">300 L/kg</b> de prenda terminada</li>
+        <li>Algodón: <b style="color:var(--text)">4 000 L/kg</b> de prenda terminada</li>
+        <li>Otros naturales: <b style="color:var(--text)">1 500 L/kg</b> de prenda terminada</li>
+        <li>El clásico "10 000 L por jean" es por kg de fibra cruda pre-procesada; para prenda terminada se usan factores reales de huella hídrica</li>
+        <li>La segunda mano reduce el agua de producción en el mismo factor (80%) que el CO₂</li>
+      </ul>
+      <div class="src">Fuente: Water Footprint Network · Chapagain & Hoekstra (2006) — actualizado con datos de prenda terminada</div>
+    </div>
+
+    <div class="metod-card">
+      <h4>🫧 Agua — Lavado</h4>
+      <ul>
+        <li><b style="color:var(--text)">15 L por lavado prorrateado por prenda</b> (lavadora doméstica ~50 L, carga típica ~3.5 kg de ropa)</li>
+        <li>Fórmula: Lavados/prenda = Usos/prenda ÷ Usos entre lavados</li>
+        <li>Total lavados anuales = Cantidad anual × lavados/prenda</li>
+        <li>Agua lavado ≠ se reduce por segunda mano (el impacto de uso es del comprador actual)</li>
+        <li>Default "usos entre lavados" = 3 (más realista que 1)</li>
+      </ul>
+      <div class="src">Fuente: Stamminger et al. (2012) Household Laundry · Energy & Resource Use in Households</div>
+    </div>
+
+    <div class="metod-card">
+      <h4>🏋️ Pesos unitarios por prenda</h4>
+      <ul>
+        <li>Remera: 160 g · Vestido/falda: 200 g</li>
+        <li>Short/bermuda: 170 g · Ropa de baño: 140 g</li>
+        <li>Accesorio/bolso: 230 g · Calzado (par): 580 g</li>
+        <li>Campera/abrigo: 420 g · Pantalón/jean: 580 g <span style="color:var(--accent3)">(corregido de 650g)</span></li>
+        <li>Buzo/hoodie: 480 g · Ropa interior/medias: 70 g</li>
+      </ul>
+      <div class="src">Fuente: Mediciones propias + promedios de retail fast fashion (H&M, Zara product specs)</div>
+    </div>
+
+    <div class="metod-card">
+      <h4>♻️ Descarte y segunda mano</h4>
+      <ul>
+        <li>Muy poco: 33% del peso anual se descarta</li>
+        <li>Medio: 50% del peso anual se descarta</li>
+        <li>Mucho: 67% del peso anual se descarta</li>
+        <li>El CO₂ del descarte usa el mismo factor de mezcla ponderado, <i>sin</i> multiplicar por factorProd (el impacto ya ocurrió en producción)</li>
+        <li>Destino del descarte distribuye el peso entre: basura, donado, vendido, reciclado, guardado</li>
+      </ul>
+      <div class="src">Fuente: Ellen MacArthur Foundation — A New Textiles Economy (2017)</div>
+    </div>
+
+    <div class="metod-card">
+      <h4>📐 Métricas por uso (nuevas en v3.1)</h4>
+      <ul>
+        <li><b style="color:var(--text)">CO₂/uso (g)</b> = CO₂ anual × 1000 ÷ (cantidad anual × usos/prenda)</li>
+        <li><b style="color:var(--text)">Agua/uso (L)</b> = Agua total ÷ (cantidad anual × usos/prenda)</li>
+        <li>Estas métricas permiten comparar el verdadero costo ambiental por "evento de uso" independientemente del volumen de compras</li>
+        <li>Costo/uso (USD) = Precio promedio/prenda ÷ usos/prenda</li>
+      </ul>
+      <div class="src">Metodología: Indicadores de circularidad inspirados en Ellen MacArthur Foundation Circulytics</div>
+    </div>
+  </div>
+
+  <div class="st metod-section">Correcciones aplicadas en v3.1</div>
+  <div class="info-box">
+    <b>Agua de sintéticos:</b> Corregido de 1 000 L/kg → <b>300 L/kg</b> (la producción de poliéster tiene baja huella hídrica directa; el original sobreestimaba).<br>
+    <b>Pantalón/jean:</b> Peso ajustado de 650 g → <b>580 g</b> (promedio más representativo de fast fashion).<br>
+    <b>CO₂ del descarte:</b> Ya no se multiplica por factorProd — el CO₂ de producción ya ocurrió independientemente de dónde termina la prenda.<br>
+    <b>Usos entre lavados:</b> Default cambiado de 1 → <b>3</b> (más realista según estudios de comportamiento).<br>
+    <b>Nuevas métricas:</b> CO₂/uso y Agua/uso en tabla y estadísticas.
+  </div>
+</div>
+
 </main>
 
 <div id="toast"></div>
 
 <script type="module">
 // ══════════════════════════════════════════════
-//  FIREBASE
+//  FIREBASE — con manejo de reconexión
 // ══════════════════════════════════════════════
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
@@ -452,8 +567,7 @@ const db   = getFirestore(FB);
 const COLL = "encuestados";
 
 // ══════════════════════════════════════════════
-//  CONSTANTES Y FACTORES
-//  ─ Fuentes: Higg MSI, IPCC, Water Footprint Network ─
+//  CONSTANTES Y FACTORES (v3.1 REVISADOS)
 // ══════════════════════════════════════════════
 const TIPOS = {
   remera:    { n: "Remeras / Camisetas",    p: 160 },
@@ -463,13 +577,12 @@ const TIPOS = {
   accesorio: { n: "Accesorios (bolsos…)",   p: 230 },
   calzado:   { n: "Calzado (par)",          p: 580 },
   campera:   { n: "Camperas / Abrigos",     p: 420 },
-  pantalon:  { n: "Pantalones / Jeans",     p: 650 },
+  pantalon:  { n: "Pantalones / Jeans",     p: 580 },  // v3.1: 650→580g
   buzo:      { n: "Buzos / Hoodies",        p: 480 },
   interior:  { n: "Ropa Interior / Medias", p:  70 },
 };
 
-// Peso promedio global (fallback cuando el encuestado no tiene datos de 30d)
-const PESO_GLOBAL_G = Object.values(TIPOS).reduce((s,v)=>s+v.p,0) / Object.keys(TIPOS).length; // ~319 g
+const PESO_GLOBAL_G = Object.values(TIPOS).reduce((s,v)=>s+v.p,0) / Object.keys(TIPOS).length;
 
 const DESTINOS = {
   guardado:  { label: "Guardada sin usar",  col: "#7A8AAF" },
@@ -479,35 +592,33 @@ const DESTINOS = {
   basura:    { label: "Tirada a la basura", col: "#FF5370" },
 };
 
-// ─ Factores CO₂ (kg CO₂ / kg de prenda) — Higg MSI 2023 ─
-const CO2_SINT = 8.5;   // poliéster/nylon
-const CO2_ALG  = 5.5;   // algodón convencional
-const CO2_OTRO = 4.5;   // lino, lana, viscosa promedio
+// ─ Factores CO₂ (kg CO₂ / kg prenda) — Higg MSI 2023 ─
+const CO2_SINT = 8.5;
+const CO2_ALG  = 5.5;
+const CO2_OTRO = 4.5;
 
-// ─ Factores agua (L / kg de prenda terminada) — Water Footprint Network ─
-// Nota: el factor clásico de 10 000 L es por kg de fibra cruda ANTES de hilado/teñido.
-// Para prenda terminada el factor realista es ~4 000 L/kg para algodón.
-const AGUA_SINT = 1000;  // bajo consumo en producción, alto en lavado por microplásticos
-const AGUA_ALG  = 4000;  // algodón: proceso húmedo intensivo
+// ─ Factores agua de PRODUCCIÓN (L / kg prenda terminada) — v3.1 CORREGIDOS ─
+// Sintético bajado de 1000→300 L/kg (producción poliéster tiene baja huella hídrica directa)
+const AGUA_SINT = 300;   // poliéster/nylon: bajo consumo directo en producción
+const AGUA_ALG  = 4000;  // algodón: proceso húmedo intensivo (irrigación + teñido)
 const AGUA_OTRO = 1500;  // promedio otros naturales
 
-// ─ Agua por lavado ─
-const LITROS_POR_LAVADO = 15; // lavado doméstico típico (7-8 kg ropa) → ~15 L promedio prorrateado por prenda
+// ─ Agua por lavado prorrateada por prenda ─
+// Lavadora doméstica ≈50 L · carga típica ≈3.5 kg ≈4-6 prendas medianas
+const LITROS_POR_LAVADO = 15;
 
-// ─ Descarte ─
+// ─ Reducción por segunda mano ─
+const REDUCCION_2MANO = 0.8;  // 80% reducción sobre impacto de producción
+
 const FACTORES_DESC = { muy_poco: 1/3, medio: 0.5, mucho: 2/3 };
 const LABELS_DESC   = { muy_poco: "Muy poco (33%)", medio: "Medio (50%)", mucho: "Mucho (67%)" };
-
-// ─ Segunda mano: reducción de impacto de producción ─
-// El 80% del impacto ya fue asignado al propietario anterior.
-const REDUCCION_2MANO = 0.8;
 
 let encuestados = [];
 let charts = {};
 let adminMode = localStorage.getItem('fs_admin') === 'true';
 
 // ══════════════════════════════════════════════
-//  CÁLCULO CENTRAL  ← matemáticamente revisado
+//  CÁLCULO CENTRAL v3.1
 // ══════════════════════════════════════════════
 function calcular(enc) {
 
@@ -520,48 +631,37 @@ function calcular(enc) {
     cant30 += q;
     peso30g += q * v.p;
   }
-
-  // Peso promedio por prenda del período 30d.
-  // CORRECCIÓN v3: usamos el peso promedio de 30d como proxy del "peso promedio
-  // de las prendas que compra esta persona". Solo recurrimos al global si compró 0.
   const pesoProm_g = cant30 > 0 ? peso30g / cant30 : PESO_GLOBAL_G;
 
   // ── 2. Totales anuales ──
-  const est = enc.estaciones;
+  const est = enc.estaciones || {};
   const cantAnual = (est.verano||0) + (est.otono||0) + (est.invierno||0) + (est.primavera||0);
-  // Peso anual en GRAMOS (consistente con pesoProm_g)
   const pesoAnual_g  = cantAnual * pesoProm_g;
   const pesoAnual_kg = pesoAnual_g / 1000;
 
   // ── 3. Composición de materiales ──
-  const pctS = (enc.pctSintetico || 0) / 100;          // fracción sintético
-  const pctN = 1 - pctS;                                 // fracción natural total
-  const pctA = pctN * ((enc.pctAlgodon || 0) / 100);    // fracción algodón (dentro del natural)
-  const pctO = pctN - pctA;                              // fracción otros naturales
+  const pctS = (enc.pctSintetico || 0) / 100;
+  const pctN = 1 - pctS;
+  const pctA = pctN * ((enc.pctAlgodon || 0) / 100);
+  const pctO = pctN - pctA;
 
-  // ── 4. Segunda mano ──
-  // CORRECCIÓN v3: la segunda mano reduce SOLO el impacto de PRODUCCIÓN
-  // de las prendas nuevas NO compradas de segunda mano.
-  // Factor multiplicador para el impacto de producción:
+  // ── 4. Factor segunda mano (solo producción) ──
   const pct2m = (enc.pctSegundaMano || 0) / 100;
-  // Parte "nueva": no segunda mano → impacto total
-  // Parte "segunda mano": solo ~20% del impacto de producción
   const factorProd = (1 - pct2m) + pct2m * (1 - REDUCCION_2MANO); // = 1 - pct2m * 0.8
 
-  // ── 5. CO₂ anual ──
-  // Base: CO₂ de producción de todo lo comprado (por tipo de material)
-  const co2Base = pesoAnual_kg * (pctS * CO2_SINT + pctA * CO2_ALG + pctO * CO2_OTRO);
+  // ── 5. CO₂ anual (producción) ──
+  const co2FactorMezcla = pctS * CO2_SINT + pctA * CO2_ALG + pctO * CO2_OTRO;
+  const co2Base  = pesoAnual_kg * co2FactorMezcla;
   const co2Anual = co2Base * factorProd;
 
   // ── 6. Agua ──
-  // Agua de producción (ajustada por segunda mano)
-  const aguaProd = pesoAnual_kg * (pctS * AGUA_SINT + pctA * AGUA_ALG + pctO * AGUA_OTRO) * factorProd;
+  // Producción: ajustada por segunda mano (solo producción nueva)
+  const aguaFactorMezcla = pctS * AGUA_SINT + pctA * AGUA_ALG + pctO * AGUA_OTRO;
+  const aguaProd = pesoAnual_kg * aguaFactorMezcla * factorProd;
 
-  // Agua de lavado: se calcula sobre el total de prendas (anuales) y su frecuencia de lavado
-  // usosLavado = cada cuántos usos se lava. Si usosLavado=2 y usos=8 → 4 lavados por prenda.
-  // Total lavados = cant. prendas × (usos/prenda ÷ usos_entre_lavados)
+  // Lavado: NO se reduce por segunda mano (el usuario lava igual)
   const usosP   = (enc.usosPromedio  || 0);
-  const usosLav = (enc.usosLavado    || 1);  // nunca 0 → división segura
+  const usosLav = Math.max(1, enc.usosLavado || 3);
   const totalLavados = cantAnual > 0 && usosP > 0
     ? cantAnual * (usosP / usosLav)
     : 0;
@@ -569,8 +669,8 @@ function calcular(enc) {
   const aguaTotal  = aguaProd + aguaLavado;
 
   // ── 7. Descarte y destino ──
-  const factDesc    = FACTORES_DESC[enc.descarte] || 0.5;
-  const pesoDesc_kg = pesoAnual_kg * factDesc;
+  const factDesc       = FACTORES_DESC[enc.descarte] || 0.5;
+  const pesoDesc_kg    = pesoAnual_kg * factDesc;
   const pesoConserv_kg = pesoAnual_kg - pesoDesc_kg;
 
   const pesoDest = {};
@@ -578,29 +678,30 @@ function calcular(enc) {
     pesoDest[k] = pesoDesc_kg * ((enc.destino[k] || 0) / 100);
   }
 
-  // CO₂ asociado al peso descartado (misma mezcla de materiales)
-  const co2FactorMezcla = pctS * CO2_SINT + pctA * CO2_ALG + pctO * CO2_OTRO;
-  const co2Descartado   = pesoDesc_kg * co2FactorMezcla * factorProd;
+  // CO₂ descartado: usa factor de mezcla sin multiplicar por factorProd
+  // (el impacto de producción ya ocurrió cuando se fabricó la prenda)
+  const co2Descartado = pesoDesc_kg * co2FactorMezcla;
 
-  // ── 8. Gasto / costo por uso / rotación ──
-  const gastoAnual = (enc.gastoMensual || 0) * 12;
+  // ── 8. Gasto / economía ──
+  const gastoAnual   = (enc.gastoMensual || 0) * 12;
+  const precioPrenda = cantAnual > 0 && gastoAnual > 0 ? gastoAnual / cantAnual : null;
+  const costoUso     = precioPrenda != null && usosP > 0 ? precioPrenda / usosP : null;
 
-  // Precio promedio por prenda = gasto anual / cantidad anual
-  const precioPrenda = cantAnual > 0 && gastoAnual > 0
-    ? gastoAnual / cantAnual
+  // ── 9. Ciclo de vida ──
+  const vidaM   = enc.vidaUtilMeses || null;
+  const rotacion = vidaM != null && vidaM > 0 ? 12 / vidaM : null;
+
+  // ── 10. Métricas por uso (NUEVAS v3.1) ──
+  const totalUsos = cantAnual > 0 && usosP > 0 ? cantAnual * usosP : null;
+
+  // CO₂ por uso en GRAMOS (más legible que kg)
+  const co2PorUso_g = totalUsos != null && totalUsos > 0
+    ? (co2Anual * 1000) / totalUsos
     : null;
 
-  // Costo por uso = precio por prenda / usos promedio por prenda
-  // Mide cuánto pagaste cada vez que efectivamente usaste una prenda.
-  const costoUso = precioPrenda != null && usosP > 0
-    ? precioPrenda / usosP
-    : null;
-
-  // Rotación anual = cuántas "vidas útiles" de prenda caben en 12 meses
-  // Ej: vida útil = 4 meses → rotación = 3×/año
-  const vidaM = enc.vidaUtilMeses || null;
-  const rotacion = vidaM != null && vidaM > 0
-    ? 12 / vidaM
+  // Agua por uso en litros
+  const aguaPorUso_L = totalUsos != null && totalUsos > 0
+    ? aguaTotal / totalUsos
     : null;
 
   return {
@@ -611,9 +712,9 @@ function calcular(enc) {
     // Composición
     pctS, pctA, pctO,
     // Producción
-    factorProd,
+    factorProd, co2FactorMezcla, aguaFactorMezcla,
     // CO₂
-    co2Anual, co2Descartado, co2FactorMezcla,
+    co2Anual, co2Descartado,
     // Agua
     aguaProd, aguaLavado, aguaTotal,
     // Descarte
@@ -622,6 +723,8 @@ function calcular(enc) {
     gastoAnual, precioPrenda, costoUso,
     // Ciclo
     rotacion,
+    // Por uso (v3.1)
+    totalUsos, co2PorUso_g, aguaPorUso_L,
   };
 }
 
@@ -656,7 +759,6 @@ function initForm() {
   }
 }
 
-// ── Destino sliders: no permiten superar 100% ──
 window.updDestino = function(changed) {
   const keys = Object.keys(DESTINOS);
   let sumOtros = 0;
@@ -684,37 +786,28 @@ window.updDestino = function(changed) {
   }
 };
 
-// ── Range helpers ──
 window.updRange = function(id, unit) {
-  const v = document.getElementById('f-'+id).value;
-  document.getElementById('rv-'+id).textContent = v + unit;
+  document.getElementById('rv-'+id).textContent = document.getElementById('f-'+id).value + unit;
 };
 
 window.updAlgodonLabel = function() {
   const sint = +document.getElementById('f-sint').value;
   const nat  = 100 - sint;
-  document.getElementById('label-alg').textContent =
-    `Del ${nat}% natural: ¿qué % es Algodón?`;
-  document.getElementById('sint-hint').textContent =
-    `Natural restante: ${nat}%`;
+  document.getElementById('label-alg').textContent = `Del ${nat}% natural: ¿qué % es Algodón?`;
+  document.getElementById('sint-hint').textContent  = `Natural restante: ${nat}%`;
 };
 
 // ══════════════════════════════════════════════
 //  AGREGAR ENCUESTADO
 // ══════════════════════════════════════════════
 window.agregarEncuestado = async function() {
-  const btn = document.getElementById('btn-add');
-
+  const btn  = document.getElementById('btn-add');
   const edad = parseInt(document.getElementById('f-edad').value);
-  if (isNaN(edad) || edad < 13 || edad > 21) {
-    alert('Edad válida: entre 13 y 21 años.'); return;
-  }
+  if (isNaN(edad) || edad < 13 || edad > 21) { alert('Edad válida: entre 13 y 21 años.'); return; }
 
   let sumDest = 0;
   for (const k of Object.keys(DESTINOS)) sumDest += +document.getElementById('d-'+k).value;
-  if (sumDest !== 100) {
-    alert(`Los porcentajes de destino deben sumar 100%. Actualmente suman ${sumDest}%.`); return;
-  }
+  if (sumDest !== 100) { alert(`Los porcentajes de destino deben sumar 100%. Actualmente suman ${sumDest}%.`); return; }
 
   const cant30d = {};
   for (const k of Object.keys(TIPOS)) cant30d[k] = Math.max(0, parseInt(document.getElementById('p-'+k).value)||0);
@@ -735,7 +828,7 @@ window.agregarEncuestado = async function() {
       primavera: Math.max(0, parseInt(document.getElementById('f-primavera').value)||0),
     },
     pctSegundaMano: parseInt(document.getElementById('f-segunda').value) || 0,
-    usosLavado:     parseInt(document.getElementById('f-lavado').value)  || 1,
+    usosLavado:     Math.max(1, parseInt(document.getElementById('f-lavado').value) || 3),
     descarte:       document.querySelector('input[name="descarte"]:checked').value,
     destino,
     pctSintetico:   parseInt(document.getElementById('f-sint').value),
@@ -752,7 +845,7 @@ window.agregarEncuestado = async function() {
     resetForm();
   } catch(e) {
     console.error(e);
-    alert('Error Firestore: ' + e.message);
+    alert('Error al guardar: ' + e.message);
   } finally {
     btn.disabled = false; btn.textContent = '+ Agregar encuestado';
   }
@@ -769,7 +862,7 @@ function resetForm() {
     document.getElementById('dv-'+k).textContent = '20%';
   }
   document.getElementById('f-segunda').value = 0; document.getElementById('rv-segunda').textContent = '0%';
-  document.getElementById('f-lavado').value  = 1;
+  document.getElementById('f-lavado').value  = 3;
   document.getElementById('f-sint').value    = 60; document.getElementById('rv-sint').textContent = '60%';
   document.getElementById('f-alg').value     = 60; document.getElementById('rv-alg').textContent = '60%';
   document.getElementById('f-gasto').value  = '';
@@ -820,25 +913,46 @@ window.adminToggle = function() {
 };
 
 // ══════════════════════════════════════════════
-//  SNAPSHOT LISTENER
+//  SNAPSHOT LISTENER con manejo de errores y reconexión
 // ══════════════════════════════════════════════
+let retryCount = 0;
+const MAX_RETRIES = 5;
+
 function startListener() {
   const bar = document.getElementById('fb-bar');
-  bar.classList.add('show');
-  onSnapshot(collection(db, COLL), snap => {
-    encuestados = snap.docs.map(d => ({ ...d.data(), _fid: d.id }))
-      .sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
-    bar.classList.remove('show');
-    document.getElementById('badge-n').textContent = encuestados.length;
-    renderTabla();
-    const active = document.querySelector('.tab.active');
-    if (active?.id === 'tab-estadisticas') renderStats();
-    if (active?.id === 'tab-graficos')     renderCharts();
-  }, err => {
-    bar.textContent = '⚠ Error Firebase: ' + err.message;
-    bar.style.color = 'var(--accent2)';
-    bar.classList.add('show');
-  });
+  bar.className = 'show';
+  bar.textContent = 'Conectando con Firebase…';
+
+  const unsub = onSnapshot(
+    collection(db, COLL),
+    snap => {
+      retryCount = 0;
+      encuestados = snap.docs
+        .map(d => ({ ...d.data(), _fid: d.id }))
+        .sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
+      bar.classList.remove('show');
+      document.getElementById('badge-n').textContent = encuestados.length;
+      renderTabla();
+      const active = document.querySelector('.tab.active');
+      if (active?.id === 'tab-estadisticas') renderStats();
+      if (active?.id === 'tab-graficos')     renderCharts();
+    },
+    err => {
+      // El error WebChannelConnection es transitorio; intentamos reconectar
+      console.warn('Firebase listener error (transitorio):', err.code, err.message);
+      unsub(); // desuscribir
+      if (retryCount < MAX_RETRIES) {
+        retryCount++;
+        const delay = Math.min(2000 * retryCount, 15000);
+        bar.className = 'show error';
+        bar.textContent = `⚠ Conexión interrumpida. Reintentando en ${delay/1000}s… (${retryCount}/${MAX_RETRIES})`;
+        setTimeout(startListener, delay);
+      } else {
+        bar.className = 'show error';
+        bar.textContent = '⚠ No se pudo conectar a Firebase. Recargá la página.';
+      }
+    }
+  );
 }
 
 // ══════════════════════════════════════════════
@@ -850,7 +964,7 @@ const GN = { m:'Masc.', f:'Fem.', o:'Otro' };
 function renderTabla() {
   const tb = document.getElementById('tabla-body');
   if (!encuestados.length) {
-    tb.innerHTML = '<tr><td colspan="21"><div class="empty"><div class="ei">📋</div>Aún no hay encuestados</div></td></tr>';
+    tb.innerHTML = '<tr><td colspan="25"><div class="empty"><div class="ei">📋</div>Aún no hay encuestados</div></td></tr>';
     return;
   }
   tb.innerHTML = encuestados.map(enc => {
@@ -876,47 +990,36 @@ function renderTabla() {
       <td class="tr" style="color:var(--accent3)">${s.costoUso != null ? '$'+s.costoUso.toFixed(2) : '—'}</td>
       <td class="tr" style="color:var(--accent)">${s.rotacion != null ? s.rotacion.toFixed(2)+'×' : '—'}</td>
       <td class="tr" style="color:var(--accent5)">${s.co2Anual.toFixed(2)}</td>
+      <td class="tr" style="color:var(--accent5)">${s.co2PorUso_g != null ? s.co2PorUso_g.toFixed(1)+' g' : '—'}</td>
+      <td class="tr" style="color:var(--accent4)">${s.aguaProd.toFixed(0)}</td>
+      <td class="tr" style="color:var(--accent4)">${s.aguaLavado.toFixed(0)}</td>
       <td class="tr" style="color:var(--accent4)">${s.aguaTotal.toFixed(0)}</td>
+      <td class="tr" style="color:var(--accent4)">${s.aguaPorUso_L != null ? s.aguaPorUso_L.toFixed(1)+' L' : '—'}</td>
       <td>${adminMode && fid ? `<button class="btn-danger-sm" onclick="eliminar('${fid}')">✕</button>` : ''}</td>
     </tr>`;
   }).join('');
 }
 
 // ══════════════════════════════════════════════
-//  ESTADÍSTICAS DESCRIPTIVAS + DS + RANGOS
+//  ESTADÍSTICAS DESCRIPTIVAS
 // ══════════════════════════════════════════════
-
-// Helpers estadísticos
 function mean(a)     { return a.reduce((s,x)=>s+x,0)/a.length; }
 function median(a)   {
-  const s = [...a].sort((x,y)=>x-y), m = Math.floor(s.length/2);
-  return s.length % 2 ? s[m] : (s[m-1]+s[m])/2;
+  const s=[...a].sort((x,y)=>x-y), m=Math.floor(s.length/2);
+  return s.length%2 ? s[m] : (s[m-1]+s[m])/2;
 }
-function variance(a) {
-  const m = mean(a);
-  return a.reduce((s,x)=>s+(x-m)**2,0)/a.length;
-}
+function variance(a) { const m=mean(a); return a.reduce((s,x)=>s+(x-m)**2,0)/a.length; }
 function stddev(a)   { return Math.sqrt(variance(a)); }
 function minv(a)     { return Math.min(...a); }
 function maxv(a)     { return Math.max(...a); }
-function q1(a)       {
-  const s = [...a].sort((x,y)=>x-y);
-  return median(s.slice(0, Math.floor(s.length/2)));
-}
-function q3(a)       {
-  const s = [...a].sort((x,y)=>x-y);
-  const start = Math.ceil(s.length/2);
-  return median(s.slice(start));
-}
-function iqr(a)      { return q3(a) - q1(a); }
-function cv(a)       { return mean(a) !== 0 ? (stddev(a)/Math.abs(mean(a)))*100 : 0; } // coef. variación %
+function q1(a)       { const s=[...a].sort((x,y)=>x-y); return median(s.slice(0,Math.floor(s.length/2))); }
+function q3(a)       { const s=[...a].sort((x,y)=>x-y); return median(s.slice(Math.ceil(s.length/2))); }
+function iqr(a)      { return q3(a)-q1(a); }
+function cv(a)       { return mean(a)!==0 ? (stddev(a)/Math.abs(mean(a)))*100 : 0; }
 
 function fmtRow(label, arr, dec=1, unit='', color='') {
   if (!arr || arr.length === 0) return '';
-  const f = v => {
-    const n = parseFloat(v.toFixed(dec));
-    return (Number.isFinite(n) ? n.toLocaleString('es-AR', {minimumFractionDigits:dec, maximumFractionDigits:dec}) : '—') + unit;
-  };
+  const f = v => (parseFloat(v.toFixed(dec)).toLocaleString('es-AR',{minimumFractionDigits:dec,maximumFractionDigits:dec}))+unit;
   const style = color ? `style="color:${color}"` : '';
   return `<tr>
     <td ${style}>${label}</td>
@@ -931,7 +1034,6 @@ function fmtRow(label, arr, dec=1, unit='', color='') {
     <td style="color:var(--muted)">${cv(arr).toFixed(1)}%</td>
   </tr>`;
 }
-
 function groupHdr(label, color) {
   return `<tr class="group-hdr"><td colspan="10" style="color:${color};border-top:1px solid ${color}22">▸ ${label}</td></tr>`;
 }
@@ -946,15 +1048,15 @@ function renderStats() {
     return;
   }
 
-  const all = encuestados.map(e => calcular(e));
+  const all  = encuestados.map(e => calcular(e));
   const pick = fn => all.map(fn).filter(v => v != null && Number.isFinite(v));
 
-  // KPI cards
-  const nE   = encuestados.length;
+  const nE     = encuestados.length;
   const avgKg  = mean(pick(s=>s.pesoAnual_kg));
   const avgCO2 = mean(pick(s=>s.co2Anual));
   const avgH2O = mean(pick(s=>s.aguaTotal));
-  const avgGas = pick(s=>s.gastoAnual).filter(v=>v>0);
+  const gasArr = pick(s=>s.gastoAnual).filter(v=>v>0);
+  const co2uso = pick(s=>s.co2PorUso_g).filter(v=>v>0);
 
   kRow.innerHTML = `
     <div class="kpi-card"><div class="kpi-label">Encuestados</div>
@@ -965,11 +1067,12 @@ function renderStats() {
       <div class="kpi-value" style="color:var(--accent5)">${avgCO2.toFixed(1)}<span class="kpi-unit">kg CO₂</span></div></div>
     <div class="kpi-card"><div class="kpi-label">Agua promedio</div>
       <div class="kpi-value" style="color:var(--accent4)">${(avgH2O/1000).toFixed(1)}<span class="kpi-unit">m³</span></div></div>
-    ${avgGas.length ? `<div class="kpi-card"><div class="kpi-label">Gasto anual prom.</div>
-      <div class="kpi-value" style="color:var(--accent3)">$${mean(avgGas).toFixed(0)}<span class="kpi-unit">USD</span></div></div>` : ''}
+    ${co2uso.length ? `<div class="kpi-card"><div class="kpi-label">CO₂ por uso (prom.)</div>
+      <div class="kpi-value" style="color:var(--accent5)">${mean(co2uso).toFixed(1)}<span class="kpi-unit">g CO₂</span></div></div>` : ''}
+    ${gasArr.length ? `<div class="kpi-card"><div class="kpi-label">Gasto anual prom.</div>
+      <div class="kpi-value" style="color:var(--accent3)">$${mean(gasArr).toFixed(0)}<span class="kpi-unit">USD</span></div></div>` : ''}
   `;
 
-  // Tabla de estadísticas
   const tipoRows = Object.entries(TIPOS).map(([k,v]) =>
     fmtRow(`${v.n} — 30d`, pick(s=>s.pesoPorTipo[k]||0), 0, ' g')
   ).join('');
@@ -1000,6 +1103,7 @@ function renderStats() {
         ${fmtRow('% Material sintético', encuestados.map(e=>e.pctSintetico), 1, '%')}
         ${fmtRow('% Algodón (del natural)', all.map(s=>s.pctA*100), 1, '%')}
         ${fmtRow('% Segunda mano', encuestados.map(e=>e.pctSegundaMano||0), 1, '%')}
+        ${fmtRow('Usos entre lavados', encuestados.map(e=>Math.max(1,e.usosLavado||3)), 1, ' usos')}
 
         ${groupHdr('COMPRAS — ÚLTIMOS 30 DÍAS', '#00E5C5')}
         ${fmtRow('Cantidad total', pick(s=>s.cant30), 1, ' prendas')}
@@ -1010,10 +1114,10 @@ function renderStats() {
         ${groupHdr('COMPRAS — AÑO COMPLETO', '#00E5C5')}
         ${fmtRow('Cantidad anual', pick(s=>s.cantAnual), 1, ' prendas')}
         ${fmtRow('Peso anual total', pick(s=>s.pesoAnual_kg), 2, ' kg')}
-        ${fmtRow('Verano', encuestados.map(e=>e.estaciones.verano||0), 1, ' prendas')}
-        ${fmtRow('Otoño', encuestados.map(e=>e.estaciones.otono||0), 1, ' prendas')}
-        ${fmtRow('Invierno', encuestados.map(e=>e.estaciones.invierno||0), 1, ' prendas')}
-        ${fmtRow('Primavera', encuestados.map(e=>e.estaciones.primavera||0), 1, ' prendas')}
+        ${fmtRow('Verano', encuestados.map(e=>(e.estaciones||{}).verano||0), 1, ' prendas')}
+        ${fmtRow('Otoño', encuestados.map(e=>(e.estaciones||{}).otono||0), 1, ' prendas')}
+        ${fmtRow('Invierno', encuestados.map(e=>(e.estaciones||{}).invierno||0), 1, ' prendas')}
+        ${fmtRow('Primavera', encuestados.map(e=>(e.estaciones||{}).primavera||0), 1, ' prendas')}
 
         ${groupHdr('DESCARTE Y DESTINO — ESTIMACIÓN ANUAL', '#FF5370')}
         ${fmtRow('Factor de descarte', pick(s=>s.factDesc*100), 1, '%')}
@@ -1025,13 +1129,17 @@ function renderStats() {
         ${fmtRow('Peso → Reciclado', pick(s=>s.pesoDest.reciclado), 2, ' kg')}
         ${fmtRow('Peso → Guardado sin usar', pick(s=>s.pesoDest.guardado), 2, ' kg')}
 
-        ${groupHdr('HUELLA AMBIENTAL — CO₂ Y AGUA', '#a78bfa')}
-        ${fmtRow('CO₂ anual total', pick(s=>s.co2Anual), 2, ' kg CO₂', 'var(--accent5)')}
+        ${groupHdr('HUELLA AMBIENTAL — CO₂', '#a78bfa')}
+        ${fmtRow('CO₂ anual total (producción)', pick(s=>s.co2Anual), 2, ' kg CO₂', 'var(--accent5)')}
         ${fmtRow('CO₂ del peso descartado', pick(s=>s.co2Descartado), 2, ' kg CO₂', 'var(--accent5)')}
-        ${fmtRow('Factor CO₂ mezclado ponderado', pick(s=>s.co2FactorMezcla), 2, ' kg CO₂/kg')}
+        ${fmtRow('Factor CO₂ mezcla ponderada', pick(s=>s.co2FactorMezcla), 2, ' kg CO₂/kg')}
+        ${fmtRow('CO₂ por uso ★', pick(s=>s.co2PorUso_g).filter(v=>v>0), 2, ' g CO₂', 'var(--accent5)')}
+
+        ${groupHdr('HUELLA AMBIENTAL — AGUA', '#6B9FFF')}
         ${fmtRow('Agua producción (ajust. 2ª mano)', pick(s=>s.aguaProd), 0, ' L', 'var(--accent4)')}
-        ${fmtRow('Agua lavado (anual)', pick(s=>s.aguaLavado), 0, ' L', 'var(--accent4)')}
+        ${fmtRow('Agua lavado anual', pick(s=>s.aguaLavado), 0, ' L', 'var(--accent4)')}
         ${fmtRow('Agua TOTAL anual', pick(s=>s.aguaTotal), 0, ' L', 'var(--accent4)')}
+        ${fmtRow('Agua por uso ★', pick(s=>s.aguaPorUso_L).filter(v=>v>0), 2, ' L', 'var(--accent4)')}
 
         ${groupHdr('CICLO DE VIDA, GASTO Y ECONOMÍA', '#FFB547')}
         ${fmtRow('Gasto mensual', pick(s=>s.gastoAnual/12).filter(v=>v>0), 2, ' USD', 'var(--accent3)')}
@@ -1040,18 +1148,12 @@ function renderStats() {
         ${fmtRow('Usos promedio/prenda', encuestados.map(e=>e.usosPromedio).filter(v=>v!=null&&v>0), 1, ' veces')}
         ${fmtRow('Vida útil promedio', encuestados.map(e=>e.vidaUtilMeses).filter(v=>v!=null&&v>0), 1, ' meses')}
         ${fmtRow('Rotación anual', pick(s=>s.rotacion).filter(v=>v!=null), 2, '×/año', 'var(--accent)')}
-        ${fmtRow('Costo por uso', pick(s=>s.costoUso).filter(v=>v!=null), 3, ' USD', 'var(--accent3)')}
+        ${fmtRow('Costo por uso ★', pick(s=>s.costoUso).filter(v=>v!=null), 3, ' USD', 'var(--accent3)')}
 
       </tbody>
     </table>
+    <p style="font-size:10px;color:var(--muted);margin-top:10px">★ Requiere que el encuestado haya completado los campos de usos/prenda</p>
   </div>`;
-
-  // Corregir la fila de edad que usa el workaround
-  // Reemplazar la fila duplicada "Edad"
-  const rows = cont.querySelectorAll('.stats-tbl tbody tr');
-  rows.forEach(r => {
-    if (r.cells[0]?.textContent === 'Edad') r.remove();
-  });
 }
 
 // ══════════════════════════════════════════════
@@ -1072,7 +1174,6 @@ const CHART_BASE = {
 function destroyChart(id) {
   if (charts[id]) { charts[id].destroy(); delete charts[id]; }
 }
-
 function mkChart(id, type, data, opts) {
   destroyChart(id);
   charts[id] = new Chart(document.getElementById(id), { type, data, options: opts });
@@ -1084,7 +1185,6 @@ function renderCharts() {
     cont.innerHTML = '<div class="empty"><div class="ei">📈</div>Cargá encuestados para ver gráficos</div>';
     return;
   }
-
   Object.keys(charts).forEach(destroyChart);
 
   cont.innerHTML = `
@@ -1110,13 +1210,13 @@ function renderCharts() {
         <canvas id="c4"></canvas>
       </div>
       <div class="chart-card">
-        <h3>CO₂ anual por encuestado</h3>
-        <p>Total producción vs. porción descartada (kg CO₂)</p>
+        <h3>CO₂ anual: producción vs. descarte — por encuestado</h3>
+        <p>kg CO₂ (nota: descarte ya no multiplica factorProd)</p>
         <canvas id="c5"></canvas>
       </div>
       <div class="chart-card">
-        <h3>Consumo de agua anual</h3>
-        <p>Producción vs. lavado (litros) — por encuestado</p>
+        <h3>Agua anual: producción vs. lavado — por encuestado</h3>
+        <p>Litros (factores v3.1 corregidos)</p>
         <canvas id="c6"></canvas>
       </div>
       <div class="chart-card">
@@ -1125,43 +1225,46 @@ function renderCharts() {
         <canvas id="c7"></canvas>
       </div>
       <div class="chart-card">
-        <h3>Gasto anual vs. Usos por prenda</h3>
-        <p>Scatter — tamaño del punto = costo por uso</p>
+        <h3>CO₂ por uso vs. Agua por uso</h3>
+        <p>Métricas de intensidad ambiental por evento de uso (★ solo encuestados con datos completos)</p>
         <canvas id="c8"></canvas>
+      </div>
+      <div class="chart-card full">
+        <h3>Gasto anual vs. Usos por prenda — Bubble chart</h3>
+        <p>Tamaño del punto = costo por uso (USD)</p>
+        <canvas id="c9"></canvas>
       </div>
     </div>`;
 
   const all = encuestados.map(e => ({ ...e, s: calcular(e) }));
+  const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
 
-  // Función auxiliar para promedio de array
-  const avg = arr => arr.reduce((a,b)=>a+b,0) / arr.length;
-
-  // ── C1: Peso por tipo (30d) promedio ──
+  // C1: Peso por tipo (30d) promedio
   const avgTipo = Object.keys(TIPOS).map(k => avg(all.map(e => e.s.pesoPorTipo[k]||0)));
   mkChart('c1','bar',{
     labels: Object.values(TIPOS).map(v => v.n.split('/')[0].trim()),
-    datasets: [{ label:'g (prom.)', data: avgTipo.map(v=>+v.toFixed(1)),
+    datasets:[{ label:'g (prom.)', data:avgTipo.map(v=>+v.toFixed(1)),
       backgroundColor:'rgba(0,229,197,.7)', borderColor:'#00E5C5', borderWidth:1, borderRadius:5 }]
   },{ ...CHART_BASE, indexAxis:'y' });
 
-  // ── C2: Destino descarte (Doughnut) ──
-  const avgDest = Object.keys(DESTINOS).map(k => avg(all.map(e => e.s.pesoDest[k])));
+  // C2: Destino (Doughnut)
+  const avgDest = Object.keys(DESTINOS).map(k => avg(all.map(e=>e.s.pesoDest[k])));
   mkChart('c2','doughnut',{
-    labels: Object.values(DESTINOS).map(d => d.label),
-    datasets: [{ data: avgDest.map(v=>+v.toFixed(3)),
-      backgroundColor: Object.values(DESTINOS).map(d => d.col+'BB'),
-      borderColor: Object.values(DESTINOS).map(d => d.col), borderWidth:2 }]
+    labels: Object.values(DESTINOS).map(d=>d.label),
+    datasets:[{ data:avgDest.map(v=>+v.toFixed(3)),
+      backgroundColor:Object.values(DESTINOS).map(d=>d.col+'BB'),
+      borderColor:Object.values(DESTINOS).map(d=>d.col), borderWidth:2 }]
   },{
-    responsive: true,
-    plugins: {
-      legend: { position:'bottom', labels: { color:'#7A8AAF', font:{family:"'Space Mono'",size:10}, padding:10 } },
-      tooltip: { backgroundColor:'#1C2640', titleColor:'#E8EDF8', bodyColor:'#7A8AAF', borderColor:'#2A3555', borderWidth:1 }
+    responsive:true,
+    plugins:{
+      legend:{position:'bottom',labels:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10},padding:10}},
+      tooltip:{backgroundColor:'#1C2640',titleColor:'#E8EDF8',bodyColor:'#7A8AAF',borderColor:'#2A3555',borderWidth:1}
     }
   });
 
-  // ── C3: Comprado vs Descartado vs Basura por persona ──
+  // C3: Comprado vs Descartado vs Basura
   mkChart('c3','bar',{
-    labels: all.map(e=>e.nombre),
+    labels:all.map(e=>e.nombre),
     datasets:[
       { label:'Comprado (kg/año)', data:all.map(e=>+e.s.pesoAnual_kg.toFixed(2)),
         backgroundColor:'rgba(0,229,197,.65)', borderColor:'#00E5C5', borderWidth:1, borderRadius:4 },
@@ -1172,30 +1275,29 @@ function renderCharts() {
     ]
   }, CHART_BASE);
 
-  // ── C4: Compras por estación ──
-  const seasons = ['verano','otono','invierno','primavera'];
-  const sLbls   = ['Verano ☀️','Otoño 🍂','Invierno ❄️','Primavera 🌸'];
+  // C4: Estaciones
   mkChart('c4','bar',{
-    labels: sLbls,
-    datasets:[{ label:'Prendas (prom.)', data: seasons.map(s=>+avg(all.map(e=>e.estaciones[s]||0)).toFixed(1)),
+    labels:['Verano ☀️','Otoño 🍂','Invierno ❄️','Primavera 🌸'],
+    datasets:[{ label:'Prendas (prom.)',
+      data:['verano','otono','invierno','primavera'].map(s=>+avg(all.map(e=>(e.estaciones||{})[s]||0)).toFixed(1)),
       backgroundColor:['rgba(255,181,71,.7)','rgba(255,120,70,.7)','rgba(100,149,237,.7)','rgba(0,229,197,.7)'],
       borderColor:['#FFB547','#FF7846','#6495ED','#00E5C5'], borderWidth:1, borderRadius:6 }]
   }, CHART_BASE);
 
-  // ── C5: CO₂ total vs descartado por persona ──
+  // C5: CO₂ producción vs descarte (corregido)
   mkChart('c5','bar',{
-    labels: all.map(e=>e.nombre),
+    labels:all.map(e=>e.nombre),
     datasets:[
-      { label:'CO₂ total (kg)', data:all.map(e=>+e.s.co2Anual.toFixed(2)),
+      { label:'CO₂ producción (kg)', data:all.map(e=>+e.s.co2Anual.toFixed(2)),
         backgroundColor:'rgba(167,139,250,.7)', borderColor:'#a78bfa', borderWidth:1, borderRadius:4 },
       { label:'CO₂ descartado (kg)', data:all.map(e=>+e.s.co2Descartado.toFixed(2)),
         backgroundColor:'rgba(255,83,112,.6)', borderColor:'#FF5370', borderWidth:1, borderRadius:4 },
     ]
   }, CHART_BASE);
 
-  // ── C6: Agua producción vs lavado por persona ──
+  // C6: Agua producción vs lavado (valores v3.1 corregidos)
   mkChart('c6','bar',{
-    labels: all.map(e=>e.nombre),
+    labels:all.map(e=>e.nombre),
     datasets:[
       { label:'Agua producción (L)', data:all.map(e=>+e.s.aguaProd.toFixed(0)),
         backgroundColor:'rgba(107,159,255,.7)', borderColor:'#6B9FFF', borderWidth:1, borderRadius:4 },
@@ -1204,51 +1306,71 @@ function renderCharts() {
     ]
   }, CHART_BASE);
 
-  // ── C7: Peso a basura por género ──
-  const gens  = ['f','m','o'];
-  const gLbls = ['Femenino','Masculino','Otro'];
+  // C7: Peso a basura por género
+  const gens=['f','m','o'];
   mkChart('c7','bar',{
-    labels: gLbls,
+    labels:['Femenino','Masculino','Otro'],
     datasets:[{ label:'kg a basura (prom.)',
-      data: gens.map(g => {
-        const v = all.filter(e=>e.genero===g).map(e=>e.s.pesoDest.basura);
+      data:gens.map(g=>{
+        const v=all.filter(e=>e.genero===g).map(e=>e.s.pesoDest.basura);
         return v.length ? +avg(v).toFixed(2) : 0;
       }),
       backgroundColor:['rgba(255,83,170,.6)','rgba(107,159,255,.6)','rgba(255,181,71,.6)'],
       borderColor:['#FF53AA','#6B9FFF','#FFB547'], borderWidth:1, borderRadius:6 }]
   }, CHART_BASE);
 
-  // ── C8: Scatter gasto anual vs usos ──
+  // C8: CO₂/uso vs Agua/uso (scatter, nuevas métricas v3.1)
+  const metricsData = all
+    .filter(e => e.s.co2PorUso_g != null && e.s.aguaPorUso_L != null)
+    .map(e => ({ x: +e.s.aguaPorUso_L.toFixed(2), y: +e.s.co2PorUso_g.toFixed(2), _n: e.nombre }));
+  mkChart('c8','scatter',{
+    datasets:[{ label:'Encuestado',
+      data:metricsData,
+      backgroundColor:'rgba(167,139,250,.6)', borderColor:'#a78bfa', borderWidth:2, pointRadius:7 }]
+  },{
+    responsive:true,
+    plugins:{
+      legend:{labels:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}}},
+      tooltip:{backgroundColor:'#1C2640',titleColor:'#E8EDF8',bodyColor:'#7A8AAF',
+        borderColor:'#2A3555',borderWidth:1,
+        callbacks:{label:ctx=>`${ctx.raw._n} | Agua: ${ctx.raw.x} L/uso | CO₂: ${ctx.raw.y} g/uso`}}
+    },
+    scales:{
+      x:{title:{display:true,text:'Agua por uso (L)',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},
+         ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},grid:{color:'rgba(42,53,85,.4)'}},
+      y:{title:{display:true,text:'CO₂ por uso (g CO₂)',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},
+         ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},grid:{color:'rgba(42,53,85,.4)'}},
+    }
+  });
+
+  // C9: Bubble — gasto vs usos
   const scData = all
     .filter(e => e.gastoMensual > 0 && (e.usosPromedio||0) > 0)
     .map(e => ({
-      x: +(e.gastoMensual * 12).toFixed(2),
+      x: +(e.gastoMensual*12).toFixed(2),
       y: e.usosPromedio,
-      r: e.s.costoUso != null ? Math.max(5, Math.min(22, e.s.costoUso * 10)) : 7,
+      r: e.s.costoUso != null ? Math.max(5,Math.min(22,e.s.costoUso*10)) : 7,
       _n: e.nombre, _cxu: e.s.costoUso
     }));
-  mkChart('c8','bubble',{
-    datasets:[{ label:'Encuestado',
-      data: scData,
+  mkChart('c9','bubble',{
+    datasets:[{ label:'Encuestado', data:scData,
       backgroundColor:'rgba(0,229,197,.5)', borderColor:'#00E5C5', borderWidth:1 }]
   },{
-    responsive: true,
+    responsive:true,
     plugins:{
-      legend:{ labels:{ color:'#7A8AAF', font:{family:"'Space Mono'",size:10} } },
-      tooltip:{
-        backgroundColor:'#1C2640', titleColor:'#E8EDF8', bodyColor:'#7A8AAF',
-        borderColor:'#2A3555', borderWidth:1,
-        callbacks:{ label: ctx => {
-          const d = ctx.raw;
-          return `${d._n} | Gasto: $${d.x}/año | Usos: ${d.y}${d._cxu!=null?' | $/uso: $'+d._cxu.toFixed(2):''}`;
-        }}
-      }
+      legend:{labels:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}}},
+      tooltip:{backgroundColor:'#1C2640',titleColor:'#E8EDF8',bodyColor:'#7A8AAF',
+        borderColor:'#2A3555',borderWidth:1,
+        callbacks:{label:ctx=>{
+          const d=ctx.raw;
+          return `${d._n} | $${d.x}/año | ${d.y} usos${d._cxu!=null?' | $/uso: $'+d._cxu.toFixed(2):''}`;
+        }}}
     },
     scales:{
-      x:{ title:{display:true,text:'Gasto anual (USD)',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},
-          ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}}, grid:{color:'rgba(42,53,85,.4)'} },
-      y:{ title:{display:true,text:'Usos por prenda',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},
-          ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}}, grid:{color:'rgba(42,53,85,.4)'} },
+      x:{title:{display:true,text:'Gasto anual (USD)',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},
+         ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},grid:{color:'rgba(42,53,85,.4)'}},
+      y:{title:{display:true,text:'Usos por prenda',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},
+         ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},grid:{color:'rgba(42,53,85,.4)'}},
     }
   });
 }
@@ -1281,7 +1403,6 @@ document.getElementById('btn-clear').style.display = adminMode ? 'inline-block' 
 initForm();
 updAlgodonLabel();
 startListener();
-
 </script>
 </body>
 </html>
