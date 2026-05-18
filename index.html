@@ -484,12 +484,13 @@
           <th>Usos/prenda</th>
           <th>Vida útil (meses)</th>
           <th>Costo/uso (USD)</th>
+          <th>Rotación (×/año)</th>
           <th>CO₂ anual (kg)</th>
           <th></th>
         </tr>
       </thead>
       <tbody id="tabla-body">
-        <tr><td colspan="18"><div class="empty"><div class="icon">📋</div>Aún no hay encuestados cargados</div></td></tr>
+        <tr><td colspan="19"><div class="empty"><div class="icon">📋</div>Aún no hay encuestados cargados</div></td></tr>
       </tbody>
     </table>
   </div>
@@ -718,6 +719,7 @@ function checkPctSum() {
 //  CÁLCULOS
 // ═══════════════════════════════════════════════════
 function calcularStats(enc) {
+  // ── Peso y cantidad por tipo (30 días) ──
   let total30dCant = 0, total30dPeso = 0;
   const pesoPorTipo = {};
   for (const [key, val] of Object.entries(TIPOS)) {
@@ -727,43 +729,83 @@ function calcularStats(enc) {
     total30dPeso += q * val.peso;
   }
 
+  // Peso promedio por prenda del mes (proxy para estimar peso anual)
   const pesoPromedio = total30dCant > 0 ? total30dPeso / total30dCant : 200;
 
+  // ── Totales anuales ──
   const totalAnualCant = (enc.estaciones.verano + enc.estaciones.otono +
                           enc.estaciones.invierno + enc.estaciones.primavera);
-
   const pesoTotalAnual = totalAnualCant * pesoPromedio;
 
+  // ── Descarte ──
   const factor = FACTORES[enc.descarte];
   const pesoDescartado = pesoTotalAnual * factor;
   const pesoConservado = pesoTotalAnual - pesoDescartado;
 
+  // ── Destino del peso descartado ──
   const pesoDest = {};
   for (const key of Object.keys(DESTINOS)) {
     pesoDest[key] = pesoDescartado * (enc.destino[key] / 100);
   }
 
-  const pesoSintetico = pesoTotalAnual * (enc.pctSintetico / 100);
-  const pesoNatural = pesoTotalAnual - pesoSintetico;
-  const co2Factor = 5.5 + 3.0 * (enc.pctSintetico / 100);
+  // ── CO₂ — método CONSISTENTE para total y descartado ──
+  // Algodón/natural: ~5.5 kg CO₂/kg | Poliéster/sintético: ~8.5 kg CO₂/kg
+  const pctSint = enc.pctSintetico / 100;
+  const pctNat  = 1 - pctSint;
+
+  // CO₂ del total comprado (por material)
+  const pesoSintetico = pesoTotalAnual * pctSint;
+  const pesoNatural   = pesoTotalAnual * pctNat;
   const co2PorMaterial = {
     sintetico: (pesoSintetico / 1000) * 8.5,
-    natural:   (pesoNatural / 1000) * 5.5,
+    natural:   (pesoNatural   / 1000) * 5.5,
   };
+  const co2Anual = co2PorMaterial.sintetico + co2PorMaterial.natural;
+
+  // CO₂ del peso descartado — MISMA fórmula mixta (no el factor interpolado)
+  const co2Descartado =
+    (pesoDescartado * pctSint / 1000) * 8.5 +
+    (pesoDescartado * pctNat  / 1000) * 5.5;
+
+  // Factor CO₂ promedio ponderado (solo informativo)
+  const co2Factor = 5.5 + 3.0 * pctSint;
+
+  // ── Gasto ──
+  const gastoAnual = (enc.gastoMensual || 0) * 12;
+
+  // ── Costo por uso ──
+  // Fórmula: precio promedio por prenda / usos promedio por prenda
+  // = (gastoAnual / totalAnualCant) / usosPromedio
+  // Interpretación: cuánto pagaste cada vez que usaste una prenda.
+  const precioPorPrenda = totalAnualCant > 0 && enc.gastoMensual > 0
+    ? gastoAnual / totalAnualCant
+    : null;
+  const costoXUso = precioPorPrenda != null && enc.usosPromedio != null && enc.usosPromedio > 0
+    ? precioPorPrenda / enc.usosPromedio
+    : null;
+
+  // ── Rotación anual estimada (usa vidaUtilMeses) ──
+  // Cuántas veces en el año "renovás" cada prenda.
+  // Si una prenda dura N meses, en 12 meses la rotás 12/N veces.
+  const rotacionAnual = enc.vidaUtilMeses != null && enc.vidaUtilMeses > 0
+    ? parseFloat((12 / enc.vidaUtilMeses).toFixed(2))
+    : null;
+
+  // ── Gasto anual "real" ajustado por rotación ──
+  // Cuánto gastás por prenda × cuántas veces la renovás al año
+  const gastoPorPrendaAnual = precioPorPrenda != null && rotacionAnual != null
+    ? parseFloat((precioPorPrenda * rotacionAnual).toFixed(2))
+    : null;
 
   return {
     pesoPorTipo, total30dCant, total30dPeso,
     pesoPromedio, totalAnualCant, pesoTotalAnual,
     factor, pesoDescartado, pesoConservado, pesoDest,
     pesoSintetico, pesoNatural,
-    co2Factor,
-    co2PorMaterial,
-    co2Anual:      co2PorMaterial.sintetico + co2PorMaterial.natural,
-    co2Descartado: (pesoDescartado / 1000) * co2Factor,
-    gastoAnual:    (enc.gastoMensual || 0) * 12,
-    costoXUso:     (enc.gastoMensual > 0 && enc.usosPromedio > 0 && totalAnualCant > 0)
-                     ? ((enc.gastoMensual * 12) / (totalAnualCant * enc.usosPromedio))
-                     : null,
+    co2Factor, co2PorMaterial,
+    co2Anual, co2Descartado,
+    gastoAnual, precioPorPrenda, costoXUso,
+    rotacionAnual, gastoPorPrendaAnual,
   };
 }
 
@@ -812,8 +854,9 @@ window.agregarEncuestado = async function() {
     cant30d, estaciones, descarte, destino,
     pctSintetico:  parseInt(document.getElementById('f-sintetico').value),
     gastoMensual:  parseFloat(document.getElementById('f-gasto').value)   || 0,
-    usosPromedio:  parseInt(document.getElementById('f-usos').value)       || 1,
-    vidaUtilMeses: parseInt(document.getElementById('f-meses').value)      || 1,
+    // null si el campo quedó vacío → no contamina estadísticas con default 1
+    usosPromedio:  parseInt(document.getElementById('f-usos').value)   || null,
+    vidaUtilMeses: parseInt(document.getElementById('f-meses').value)  || null,
   };
 
   // Disable button while saving
@@ -916,7 +959,7 @@ const G_LABEL = { m:'Masc.', f:'Fem.', o:'Otro' };
 function actualizarTabla() {
   const tbody = document.getElementById('tabla-body');
   if (encuestados.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="18"><div class="empty"><div class="icon">📋</div>Aún no hay encuestados cargados</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="19"><div class="empty"><div class="icon">📋</div>Aún no hay encuestados cargados</div></td></tr>';
     return;
   }
   tbody.innerHTML = encuestados.map(enc => {
@@ -937,9 +980,10 @@ function actualizarTabla() {
       <td class="td-num" style="color:var(--accent)">${(s.pesoDest.donado/1000).toFixed(2)}</td>
       <td class="td-num">${enc.pctSintetico}%</td>
       <td class="td-num" style="color:var(--accent3)">${s.gastoAnual > 0 ? '$'+s.gastoAnual.toFixed(0) : '—'}</td>
-      <td class="td-num">${enc.usosPromedio || '—'}</td>
-      <td class="td-num">${enc.vidaUtilMeses || '—'}</td>
+      <td class="td-num">${enc.usosPromedio != null ? enc.usosPromedio : '—'}</td>
+      <td class="td-num">${enc.vidaUtilMeses != null ? enc.vidaUtilMeses : '—'}</td>
       <td class="td-num" style="color:var(--accent3)">${s.costoXUso != null ? '$'+s.costoXUso.toFixed(2) : '—'}</td>
+      <td class="td-num" style="color:var(--accent)">${s.rotacionAnual != null ? s.rotacionAnual.toFixed(2)+'×/año' : '—'}</td>
       <td class="td-num" style="color:#a78bfa">${s.co2Anual.toFixed(2)}</td>
       <td>${adminMode && fid ? `<button class="btn-danger" onclick="eliminarEncuestado('${fid}')">✕</button>` : ''}</td>
     </tr>`;
@@ -1023,10 +1067,12 @@ function actualizarEstadisticas() {
         <tr><td colspan="6" style="color:#a78bfa;font-size:10px;padding:12px 14px 4px;letter-spacing:.1em;text-transform:uppercase">▸ CICLO DE VIDA, GASTO Y HUELLA CO₂</td></tr>
         ${statsRow('Gasto mensual (USD)', pick(e=>e.gastoMensual).filter(v=>v>0), 2, ' USD')}
         ${statsRow('Gasto anual estimado (USD)', pick(e=>e.s.gastoAnual).filter(v=>v>0), 2, ' USD')}
-        ${statsRow('Usos promedio por prenda', pick(e=>e.usosPromedio).filter(v=>v>0), 1, ' veces')}
-        ${statsRow('Vida útil promedio (meses)', pick(e=>e.vidaUtilMeses).filter(v=>v>0), 1, ' meses')}
-        ${statsRow('Costo por uso (USD)', pick(e=>e.s.costoXUso).filter(v=>v!=null), 3, ' USD')}
-        ${statsRow('Factor CO₂ por kg textil', pick(e=>e.s.co2Factor), 2, ' kg CO₂/kg')}
+        ${statsRow('Precio promedio por prenda (USD)', pick(e=>e.s.precioPorPrenda).filter(v=>v!=null), 2, ' USD')}
+        ${statsRow('Usos promedio por prenda', pick(e=>e.usosPromedio).filter(v=>v!=null&&v>0), 1, ' veces')}
+        ${statsRow('Vida útil promedio (meses)', pick(e=>e.vidaUtilMeses).filter(v=>v!=null&&v>0), 1, ' meses')}
+        ${statsRow('Rotación anual (veces/año)', pick(e=>e.s.rotacionAnual).filter(v=>v!=null), 2, '×/año')}
+        ${statsRow('Costo por uso (USD) = precio/prenda ÷ usos', pick(e=>e.s.costoXUso).filter(v=>v!=null), 3, ' USD')}
+        ${statsRow('Factor CO₂ prom. ponderado (kg CO₂/kg)', pick(e=>e.s.co2Factor), 2, ' kg CO₂/kg')}
         ${statsRow('CO₂ total anual (kg CO₂)', pick(e=>e.s.co2Anual), 2, ' kg CO₂')}
         ${statsRow('CO₂ sintético estimado', pick(e=>e.s.co2PorMaterial.sintetico), 2, ' kg CO₂')}
         ${statsRow('CO₂ natural estimado', pick(e=>e.s.co2PorMaterial.natural), 2, ' kg CO₂')}
@@ -1250,7 +1296,7 @@ function actualizarGraficos() {
 
   // ── GRÁFICO 7: Scatter gasto anual vs usos promedio ──
   const scatterData = allStats
-    .filter(e => e.gastoMensual > 0 && e.usosPromedio > 0)
+    .filter(e => e.gastoMensual > 0 && e.usosPromedio != null && e.usosPromedio > 0)
     .map(e => ({
       x: parseFloat((e.gastoMensual * 12).toFixed(2)),
       y: e.usosPromedio,
@@ -1279,7 +1325,9 @@ function actualizarGraficos() {
           callbacks: {
             label: ctx => {
               const d = ctx.raw;
-              return `${scatterData[ctx.dataIndex]?.nombre || ''} | Gasto: $${d.x} | Usos: ${d.y}`;
+              const enc = scatterData[ctx.dataIndex];
+              const cxu = enc && allStats.find(e=>e.nombre===enc.nombre)?.s?.costoXUso;
+              return `${enc?.nombre || ''} | Gasto: $${d.x} | Usos: ${d.y}${cxu!=null?' | Costo/uso: $'+cxu.toFixed(2):''}`;
             }
           }
         }
