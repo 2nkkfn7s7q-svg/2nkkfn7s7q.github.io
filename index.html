@@ -1,811 +1,401 @@
 <!DOCTYPE html>
-
 <html lang="es">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>FastStats · Fast Fashion Dashboard v4.5</title>
-
+<title>FastStats · Fast Fashion Dashboard v4.6</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-
 <style>
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 :root {
-
   --bg:       #0B0F1A;
-
   --surface:  #131929;
-
   --surface2: #1C2640;
-
   --border:   #2A3555;
-
   --accent:   #00E5C5;
-
   --accent2:  #FF5370;
-
   --accent3:  #FFB547;
-
   --accent4:  #6B9FFF;
-
   --accent5:  #a78bfa;
-
   --text:     #E8EDF8;
-
   --muted:    #7A8AAF;
-
   --font-h:   'Syne', sans-serif;
-
   --font-d:   'Space Mono', monospace;
-
 }
-
 body { background: var(--bg); color: var(--text); font-family: var(--font-d); font-size: 13px; min-height: 100vh; }
-
-/* FIX #53 — Loading overlay visual */
-
 #loading-overlay {
-
   position: fixed; inset: 0; background: rgba(11,15,26,.92);
-
   display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px;
-
   z-index: 10000; font-family: var(--font-d); font-size: 13px;
-
   color: var(--accent); letter-spacing: .08em;
-
   transition: opacity .4s;
-
 }
-
 #loading-overlay.hidden { opacity: 0; pointer-events: none; }
-
 .spin { width: 22px; height: 22px; border: 2px solid rgba(0,229,197,.2); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
-
 @keyframes spin { to { transform: rotate(360deg); } }
-
 header {
-
   padding: 0 40px;
-
   display: flex; align-items: stretch; gap: 0;
-
   border-bottom: 1px solid var(--border);
-
   position: sticky; top: 0; z-index: 100;
-
   background: rgba(11,15,26,.97);
-
   backdrop-filter: blur(12px);
-
 }
-
 .logo {
-
   font-family: var(--font-h); font-weight: 800; font-size: 20px;
-
   color: var(--accent); letter-spacing: -0.5px;
-
   padding: 18px 28px 18px 0;
-
   border-right: 1px solid var(--border);
-
   flex-shrink: 0; display: flex; align-items: center; gap: 8px;
-
 }
-
 .logo span { color: var(--text); }
-
 .logo sub { font-size: 10px; color: var(--muted); font-weight: 400; letter-spacing: 0.1em; margin-left: 4px; vertical-align: middle; }
-
 .version-chip {
-
   font-size: 9px; background: rgba(0,229,197,.12); border: 1px solid rgba(0,229,197,.3);
-
   color: var(--accent); padding: 2px 7px; border-radius: 99px; letter-spacing: .06em;
-
   font-family: var(--font-d);
-
 }
-
 nav { display: flex; gap: 0; align-items: stretch; padding-left: 8px; flex: 1; overflow-x: auto; }
-
 nav button {
-
   background: none; border: none; cursor: pointer;
-
   font-family: var(--font-d); font-size: 11px; letter-spacing: 0.06em;
-
   color: var(--muted); padding: 0 16px;
-
   border-bottom: 2px solid transparent;
-
   transition: color .2s, border-color .2s; white-space: nowrap;
-
 }
-
 nav button:hover { color: var(--text); }
-
 nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-/* FIX #45/#72 — focus visible para teclado */
-
 nav button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-
 .counter-badge {
-
   display: inline-block; background: var(--accent); color: var(--bg);
-
   font-size: 9px; font-weight: 700; padding: 1px 5px;
-
   border-radius: 99px; margin-left: 5px;
-
 }
-
 .header-right { display: flex; align-items: center; gap: 8px; margin-left: auto; padding-left: 20px; flex-shrink: 0; }
-
 .admin-btn {
-
   background: none; border: 1px solid var(--border); cursor: pointer;
-
   color: var(--muted); font-family: var(--font-d); font-size: 10px;
-
   padding: 7px 14px; border-radius: 6px; letter-spacing: 0.05em;
-
   transition: all .2s;
-
 }
-
 .admin-btn:hover { color: var(--text); border-color: rgba(255,255,255,.2); }
-
 .admin-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(0,229,197,.08); }
-
 .btn-danger-sm {
-
   background: none; border: 1px solid var(--accent2); color: var(--accent2);
-
   cursor: pointer; font-family: var(--font-d); font-size: 10px;
-
   padding: 5px 10px; border-radius: 5px; transition: background .2s;
-
 }
-
 .btn-danger-sm:hover { background: rgba(255,83,112,.12); }
-
 .btn-danger-sm:disabled { opacity: .45; cursor: not-allowed; }
-
 main { padding: 28px 40px; max-width: 1400px; }
-
 .tab { display: none; }
-
 .tab.active { display: block; }
-
 .st {
-
   font-family: var(--font-h); font-weight: 700; font-size: 10px;
-
   letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
-
   margin: 28px 0 14px; padding-bottom: 7px;
-
   border-bottom: 1px solid var(--border);
-
   display: flex; justify-content: space-between; align-items: center;
-
 }
-
 .st:first-child { margin-top: 0; }
-
 .temporal-badge {
-
   display: inline-block; font-size: 9px; font-weight: 700;
-
   padding: 2px 7px; border-radius: 99px; letter-spacing: .06em;
-
   font-family: var(--font-d); margin-left: 6px; vertical-align: middle;
-
 }
-
 .temporal-badge.anual   { background: rgba(107,159,255,.15); border: 1px solid rgba(107,159,255,.3); color: var(--accent4); }
-
 .temporal-badge.mensual { background: rgba(255,181,71,.15);  border: 1px solid rgba(255,181,71,.3);  color: var(--accent3); }
-
 .temporal-badge.por-uso { background: rgba(167,139,250,.15); border: 1px solid rgba(167,139,250,.3); color: var(--accent5); }
-
+.temporal-badge.ciclo   { background: rgba(0,229,197,.10);   border: 1px solid rgba(0,229,197,.25);  color: var(--accent); }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; }
-
 .field { display: flex; flex-direction: column; gap: 5px; }
-
 .field label { font-size: 10px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
-
 .field input, .field select {
-
   background: var(--surface2); border: 1px solid var(--border);
-
   color: var(--text); font-family: var(--font-d); font-size: 13px;
-
   padding: 8px 10px; border-radius: 6px; outline: none;
-
   transition: border-color .2s, box-shadow .2s;
-
 }
-
 .field input:focus, .field select:focus {
-
   border-color: var(--accent);
-
   box-shadow: 0 0 0 2px rgba(0,229,197,.12);
-
 }
-
 .field input[type="range"] { padding: 5px 0; cursor: pointer; accent-color: var(--accent); }
-
 .range-row { display: flex; justify-content: space-between; align-items: center; margin-top: 3px; }
-
 .range-val  { font-size: 12px; color: var(--accent); font-weight: 700; }
-
 .range-hint { font-size: 10px; color: var(--muted); }
-
 .prendas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 10px; }
-
 .prenda-card {
-
   background: var(--surface2); border: 1px solid var(--border);
-
   border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 5px;
-
 }
-
 .prenda-card .pn { font-size: 11px; color: var(--text); }
-
 .prenda-card .ph { font-size: 10px; color: var(--muted); }
-
 .prenda-card input {
-
   background: var(--surface); border: 1px solid var(--border);
-
   color: var(--text); font-family: var(--font-d); font-size: 15px; font-weight: 700;
-
   padding: 7px; border-radius: 5px; width: 100%; text-align: center; outline: none;
-
   transition: border-color .2s;
-
 }
-
 .prenda-card input:focus { border-color: var(--accent); }
-
 .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
-
 .radio-opt {
-
   flex: 1; min-width: 140px; background: var(--surface2); border: 1px solid var(--border);
-
   padding: 12px 16px; border-radius: 8px; cursor: pointer;
-
   transition: border-color .2s, background .2s;
-
   display: flex; align-items: center; gap: 10px;
-
 }
-
 .radio-opt:has(input:checked) { border-color: var(--accent); background: rgba(0,229,197,.08); }
-
 .radio-opt input { accent-color: var(--accent); flex-shrink: 0; }
-
 .radio-txt strong { display: block; font-size: 13px; color: var(--text); }
-
 .radio-txt span   { font-size: 10px; color: var(--muted); }
-
 .destino-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(195px, 1fr)); gap: 12px; }
-
 .destino-card {
-
   background: var(--surface2); border: 1px solid var(--border);
-
   border-radius: 8px; padding: 13px;
-
 }
-
 .destino-card .dc-label {
-
   display: flex; justify-content: space-between; align-items: center;
-
   font-size: 11px; color: var(--muted); margin-bottom: 8px;
-
 }
-
 .destino-card input[disabled] { opacity: .4; cursor: not-allowed; }
-
 .destino-locked { font-size: 9px; color: var(--accent2); margin-top: 3px; display: none; }
-
 .info-box {
-
   background: rgba(0,229,197,.05); border: 1px solid rgba(0,229,197,.18);
-
   border-radius: 8px; padding: 12px 16px; margin-bottom: 14px;
-
   font-size: 11px; color: var(--muted); line-height: 1.65;
-
 }
-
 .info-box b { color: var(--accent); }
-
 .info-box.warn  { background: rgba(255,83,112,.05); border-color: rgba(255,83,112,.18); }
-
 .info-box.warn b { color: var(--accent2); }
-
 .info-box.amber { background: rgba(255,181,71,.05); border-color: rgba(255,181,71,.18); }
-
 .info-box.amber b { color: var(--accent3); }
-
 .btn-primary {
-
   background: var(--accent); color: var(--bg);
-
   border: none; cursor: pointer;
-
   font-family: var(--font-h); font-weight: 700; font-size: 14px;
-
   padding: 13px 32px; border-radius: 8px; margin-top: 24px;
-
   transition: opacity .2s, transform .1s; letter-spacing: 0.04em;
-
 }
-
 .btn-primary:hover  { opacity: .88; }
-
 .btn-primary:active { transform: scale(.98); }
-
 .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
-
 #pct-remaining { font-size: 11px; font-weight: 700; font-family: var(--font-d); letter-spacing: .05em; color: var(--accent3); }
-
 #timer-indicator {
-
   display: inline-flex; align-items: center; gap: 6px;
-
   font-size: 10px; color: var(--muted); font-family: var(--font-d);
-
   margin-top: 10px; padding: 5px 10px; background: var(--surface2);
-
   border: 1px solid var(--border); border-radius: 6px;
-
 }
-
 #timer-indicator .timer-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: blink 1s infinite; }
-
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-
 .tbl-wrap { overflow-x: auto; margin-top: 8px; }
-
 table { width: 100%; border-collapse: collapse; font-size: 11px; }
-
 th {
-
   text-align: left; padding: 10px 12px;
-
   font-size: 10px; color: var(--muted); letter-spacing: 0.1em;
-
   text-transform: uppercase; border-bottom: 1px solid var(--border);
-
   font-weight: 400; white-space: nowrap; background: var(--surface2);
-
 }
-
 th .th-temporal { display: block; font-size: 8px; margin-top: 2px; }
-
 td { padding: 9px 12px; border-bottom: 1px solid rgba(42,53,85,.4); white-space: nowrap; }
-
 tr:last-child td { border-bottom: none; }
-
 tr:hover td { background: rgba(28,38,64,.7); }
-
 .tr { text-align: right; font-weight: 700; }
-
 .bg-m { background: rgba(71,120,255,.2);  color: #6B9FFF; }
-
 .bg-f { background: rgba(255,83,170,.2);  color: #FF83D4; }
-
 .bg-o { background: rgba(255,181,71,.2);  color: var(--accent3); }
-
 .gen-badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 10px; }
-
 .veracity-high { color: var(--accent); }
-
 .veracity-med  { color: var(--accent3); }
-
 .veracity-low  { color: var(--accent2); }
-
 .stats-wrap { overflow-x: auto; }
-
 .stats-tbl { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
-
 .stats-tbl th {
-
   padding: 9px 14px; font-size: 10px; color: var(--muted);
-
   text-transform: uppercase; letter-spacing: .1em;
-
   border-bottom: 1px solid var(--border);
-
   background: var(--surface2); text-align: right; font-weight: 400;
-
 }
-
 .stats-tbl th:first-child { text-align: left; }
-
 .stats-tbl td { padding: 8px 14px; border-bottom: 1px solid rgba(42,53,85,.35); text-align: right; }
-
 .stats-tbl td:first-child { text-align: left; color: var(--text); font-size: 11px; }
-
 .stats-tbl tr:hover td { background: rgba(28,38,64,.7); }
-
 .sa { color: var(--accent); font-weight: 700; }
-
-/* FIX #58 — colspan correcto en group-hdr via JS */
-
 .group-hdr td {
-
   font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
-
   padding: 12px 14px 5px; border-bottom: none; font-weight: 700;
-
 }
-
 .kpi-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
-
 .kpi-card {
-
   flex: 1; min-width: 150px; background: var(--surface2); border: 1px solid var(--border);
-
   border-radius: 10px; padding: 18px 20px;
-
 }
-
 .kpi-card .kpi-label    { font-size: 10px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
-
 .kpi-card .kpi-temporal { font-size: 9px; color: var(--muted); margin-bottom: 6px; opacity: .6; }
-
 .kpi-card .kpi-value    { font-family: var(--font-h); font-size: 26px; font-weight: 800; }
-
 .kpi-card .kpi-unit     { font-size: 11px; color: var(--muted); margin-left: 4px; }
-
 .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 8px; }
-
 .chart-card {
-
   background: var(--surface2); border: 1px solid var(--border);
-
   border-radius: 12px; padding: 22px;
-
 }
-
 .chart-card.full { grid-column: 1 / -1; }
-
 .chart-card h3 { font-family: var(--font-h); font-weight: 700; font-size: 13px; margin-bottom: 4px; }
-
 .chart-card p  { font-size: 10px; color: var(--muted); margin-bottom: 16px; letter-spacing: .04em; }
-
 .chart-source  {
-
   font-size: 9px; color: rgba(122,138,175,.5); margin-top: 10px;
-
   border-top: 1px solid var(--border); padding-top: 6px;
-
 }
-
 .chart-source a { color: var(--accent4); text-decoration: none; }
-
 .chart-source a:hover { text-decoration: underline; }
-
-/* FIX #41 — ref-badges usan goFuentes() que ahora está definida */
-
 .ref-badge {
-
   display: inline-block; font-size: 8px; font-weight: 700;
-
   background: rgba(107,159,255,.15); border: 1px solid rgba(107,159,255,.3);
-
   color: var(--accent4); padding: 1px 5px; border-radius: 4px;
-
   font-family: var(--font-d); vertical-align: super; margin-left: 2px;
-
   cursor: help; text-decoration: none; letter-spacing: 0;
-
 }
-
 .ref-badge:hover { background: rgba(107,159,255,.3); }
-
 .sigma-legend {
-
   display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0 4px;
-
   font-size: 9px; font-family: var(--font-d);
-
 }
-
 .sigma-chip { padding: 3px 8px; border-radius: 4px; border: 1px solid; }
-
 .sigma-chip.s1 { background: rgba(0,229,197,.08);  border-color: rgba(0,229,197,.3);  color: var(--accent); }
-
 .sigma-chip.s2 { background: rgba(255,181,71,.08); border-color: rgba(255,181,71,.3); color: var(--accent3); }
-
 .sigma-chip.s3 { background: rgba(255,83,112,.08); border-color: rgba(255,83,112,.3); color: var(--accent2); }
-
 .prob-band { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0 0; }
-
 .prob-chip {
-
   font-size: 10px; padding: 4px 10px; border-radius: 6px; font-family: var(--font-d);
-
 }
-
 .prob-chip.cumple  { background: rgba(0,229,197,.12);  color: var(--accent);  border: 1px solid rgba(0,229,197,.3); }
-
 .prob-chip.riesgo  { background: rgba(255,181,71,.12); color: var(--accent3); border: 1px solid rgba(255,181,71,.3); }
-
 .prob-chip.critico { background: rgba(255,83,112,.12); color: var(--accent2); border: 1px solid rgba(255,83,112,.3); }
-
 .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
-
 .empty .ei { font-size: 36px; margin-bottom: 12px; }
-
-/* FIX #55 — toast con role y aria-live definidos en HTML */
-
 #toast {
-
   position: fixed; bottom: 24px; right: 24px;
-
   background: var(--accent); color: var(--bg);
-
   font-family: var(--font-d); font-size: 12px; font-weight: 700;
-
   padding: 11px 20px; border-radius: 8px;
-
   opacity: 0; transform: translateY(8px);
-
   transition: all .3s; pointer-events: none; z-index: 999;
-
 }
-
 #toast.show { opacity: 1; transform: translateY(0); }
-
 #fb-bar {
-
   display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-
   background: rgba(0,229,197,.1); border-bottom: 1px solid var(--accent);
-
   color: var(--accent); font-family: var(--font-d); font-size: 10px;
-
   padding: 5px 16px; text-align: center; letter-spacing: .05em;
-
 }
-
 #fb-bar.show  { display: block; }
-
 #fb-bar.error { background: rgba(255,83,112,.1); border-color: var(--accent2); color: var(--accent2); }
-
-/* FIX #29 — n-warning chip */
-
 .n-warn {
-
   display: inline-flex; align-items: center; gap: 5px;
-
   font-size: 9px; color: var(--accent3); font-family: var(--font-d);
-
   background: rgba(255,181,71,.08); border: 1px solid rgba(255,181,71,.25);
-
   padding: 3px 8px; border-radius: 4px; margin-left: 8px;
-
 }
-
 .n-warn.crit { color: var(--accent2); background: rgba(255,83,112,.08); border-color: rgba(255,83,112,.25); }
-
 .sd-range-box {
-
   background: var(--surface); border: 1px solid var(--border);
-
   border-radius: 8px; padding: 12px 16px; margin-top: 10px;
-
   font-size: 10px; font-family: var(--font-d);
-
 }
-
 .sd-range-box .sd-title { font-size: 9px; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
-
 .sd-range-row { display: flex; gap: 0; border-radius: 5px; overflow: hidden; margin-top: 6px; }
-
 .sd-zone { flex: 1; padding: 7px 10px; text-align: center; font-size: 9px; font-weight: 700; line-height: 1.5; }
-
 .sd-zone.z1 { background: rgba(0,229,197,.18);  color: var(--accent); }
-
 .sd-zone.z2 { background: rgba(255,181,71,.18); color: var(--accent3); }
-
 .sd-zone.z3 { background: rgba(255,83,112,.18); color: var(--accent2); }
-
 .sources-hero {
-
   background: linear-gradient(135deg, rgba(0,229,197,.06) 0%, rgba(107,159,255,.06) 100%);
-
   border: 1px solid rgba(0,229,197,.2);
-
   border-radius: 14px; padding: 28px 32px; margin-bottom: 28px;
-
 }
-
 .sources-hero h2 { font-family: var(--font-h); font-weight: 800; font-size: 22px; color: var(--text); margin-bottom: 8px; }
-
 .sources-hero p { font-size: 11px; color: var(--muted); line-height: 1.7; max-width: 800px; }
-
-/* FIX #39 — índice de fuentes */
-
 .src-index { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-
 .src-index-btn {
-
   font-size: 10px; font-family: var(--font-d);
-
   background: var(--surface2); border: 1px solid var(--border);
-
   color: var(--muted); padding: 4px 10px; border-radius: 6px;
-
   cursor: pointer; text-decoration: none; transition: all .2s;
-
 }
-
 .src-index-btn:hover { color: var(--accent); border-color: var(--accent); }
-
 .src-category { margin-bottom: 32px; scroll-margin-top: 80px; }
-
 .src-category-title {
-
   font-family: var(--font-h); font-weight: 700; font-size: 11px;
-
   letter-spacing: 0.16em; text-transform: uppercase;
-
   color: var(--muted); padding: 8px 0 10px;
-
   border-bottom: 1px solid var(--border); margin-bottom: 14px;
-
   display: flex; align-items: center; gap: 10px;
-
 }
-
 .src-category-title .cat-icon {
-
   width: 28px; height: 28px; border-radius: 6px;
-
   display: flex; align-items: center; justify-content: center;
-
   font-size: 14px; flex-shrink: 0;
-
 }
-
 .src-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-
 .src-table thead th {
-
   text-align: left; padding: 9px 14px; font-size: 9px; color: var(--muted);
-
   letter-spacing: .12em; text-transform: uppercase; border-bottom: 1px solid var(--border);
-
   background: var(--surface2); font-weight: 400;
-
 }
-
 .src-table td { padding: 11px 14px; border-bottom: 1px solid rgba(42,53,85,.35); vertical-align: top; line-height: 1.6; }
-
 .src-table tr:last-child td { border-bottom: none; }
-
 .src-table tr:hover td { background: rgba(28,38,64,.5); }
-
 .src-num {
-
   display: inline-flex; align-items: center; justify-content: center;
-
   width: 22px; height: 22px; border-radius: 5px;
-
   background: rgba(107,159,255,.15); border: 1px solid rgba(107,159,255,.3);
-
   color: var(--accent4); font-size: 9px; font-weight: 700;
-
   font-family: var(--font-d); flex-shrink: 0;
-
 }
-
 .src-dato { color: var(--text); font-size: 11px; }
-
 .src-dato small { display: block; color: var(--muted); font-size: 10px; margin-top: 2px; }
-
 .src-dato .src-value {
-
   display: inline-block; margin-top: 4px;
-
   background: rgba(0,229,197,.08); border: 1px solid rgba(0,229,197,.2);
-
   color: var(--accent); font-family: var(--font-d); font-size: 10px;
-
   padding: 2px 8px; border-radius: 4px; font-weight: 700;
-
 }
-
 .src-dato .src-range {
-
   display: inline-block; margin-top: 4px; margin-left: 6px;
-
   background: rgba(255,181,71,.08); border: 1px solid rgba(255,181,71,.2);
-
   color: var(--accent3); font-family: var(--font-d); font-size: 10px;
-
   padding: 2px 8px; border-radius: 4px;
-
 }
-
 .src-org { color: var(--accent); font-size: 10px; font-weight: 700; }
-
 .src-year { color: var(--muted); font-size: 9px; }
-
 .src-link {
-
   display: inline-flex; align-items: center; gap: 4px;
-
   color: var(--accent4); font-size: 9px; text-decoration: none;
-
   border: 1px solid rgba(107,159,255,.25); padding: 3px 8px;
-
   border-radius: 4px; transition: background .2s; font-family: var(--font-d);
-
 }
-
 .src-link:hover { background: rgba(107,159,255,.1); }
-
 .metod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 12px; }
-
 .metod-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-
 .metod-card h4 { font-family: var(--font-h); font-size: 12px; font-weight: 700; margin-bottom: 8px; color: var(--accent); }
-
 .metod-card p, .metod-card li { font-size: 10px; color: var(--muted); line-height: 1.7; }
-
 .metod-card ul { padding-left: 14px; }
-
 .metod-card li { margin-bottom: 3px; }
-
 .metod-card .src { font-size: 9px; color: rgba(122,138,175,.5); margin-top: 8px; border-top: 1px solid var(--border); padding-top: 6px; }
-
 .formula-block {
-
   background: var(--surface); border: 1px solid var(--border);
-
   border-radius: 6px; padding: 10px 12px; margin: 6px 0;
-
   font-size: 10px; color: var(--accent); font-family: var(--font-d); line-height: 1.8;
-
 }
-
 @media (max-width: 720px) {
-
   header { padding: 0 16px; flex-wrap: wrap; }
-
   main   { padding: 20px 16px; }
-
   .charts-grid { grid-template-columns: 1fr; }
-
   .chart-card.full { grid-column: 1; }
-
 }
-
-/* ── Excel export buttons ── */
 .excel-export-row {
   display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0 4px;
 }
@@ -818,269 +408,160 @@ tr:hover td { background: rgba(28,38,64,.7); }
 .btn-excel:hover { background: rgba(29,111,66,.15); color: #6DD99A; }
 .btn-excel:disabled { opacity: .4; cursor: not-allowed; }
 .btn-excel .xl-icon { font-size: 16px; }
-
+.timer-warn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 9px; font-family: var(--font-d);
+  padding: 3px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle;
+}
+.timer-warn.muy_rapido { color: var(--accent2); background: rgba(255,83,112,.10); border: 1px solid rgba(255,83,112,.25); }
+.timer-warn.rapido     { color: var(--accent3); background: rgba(255,181,71,.08); border: 1px solid rgba(255,181,71,.20); }
+.timer-warn.aceptable  { color: var(--muted);   background: rgba(122,138,175,.08); border: 1px solid rgba(122,138,175,.20); }
+.incon-warn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 9px; color: var(--accent3); font-family: var(--font-d);
+  background: rgba(255,181,71,.08); border: 1px solid rgba(255,181,71,.25);
+  padding: 2px 7px; border-radius: 4px; cursor: help;
+}
 </style>
-
 </head>
-
 <body>
-
-<!-- FIX #53 — Loading overlay visual bloqueante -->
-
 <div id="loading-overlay" role="status" aria-live="polite">
-
   <div class="spin"></div>
-
   <span>Conectando con Firebase…</span>
-
 </div>
-
-<!-- FIX #38 — barra de estado Firebase -->
-
 <div id="fb-bar" role="status" aria-live="polite"></div>
-
 <header>
-
-  <div class="logo">FAST<span>STATS</span><sub>v4.5</sub> <span class="version-chip">CIENTÍFICO</span></div>
-
+  <div class="logo">FAST<span>STATS</span><sub>v4.6</sub> <span class="version-chip">CIENTÍFICO</span></div>
   <nav role="navigation" aria-label="Pestañas principales">
-
     <button class="active" onclick="showTab('cargar',event)">Cargar datos</button>
-
     <button onclick="showTab('tabla',event)">Tabla <span class="counter-badge" id="badge-n">0</span></button>
-
     <button onclick="showTab('estadisticas',event)">Estadísticas</button>
-
     <button onclick="showTab('graficos',event)">Gráficos</button>
-
     <button onclick="showTab('probabilidad',event)">Probabilidad</button>
-
     <button onclick="showTab('veracidad',event)">Veracidad</button>
-
     <button onclick="showTab('metodologia',event)">Metodología</button>
-
     <button onclick="showTab('fuentes',event)">📚 Fuentes</button>
-
   </nav>
-
   <div class="header-right">
-
-    <!-- FIX #77 — botón clearAll con id para poder deshabilitarlo -->
-
     <button class="btn-danger-sm" id="btn-clear" style="display:none" onclick="clearAll()">Borrar todo</button>
-
-    <!-- FIX #40/#52 — admin sin contraseña en plaintext, sin localStorage bypass -->
-
     <button class="admin-btn" id="btn-admin" onclick="adminToggle()">Admin</button>
-
     <span id="admin-lbl" style="font-size:10px;color:var(--accent);display:none" aria-live="polite">● ADMIN</span>
-
   </div>
-
 </header>
-
 <main>
 
 <!-- ════ TAB CARGAR ════ -->
-
 <div id="tab-cargar" class="tab active">
-
   <div class="st">Datos personales</div>
-
   <div class="form-grid">
-
-    <!-- FIX #62 — maxlength en nombre -->
-
     <div class="field"><label for="f-nombre">Nombre / ID</label><input type="text" id="f-nombre" placeholder="Encuestado 1" maxlength="80" autocomplete="off"></div>
-
     <div class="field"><label for="f-edad">Edad (13–21)</label><input type="number" id="f-edad" min="13" max="21" placeholder="17"></div>
-
     <div class="field"><label for="f-genero">Género</label>
-
       <select id="f-genero">
-
         <option value="f">Femenino</option>
-
         <option value="m">Masculino</option>
-
         <option value="o">Otro / No especifica</option>
-
       </select>
-
     </div>
-
   </div>
-
   <div class="st">Prendas compradas — últimos 30 días <span class="temporal-badge mensual">MENSUAL</span></div>
-
   <div class="prendas-grid" id="prendas-grid"></div>
-
   <div class="st">Prendas compradas — último año por estación <span class="temporal-badge anual">ANUAL</span></div>
-
+  <div class="info-box amber">
+    ⚠️ <b>Nota (Fix #6):</b> Si la suma de los 4 campos de estación difiere mucho de 12× los 30 días, se mostrará una advertencia. Ambas fuentes de datos son independientes; ingresar valores coherentes mejora la calidad del análisis.
+  </div>
   <div class="form-grid">
-
-    <!-- FIX #26 — max en campos estacionales -->
-
     <div class="field"><label for="f-verano">☀️ Verano</label><input type="number" id="f-verano" min="0" max="500" value="0" placeholder="0"></div>
-
     <div class="field"><label for="f-otono">🍂 Otoño</label><input type="number" id="f-otono" min="0" max="500" value="0" placeholder="0"></div>
-
     <div class="field"><label for="f-invierno">❄️ Invierno</label><input type="number" id="f-invierno" min="0" max="500" value="0" placeholder="0"></div>
-
     <div class="field"><label for="f-primavera">🌸 Primavera</label><input type="number" id="f-primavera" min="0" max="500" value="0" placeholder="0"></div>
-
   </div>
-
   <div class="st">Hábitos de compra y lavado</div>
-
   <div class="form-grid">
-
     <div class="field">
-
       <label for="f-segunda">% Compras de segunda mano</label>
-
       <input type="range" id="f-segunda" min="0" max="100" value="0" oninput="updRange('segunda','%')">
-
       <div class="range-row"><span class="range-hint">Reduce CO₂ un ~80% por prenda <a class="ref-badge" href="#" onclick="goFuentes(event,'src-descarte')">[8]</a></span><span class="range-val" id="rv-segunda">0%</span></div>
-
     </div>
-
     <div class="field">
-
-      <!-- FIX #60/#76 — max y step para f-lavado -->
-
       <label for="f-lavado">Usos entre lavados (↑ = menos agua)</label>
-
       <input type="number" id="f-lavado" min="1" max="50" step="1" value="3" placeholder="ej: 3">
-
       <div class="range-row"><span class="range-hint">Promedio real: 2–4 usos <a class="ref-badge" href="#" onclick="goFuentes(event,'src-descarte')">[10]</a></span></div>
-
     </div>
-
   </div>
-
   <div class="st">Nivel de descarte (¿qué proporción dejás de usar?)</div>
-
+  <!-- FIX #10: nota sobre alcance del descarte -->
+  <div class="info-box amber">
+    ⚠️ <b>Nota (Fix #10):</b> El porcentaje de descarte se aplica sobre las prendas <b>compradas en el año</b>, no sobre el guardarropa acumulado total. Los valores reales de descarte pueden diferir si la mayor parte del descarte proviene de ropa vieja. Esta es una <b>limitación del modelo</b>; los resultados son orientativos.
+  </div>
   <div class="radio-group" role="radiogroup" aria-label="Nivel de descarte">
-
     <label class="radio-opt"><input type="radio" name="descarte" value="muy_poco" checked>
-
       <div class="radio-txt"><strong>Muy poco</strong><span>≈ 33% de lo comprado</span></div></label>
-
     <label class="radio-opt"><input type="radio" name="descarte" value="medio">
-
       <div class="radio-txt"><strong>Medio</strong><span>≈ 50% de lo comprado</span></div></label>
-
     <label class="radio-opt"><input type="radio" name="descarte" value="mucho">
-
       <div class="radio-txt"><strong>Mucho</strong><span>≈ 67% de lo comprado</span></div></label>
-
   </div>
-
   <div class="st" style="margin-top:24px">
-
     Destino del descarte (%) <span class="temporal-badge anual">ANUAL</span>
-
     <span id="pct-remaining" aria-live="polite">100% restante</span>
-
   </div>
-
   <div class="info-box">
-
     💡 Mové los sliders hasta distribuir exactamente el <b>100%</b>. Cuando la suma llega a 100%, los sliders en 0% se <b>bloquean automáticamente</b>. Para redistribuir, bajá alguno primero.
-
   </div>
-
   <div class="destino-grid" id="destino-grid"></div>
-
   <div class="st">Composición de materiales</div>
-
   <div class="info-box">
-
     💡 Factores CO₂ (Higg MSI / Nature Climate Change 2023): Sintético <b>9.52 kg CO₂/kg</b> <a class="ref-badge" href="#" onclick="goFuentes(event,'src-co2')">[1]</a>
-
     · Algodón <b>5.89 kg CO₂/kg</b> <a class="ref-badge" href="#" onclick="goFuentes(event,'src-co2')">[2]</a>
-
     · Otros naturales <b>3.4 kg CO₂/kg</b> <a class="ref-badge" href="#" onclick="goFuentes(event,'src-co2')">[3]</a><br>
-
     Factores agua (Water Footprint Network): Sintético <b>125 L/kg</b> <a class="ref-badge" href="#" onclick="goFuentes(event,'src-agua')">[5]</a>
-
     · Algodón <b>10 000 L/kg</b> <a class="ref-badge" href="#" onclick="goFuentes(event,'src-agua')">[4]</a>
-
     · Otros <b>1 500 L/kg</b> — más <b>15 L</b> por lavado <a class="ref-badge" href="#" onclick="goFuentes(event,'src-descarte')">[11]</a><br>
-
-    La segunda mano reduce el impacto de <b>producción</b> un <b>80%</b> <a class="ref-badge" href="#" onclick="goFuentes(event,'src-descarte')">[8]</a> (el lavado no se ve afectado).
-
+    La segunda mano reduce el impacto de <b>producción</b> un <b>80%</b> <a class="ref-badge" href="#" onclick="goFuentes(event,'src-descarte')">[8]</a> (el lavado no se ve afectado).<br>
+    <b style="color:var(--accent3)">Fix #5:</b> El peso anual usa el promedio global de tipos de prenda (${Math.round(Object.values({remera:160,vestido:200,short:170,bano:140,accesorio:230,calzado:580,campera:420,pantalon:580,buzo:480,interior:70}).reduce((s,v)=>s+v,0)/10)}g/prenda) para evitar el sesgo de composición de los 30 días.
   </div>
-
   <div class="form-grid">
-
     <div class="field">
-
       <label for="f-sint">% Material sintético (poliéster, nylon…)</label>
-
-      <!-- FIX #43 — debounce aplicado via oninput con la función debounceAlgodon -->
-
       <input type="range" id="f-sint" min="0" max="100" value="60"
-
         oninput="updRange('sint','%'); debouncedUpdAlgodon()">
-
       <div class="range-row"><span class="range-hint" id="sint-hint">Natural restante: 40%</span><span class="range-val" id="rv-sint">60%</span></div>
-
     </div>
-
     <div class="field">
-
       <label id="label-alg" for="f-alg">Del 40% natural: ¿qué % es Algodón?</label>
-
       <input type="range" id="f-alg" min="0" max="100" value="60"
-
         oninput="updRange('alg','%')">
-
       <div class="range-row"><span class="range-hint">Resto = lino, lana, viscosa…</span><span class="range-val" id="rv-alg">60%</span></div>
-
     </div>
-
   </div>
-
   <div class="st">Ciclo de vida y gasto <span class="temporal-badge anual">ANUAL</span></div>
-
+  <!-- FIX #15: nota sobre independencia de inputs -->
+  <div class="info-box amber">
+    ⚠️ <b>Nota (Fix #15):</b> El gasto mensual y la cantidad anual de prendas son <b>entradas independientes</b>. El "precio por prenda" es un cociente orientativo que puede ser irreal si los valores no se corresponden con los mismos ítems.
+  </div>
   <div class="form-grid">
-
-    <!-- FIX #61 — min="0" en f-gasto para bloquear negativos -->
-
     <div class="field"><label for="f-gasto">Gasto mensual en fast fashion (USD) <span class="temporal-badge mensual" style="font-size:8px">MENSUAL</span></label><input type="number" id="f-gasto" min="0" max="10000" step="0.5" placeholder="ej: 25"></div>
-
-    <!-- FIX #32 — max en usos -->
-
     <div class="field"><label for="f-usos">Veces que usás cada prenda antes de descartarla <span class="temporal-badge por-uso" style="font-size:8px">POR USO</span></label><input type="number" id="f-usos" min="1" max="500" step="1" placeholder="ej: 8"></div>
-
-    <!-- FIX #32 — max en meses -->
-
-    <div class="field"><label for="f-meses">Meses que usás cada prenda antes de descartarla <span class="temporal-badge anual" style="font-size:8px">MESES</span></label><input type="number" id="f-meses" min="1" max="300" step="1" placeholder="ej: 6"></div>
-
+    <!-- FIX #14: nota sobre rotación simplificada -->
+    <div class="field"><label for="f-meses">Meses que usás cada prenda antes de descartarla <span class="temporal-badge anual" style="font-size:8px">MESES</span></label><input type="number" id="f-meses" min="1" max="300" step="1" placeholder="ej: 6">
+      <div class="range-row"><span class="range-hint" style="font-size:9px">Rotación = 12/meses (vida útil uniforme)</span></div>
+    </div>
   </div>
-
   <div id="timer-indicator" aria-label="Tiempo de respuesta de la encuesta">
-
     <span class="timer-dot" aria-hidden="true"></span>
-
     Tiempo de respuesta: <span id="timer-display">0s</span>
-
     <span id="timer-quality" style="margin-left:4px" aria-live="polite"></span>
-
   </div>
-
   <button class="btn-primary" id="btn-add" onclick="agregarEncuestado()">+ Agregar encuestado</button>
-
 </div>
 
 <!-- ════ TAB TABLA ════ -->
-
 <div id="tab-tabla" class="tab">
-
   <div class="st">Todos los encuestados — datos y métricas calculadas</div>
-
+  <div class="info-box amber">
+    ⚠️ <b>Fix #16:</b> "CO₂ desc." = CO₂ de producción de las prendas descartadas (carbono incorporado no aprovechado), no emisiones de disposición final. <b>Fix #4:</b> CO₂/uso y agua/uso son métricas amortizadas del ciclo de vida de cada prenda (producción + lavados totales ÷ usos totales). <b>Fix #13:</b> IQR con n=2 equivale a la mitad del rango y tiene utilidad estadística limitada.
+  </div>
   <div class="excel-export-row">
     <button class="btn-excel" onclick="window.exportarExcel1()" title="Exporta los datos de la tabla sin fórmulas">
       <span class="xl-icon">📊</span> Descargar Excel (datos)
@@ -1089,3667 +570,2007 @@ tr:hover td { background: rgba(28,38,64,.7); }
       <span class="xl-icon">📈</span> Descargar Excel (con fórmulas estadísticas)
     </button>
   </div>
-
   <div class="tbl-wrap">
-
     <table role="grid" aria-label="Tabla de encuestados">
-
       <thead>
-
         <tr>
-
           <th scope="col">NOMBRE</th><th scope="col">EDAD</th><th scope="col">GÉN.</th>
-
           <th scope="col">CANT.30D<span class="th-temporal temporal-badge mensual" style="display:inline-block;margin-left:4px">MES</span></th>
-
           <th scope="col">PESO 30D (G)<span class="th-temporal" style="color:var(--accent3);font-size:8px">MENSUAL</span></th>
-
           <th scope="col">CANT.ANUAL<span class="th-temporal" style="color:var(--accent4);font-size:8px">ANUAL</span></th>
-
-          <th scope="col">PESO ANUAL (KG)<span class="th-temporal" style="color:var(--accent4);font-size:8px">ANUAL</span></th>
-
+          <th scope="col">PESO ANUAL (KG)<span class="th-temporal" style="color:var(--accent4);font-size:8px">ANUAL (global avg)</span></th>
           <th scope="col">DESCARTE</th>
-
           <th scope="col">PESO DESC. (KG)<span class="th-temporal" style="color:var(--accent4);font-size:8px">ANUAL</span></th>
-
           <th scope="col">→ BASURA (KG)<span class="th-temporal" style="color:var(--accent4);font-size:8px">ANUAL</span></th>
-
           <th scope="col">→ DONADO (KG)<span class="th-temporal" style="color:var(--accent4);font-size:8px">ANUAL</span></th>
-
           <th scope="col">SINT.</th><th scope="col">ALGODÓN</th>
-
           <th scope="col">GASTO ANUAL<span class="th-temporal" style="color:var(--accent4);font-size:8px">ANUAL</span></th>
-
           <th scope="col">USOS/PRENDA<span class="th-temporal" style="color:var(--accent5);font-size:8px">POR USO</span></th>
-
           <th scope="col">VIDA ÚTIL (M)<span class="th-temporal" style="color:var(--accent4);font-size:8px">MESES</span></th>
-
           <th scope="col">COSTO/USO<span class="th-temporal" style="color:var(--accent5);font-size:8px">POR USO</span></th>
-
           <th scope="col">ROTACIÓN /AÑO<span class="th-temporal" style="color:var(--accent4);font-size:8px">ANUAL</span></th>
-
           <th scope="col">CO₂ ANUAL (KG)<span class="th-temporal" style="color:var(--accent4);font-size:8px">ANUAL</span></th>
-
-          <th scope="col">CO₂/USO (G)<span class="th-temporal" style="color:var(--accent5);font-size:8px">POR USO</span></th>
-
+          <th scope="col">CO₂/USO (G)<span class="th-temporal" style="color:var(--accent5);font-size:8px">CICLO VIDA</span></th>
           <th scope="col">AGUA PROD. (L)<span class="th-temporal" style="color:var(--accent4);font-size:8px">ANUAL</span></th>
-
-          <th scope="col">AGUA LAV. (L)<span class="th-temporal" style="color:var(--accent4);font-size:8px">ANUAL</span></th>
-
-          <th scope="col">AGUA TOTAL (L)<span class="th-temporal" style="color:var(--accent4);font-size:8px">ANUAL</span></th>
-
-          <th scope="col">AGUA/USO (L)<span class="th-temporal" style="color:var(--accent5);font-size:8px">POR USO</span></th>
-
-          <th scope="col">ÍNDICE VERACIDAD<span class="th-temporal" style="color:var(--accent3);font-size:8px">SCORE</span></th>
-
+          <th scope="col">AGUA LAV. (L)<span class="th-temporal" style="color:var(--accent4);font-size:8px">CICLO VIDA</span></th>
+          <th scope="col">AGUA TOTAL (L)<span class="th-temporal" style="color:var(--accent);font-size:8px">CICLO</span></th>
+          <th scope="col">AGUA/USO (L)<span class="th-temporal" style="color:var(--accent5);font-size:8px">CICLO VIDA</span></th>
+          <th scope="col">CO₂ DESC.(KG)<span class="th-temporal" style="color:var(--accent2);font-size:8px">CO₂ PROD. DESCH.</span></th>
+          <th scope="col">VERACIDAD<span class="th-temporal" style="color:var(--accent3);font-size:8px">SCORE</span></th>
           <th scope="col"></th>
-
         </tr>
-
       </thead>
-
       <tbody id="tabla-body">
-
-        <tr><td colspan="26"><div class="empty"><div class="ei">📋</div>Aún no hay encuestados</div></td></tr>
-
+        <tr><td colspan="27"><div class="empty"><div class="ei">📋</div>Aún no hay encuestados</div></td></tr>
       </tbody>
-
     </table>
-
   </div>
-
 </div>
 
 <!-- ════ TAB ESTADÍSTICAS ════ -->
-
 <div id="tab-estadisticas" class="tab">
-
   <div id="kpi-row" class="kpi-row" style="margin-top:0"></div>
-
   <div id="stats-cont">
-
     <div class="empty"><div class="ei">📊</div>Cargá encuestados para ver estadísticas</div>
-
   </div>
-
 </div>
 
 <!-- ════ TAB GRÁFICOS ════ -->
-
 <div id="tab-graficos" class="tab">
-
   <div id="charts-cont">
-
     <div class="empty"><div class="ei">📈</div>Cargá encuestados para ver gráficos</div>
-
   </div>
-
 </div>
 
 <!-- ════ TAB PROBABILIDAD ════ -->
-
 <div id="tab-probabilidad" class="tab">
-
   <div id="prob-cont">
-
     <div class="empty"><div class="ei">🎯</div>Cargá encuestados para ver el análisis de probabilidad</div>
-
   </div>
-
 </div>
 
 <!-- ════ TAB VERACIDAD ════ -->
-
 <div id="tab-veracidad" class="tab">
-
   <div id="veracity-cont">
-
     <div class="empty"><div class="ei">🔍</div>Cargá encuestados para ver el análisis de veracidad</div>
-
   </div>
-
 </div>
 
 <!-- ════ TAB METODOLOGÍA ════ -->
-
 <div id="tab-metodologia" class="tab">
-
-  <div class="st">Fundamentos científicos y supuestos del modelo</div>
-
+  <div class="st">Fundamentos científicos y supuestos del modelo — v4.6</div>
   <div class="info-box amber">
-
     ⚠️ <b>Limitaciones importantes:</b> Este modelo usa factores promedio globales. Los valores reales dependen de la región de producción, proceso exacto, tipo de cultivo y mix energético. Las estimaciones son orientativas para educación y comparación relativa.
-
   </div>
-
   <div class="metod-grid">
-
     <div class="metod-card">
-
       <h4>💨 CO₂ — Factores de emisión</h4>
-
       <ul>
-
         <li>Sintético (poliéster/nylon): <b style="color:var(--text)">9.52 kg CO₂/kg</b> <a class="ref-badge" href="#" onclick="goFuentes(event,'src-co2')">[1]</a></li>
-
         <li>Algodón convencional: <b style="color:var(--text)">5.89 kg CO₂/kg</b> <a class="ref-badge" href="#" onclick="goFuentes(event,'src-co2')">[2]</a></li>
-
         <li>Otros naturales (lino, lana, viscosa): <b style="color:var(--text)">3.4 kg CO₂/kg</b> <a class="ref-badge" href="#" onclick="goFuentes(event,'src-co2')">[3]</a></li>
-
         <li>Segunda mano reduce el impacto de <b>producción</b> un 80% <a class="ref-badge" href="#" onclick="goFuentes(event,'src-descarte')">[8]</a></li>
-
       </ul>
-
       <div class="src">Nature Climate Change (2018) · Higg MSI v3.11 (Cascale, 2023)</div>
-
     </div>
-
     <div class="metod-card">
-
       <h4>💧 Agua — Producción</h4>
-
       <ul>
-
         <li>Sintético: <b style="color:var(--text)">125 L/kg</b> <a class="ref-badge" href="#" onclick="goFuentes(event,'src-agua')">[5]</a></li>
-
         <li>Algodón: <b style="color:var(--text)">10 000 L/kg</b> <a class="ref-badge" href="#" onclick="goFuentes(event,'src-agua')">[4]</a></li>
-
         <li>Otros naturales: <b style="color:var(--text)">1 500 L/kg</b> <a class="ref-badge" href="#" onclick="goFuentes(event,'src-agua')">[6]</a></li>
-
         <li>Segunda mano reduce agua de producción un 80%</li>
-
+        <li><b style="color:var(--accent3)">Fix #4:</b> "Agua/uso" amortiza producción + lavados de ciclo de vida completo ÷ usos totales.</li>
       </ul>
-
       <div class="src">Water Footprint Network · UNEP 2023</div>
-
     </div>
-
     <div class="metod-card">
-
-      <h4>📊 Estadísticos — fórmulas v4.5</h4>
-
-      <!-- FIX #36/#48 — documentación correcta de σ muestral -->
-
+      <h4>📊 Estadísticos — fórmulas v4.6</h4>
       <div class="formula-block">
-
         Media: x̄ = (Σxᵢ) / n<br>
-
         <b>σ MUESTRAL (Bessel, n-1):</b><br>
-
         s = √(Σ(xᵢ−x̄)² / (n−1)) — requiere n≥2<br>
-
-        stddevSafe: max(s, |x̄|·0.05, 0.0001)<br>
-
-        CV: s/|x̄|×100 [0 si x̄≈0]<br>
-
+        stddevSafe: max(s, |x̄|·0.05, 0.0001) [solo para estabilidad numérica]<br>
+        CV: s/|x̄|×100 — <b>NaN si |x̄|&lt;1e-12</b> (Fix #12)<br>
         Cuantiles: interpolación lineal Tipo 7<br>
-
-        <b>CDF: Abramowitz &amp; Stegun (1964)</b><br>
-
-        z clamp ∈ [−8, 8] · 5 términos polinómico
-
+        <b>IQR n=2: = rango/2 (valor limitado)</b> (Fix #13)<br>
+        <b>CDF: A&amp;S §26.2.17 + Mills asintótica |z|&gt;6</b> (Fix #18)
       </div>
-
       <div class="src">Corrección de Bessel (1838) · Hyndman &amp; Fan (1996) · A&amp;S §26.2.17</div>
-
     </div>
-
     <div class="metod-card">
-
-      <h4>🔍 Índice de veracidad — Jackknife</h4>
-
+      <h4>🔍 Índice de veracidad — Jackknife v4.6</h4>
       <div class="formula-block">
-
         <b>Leave-one-out por ._fid (ID único):</b><br>
-
-        μ_LOO = media del grupo SIN el individuo i<br>
-
+        μ_LOO = media del grupo SIN individuo i<br>
         σ_LOO = stddevSafe SIN individuo i<br>
-
         zScore_i = |x_i − μ_LOO| / σ_LOO<br>
-
-        timerPenalty: &lt;10s→0.6 · &lt;30s→0.3 · &lt;60s→0.1<br>
-
-        score = max(0, 1 − avgZ/3 − timerPenalty)×100<br>
-
+        <b>Fix #7: score = Φ(3 − avgZ) × 100</b><br>
+        (escala estadística, no arbitraria)<br>
+        <b>Fix #17: timer = indicador SEPARADO</b><br>
+        (⏱ o ⏱!! en el label, no resta al score)<br>
         n&lt;2 → score fijo 75 (referencial)
-
       </div>
-
-      <div class="src">Quenouille (1956) Jackknife</div>
-
+      <div class="src">Quenouille (1956) Jackknife · Fix #8: pg5 usa LOO por individuo</div>
     </div>
-
+    <div class="metod-card">
+      <h4>⚖️ Supuestos del peso anual</h4>
+      <ul>
+        <li><b style="color:var(--accent3)">Fix #5:</b> Peso anual = cant.anual × <b>peso global promedio</b> (≈303 g/prenda). No usa el peso sesgado de los 30 días, que puede reflejar una composición atípica.</li>
+        <li><b style="color:var(--accent3)">Fix #14:</b> Rotación = 12 / vidaUtilMeses asume vida útil <b>uniforme</b> en todos los tipos. Esto es una simplificación.</li>
+        <li><b style="color:var(--accent3)">Fix #3:</b> Lavados por ciclo de vida se redondean a entero.</li>
+        <li><b style="color:var(--accent3)">Fix #16:</b> "CO₂ desc." = carbono de producción incorporado en prendas descartadas, no emisiones de disposición.</li>
+      </ul>
+      <div class="src">FastStats v4.6 — correcciones metodológicas internas</div>
+    </div>
+    <div class="metod-card">
+      <h4>📈 Distribuciones y probabilidad</h4>
+      <div class="formula-block">
+        <b>Fix #2: gaussPoints renormalizada</b><br>
+        Si noNeg recorta x&lt;0, se integra<br>
+        por trapecio y se divide para que<br>
+        ∫f(x)dx = 1 visualmente correcto.<br>
+        <b>Fix #18: normalCDF asintótica</b><br>
+        |z|&gt;6: razón de Mills (4 términos)<br>
+        Distingue prob. extremas (no clamp a 0/1)<br>
+        <b>Fix #8: pg5 LOO por individuo</b><br>
+        z_i = (umbral − x_i) / σ_grupo_sin_i
+      </div>
+      <div class="src">Mills (1926) · A&amp;S §26.2.17 · Jackknife LOO</div>
+    </div>
   </div>
-
 </div>
 
 <!-- ════ TAB FUENTES ════ -->
-
 <div id="tab-fuentes" class="tab">
-
   <div class="sources-hero">
-
     <h2>📚 Fuentes de Datos y Validación Científica</h2>
-
-    <p>Todos los parámetros de cálculo de FastStats v4.5 están respaldados por investigaciones de organismos internacionales, papers académicos con revisión por pares y reportes de organizaciones especializadas en sostenibilidad textil.</p>
-
+    <p>Todos los parámetros de cálculo de FastStats v4.6 están respaldados por investigaciones de organismos internacionales, papers académicos con revisión por pares y reportes de organizaciones especializadas en sostenibilidad textil.</p>
   </div>
-
-  <!-- FIX #39 — índice interno de fuentes -->
-
   <div class="src-index" role="navigation" aria-label="Índice de fuentes">
-
     <a class="src-index-btn" href="#src-co2" onclick="scrollToSrc(event,'src-co2')">💨 CO₂ por Material</a>
-
     <a class="src-index-btn" href="#src-agua" onclick="scrollToSrc(event,'src-agua')">💧 Huella Hídrica</a>
-
     <a class="src-index-btn" href="#src-descarte" onclick="scrollToSrc(event,'src-descarte')">♻️ Descarte y Lavado</a>
-
     <a class="src-index-btn" href="#src-std" onclick="scrollToSrc(event,'src-std')">🎯 Estándares Int.</a>
-
   </div>
-
   <div class="src-category" id="src-co2">
-
     <div class="src-category-title">
-
       <span class="cat-icon" style="background:rgba(167,139,250,.15);color:var(--accent5)">💨</span>
-
       Emisiones de CO₂ por Material Textil
-
     </div>
-
     <div class="tbl-wrap">
-
       <table class="src-table">
-
         <thead><tr><th style="width:40px">#</th><th>Dato utilizado</th><th>Valor adoptado</th><th>Rango</th><th>Organismo</th><th>Año</th><th>Enlace</th></tr></thead>
-
         <tbody>
-
           <tr><td><span class="src-num">1</span></td><td class="src-dato">CO₂ fibra sintética<small>Extracción crudo, polimerización, hilatura</small><span class="src-value">9.52 kg CO₂/kg</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">9.52 kg CO₂/kg</td><td style="color:var(--muted);font-family:var(--font-d);font-size:10px">5.5–14.8</td><td><span class="src-org">Nature Climate Change / Higg MSI v3.11</span></td><td class="src-year">2018/2023</td><td><a class="src-link" href="https://www.nature.com/articles/s41558-017-0058-9" target="_blank" rel="noopener noreferrer">↗ nature.com</a></td></tr>
-
           <tr><td><span class="src-num">2</span></td><td class="src-dato">CO₂ algodón convencional<small>Cultivo, hilatura, tejeduría, tintura</small><span class="src-value">5.89 kg CO₂/kg</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">5.89 kg CO₂/kg</td><td style="color:var(--muted);font-family:var(--font-d);font-size:10px">2.1–8.0</td><td><span class="src-org">Textile Exchange / Higg MSI</span></td><td class="src-year">2023</td><td><a class="src-link" href="https://cascale.org/topic/higg-msi/" target="_blank" rel="noopener noreferrer">↗ cascale.org</a></td></tr>
-
           <tr><td><span class="src-num">3</span></td><td class="src-dato">CO₂ fibras naturales diversas<small>Lino, lana, viscosa — promedio ponderado</small><span class="src-value">3.40 kg CO₂/kg</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">3.40 kg CO₂/kg</td><td style="color:var(--muted);font-family:var(--font-d);font-size:10px">1.8–6.5</td><td><span class="src-org">EcoEnclose / Textile LCA Review</span></td><td class="src-year">2023</td><td><a class="src-link" href="https://www.ecoenclose.com/resources/guide-to-fabric-sustainability" target="_blank" rel="noopener noreferrer">↗ ecoenclose.com</a></td></tr>
-
         </tbody>
-
       </table>
-
     </div>
-
   </div>
-
   <div class="src-category" id="src-agua">
-
     <div class="src-category-title">
-
       <span class="cat-icon" style="background:rgba(107,159,255,.15);color:var(--accent4)">💧</span>
-
       Huella Hídrica
-
     </div>
-
     <div class="tbl-wrap">
-
       <table class="src-table">
-
         <thead><tr><th>#</th><th>Dato</th><th>Valor</th><th>Rango</th><th>Organismo</th><th>Año</th><th>Enlace</th></tr></thead>
-
         <tbody>
-
           <tr><td><span class="src-num">4</span></td><td class="src-dato">Agua algodón (blue+green+grey)<small>Incluye agua de lluvia, riego y contaminación</small><span class="src-value">10 000 L/kg</span><span class="src-range">7 000–20 000</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">10 000 L/kg</td><td style="color:var(--muted);font-family:var(--font-d);font-size:10px">7k–20k</td><td><span class="src-org">Water Footprint Network</span></td><td class="src-year">2006/2023</td><td><a class="src-link" href="https://waterfootprint.org" target="_blank" rel="noopener noreferrer">↗ waterfootprint.org</a></td></tr>
-
           <tr><td><span class="src-num">5</span></td><td class="src-dato">Agua fibra sintética<span class="src-value">125 L/kg</span><span class="src-range">70–200</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">125 L/kg</td><td style="color:var(--muted);font-family:var(--font-d);font-size:10px">70–200</td><td><span class="src-org">UNEP / WFN</span></td><td class="src-year">2023</td><td><a class="src-link" href="https://www.unep.org" target="_blank" rel="noopener noreferrer">↗ unep.org</a></td></tr>
-
           <tr><td><span class="src-num">6</span></td><td class="src-dato">Agua fibras naturales diversas<span class="src-value">1 500 L/kg</span><span class="src-range">600–3 500</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">1 500 L/kg</td><td style="color:var(--muted);font-family:var(--font-d);font-size:10px">600–3 500</td><td><span class="src-org">WFN / Textile LCA Review</span></td><td class="src-year">2023</td><td><a class="src-link" href="https://waterfootprint.org" target="_blank" rel="noopener noreferrer">↗ waterfootprint.org</a></td></tr>
-
         </tbody>
-
       </table>
-
     </div>
-
   </div>
-
   <div class="src-category" id="src-descarte">
-
     <div class="src-category-title">
-
       <span class="cat-icon" style="background:rgba(255,83,112,.12);color:var(--accent2)">♻️</span>
-
       Descarte, Ciclo de Vida y Lavado
-
     </div>
-
     <div class="tbl-wrap">
-
       <table class="src-table">
-
         <thead><tr><th>#</th><th>Dato</th><th>Valor</th><th>Rango</th><th>Organismo</th><th>Año</th><th>Enlace</th></tr></thead>
-
         <tbody>
-
-          <tr><td><span class="src-num">7</span></td><td class="src-dato">Proporción de descarte<small>33% / 50% / 67% modelo EMF</small><span class="src-value">33/50/67%</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">33/50/67%</td><td style="color:var(--muted)">—</td><td><span class="src-org">Ellen MacArthur Foundation</span></td><td class="src-year">2017</td><td><a class="src-link" href="https://ellenmacarthurfoundation.org/a-new-textiles-economy" target="_blank" rel="noopener noreferrer">↗ emf.org</a></td></tr>
-
+          <tr><td><span class="src-num">7</span></td><td class="src-dato">Proporción de descarte<small>33% / 50% / 67% modelo EMF — sobre compras anuales</small><span class="src-value">33/50/67%</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">33/50/67%</td><td style="color:var(--muted)">—</td><td><span class="src-org">Ellen MacArthur Foundation</span></td><td class="src-year">2017</td><td><a class="src-link" href="https://ellenmacarthurfoundation.org/a-new-textiles-economy" target="_blank" rel="noopener noreferrer">↗ emf.org</a></td></tr>
           <tr><td><span class="src-num">8</span></td><td class="src-dato">Reducción impacto segunda mano<small>Evita ~80% emisiones y agua de producción</small><span class="src-value">−80% prod.</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">−80%</td><td style="color:var(--muted);font-size:10px">−75 a −85%</td><td><span class="src-org">EMF / ThredUp</span></td><td class="src-year">2023</td><td><a class="src-link" href="https://ellenmacarthurfoundation.org" target="_blank" rel="noopener noreferrer">↗ emf.org</a></td></tr>
-
           <tr><td><span class="src-num">9</span></td><td class="src-dato">Ropa descartada antes de 1 año<small>Fast fashion ~7–10 usos promedio</small><span class="src-value">≈60% en &lt;1 año</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">≈60%</td><td style="color:var(--muted);font-size:10px">50–65%</td><td><span class="src-org">Nature Climate Change</span></td><td class="src-year">2018</td><td><a class="src-link" href="https://www.nature.com/articles/s41558-017-0058-9" target="_blank" rel="noopener noreferrer">↗ nature.com</a></td></tr>
-
           <tr><td><span class="src-num">10</span></td><td class="src-dato">Usos entre lavados ropa casual<small>Remeras 2–3, pantalones 3–5</small><span class="src-value">2–4 usos</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">3 (default)</td><td style="color:var(--muted);font-size:10px">2–4</td><td><span class="src-org">WRAP UK</span></td><td class="src-year">2022</td><td><a class="src-link" href="https://www.wrap.ngo" target="_blank" rel="noopener noreferrer">↗ wrap.ngo</a></td></tr>
-
           <tr><td><span class="src-num">11</span></td><td class="src-dato">Agua por ciclo de lavado<small>15 L / promedio prendas por lavado</small><span class="src-value">15 L/lavado</span><span class="src-range">7–22 L</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">15 L/lavado</td><td style="color:var(--muted);font-size:10px">7–22 L</td><td><span class="src-org">Stamminger et al. / IEA</span></td><td class="src-year">2012/2023</td><td><a class="src-link" href="https://iea.org/reports/energy-efficiency-2023" target="_blank" rel="noopener noreferrer">↗ iea.org</a></td></tr>
-
         </tbody>
-
       </table>
-
     </div>
-
   </div>
-
   <div class="src-category" id="src-std">
-
     <div class="src-category-title">
-
       <span class="cat-icon" style="background:rgba(255,181,71,.12);color:var(--accent3)">🎯</span>
-
       Estándares Internacionales
-
     </div>
-
     <div class="tbl-wrap">
-
       <table class="src-table">
-
         <thead><tr><th>#</th><th>Dato</th><th>Valor</th><th>Contexto</th><th>Organismo</th><th>Año</th><th>Enlace</th></tr></thead>
-
         <tbody>
-
           <tr><td><span class="src-num">12</span></td><td class="src-dato">CO₂ textil per cápita UE/año<small>Media 355 kg; umbral sostenible −91%</small><span class="src-value">umbral ≤ 30 kg/año</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">≤ 30 kg/año</td><td style="color:var(--muted);font-size:10px">−91% vs media UE</td><td><span class="src-org">European Environment Agency</span></td><td class="src-year">2022</td><td><a class="src-link" href="https://www.europarl.europa.eu/topics/en/article/20201208STO93327" target="_blank" rel="noopener noreferrer">↗ europarl.eu</a></td></tr>
-
           <tr><td><span class="src-num">13</span></td><td class="src-dato">Prendas anuales consumo sostenible<small>Media global ≈58/año; sostenible &lt;30</small><span class="src-value">umbral ≤ 30/año</span></td><td style="color:var(--accent);font-weight:700;font-family:var(--font-d)">≤ 30/año</td><td style="color:var(--muted);font-size:10px">vs 58–64 Europa</td><td><span class="src-org">Textile Exchange Global Fiber Report</span></td><td class="src-year">2023</td><td><a class="src-link" href="https://textileexchange.org/materials-market-report/" target="_blank" rel="noopener noreferrer">↗ textileexchange.org</a></td></tr>
-
           <tr><td><span class="src-num">14</span></td><td class="src-dato">Presupuesto carbono total París 1.5°C<small>TOTAL todos sectores — no solo ropa</small><span class="src-value">≤ 2 tCO₂/persona/año</span></td><td style="color:var(--muted);font-weight:700;font-family:var(--font-d)">Solo referencial</td><td style="color:var(--muted);font-size:10px">TOTAL, no ropa</td><td><span class="src-org">IPCC AR6 WG3</span></td><td class="src-year">2021</td><td><a class="src-link" href="https://www.ipcc.ch/report/ar6/wg3/" target="_blank" rel="noopener noreferrer">↗ ipcc.ch</a></td></tr>
-
         </tbody>
-
       </table>
-
     </div>
-
   </div>
-
 </div>
 
 </main>
-
-<!-- FIX #55 — role y aria-live en toast -->
-
 <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
 import {
-
   getFirestore, collection, addDoc, deleteDoc,
-
   doc, onSnapshot, getDocs, writeBatch
-
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ══════════════════════════════════════════════
-
-//  FIX #40/#52 — Admin: hash SHA-256, sin localStorage bypass
-
-//  La contraseña nunca se guarda en texto plano ni en localStorage.
-
-//  adminMode es SOLO variable en memoria, se resetea al recargar.
-
+//  ADMIN — hash SHA-256, sin localStorage bypass
 // ══════════════════════════════════════════════
-
-// Hash SHA-256 de la contraseña real (calculado fuera del código)
-
-// Para cambiar la contraseña: actualizar ADMIN_HASH con el hash del nuevo valor
-
 const ADMIN_HASH = 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3';
-
 async function verifyPassword(input) {
-
   const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
-
   const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-
   return hash === ADMIN_HASH;
-
 }
 
 const FB = initializeApp({
-
   apiKey: "AIzaSyCeN-OL6KaihtYaETzTDFDPhhL-DMPnDjE",
-
   authDomain: "faststats-90071.firebaseapp.com",
-
   projectId: "faststats-90071",
-
   storageBucket: "faststats-90071.firebasestorage.app",
-
   messagingSenderId: "439304544464",
-
   appId: "1:439304544464:web:cf1cbe7668b1f893023ed5"
-
 });
-
 const db   = getFirestore(FB);
-
 const COLL = "encuestados";
 
 // ══════════════════════════════════════════════
-
-//  CONSTANTES v4.5
-
+//  CONSTANTES v4.6
+//  FIX #11: declaradas una sola vez, nunca redeclaradas en funciones
 // ══════════════════════════════════════════════
-
 const TIPOS = {
-
   remera:    { n: "Remeras / Camisetas",    p: 160 },
-
   vestido:   { n: "Vestidos / Faldas",      p: 200 },
-
   short:     { n: "Shorts / Bermudas",      p: 170 },
-
   bano:      { n: "Ropa de Baño",           p: 140 },
-
   accesorio: { n: "Accesorios (bolsos…)",   p: 230 },
-
   calzado:   { n: "Calzado (par)",          p: 580 },
-
   campera:   { n: "Camperas / Abrigos",     p: 420 },
-
   pantalon:  { n: "Pantalones / Jeans",     p: 580 },
-
   buzo:      { n: "Buzos / Hoodies",        p: 480 },
-
   interior:  { n: "Ropa Interior / Medias", p:  70 },
-
 };
-
 const TIPO_KEYS     = Object.keys(TIPOS);
-
 const PESO_GLOBAL_G = Object.values(TIPOS).reduce((s,v)=>s+v.p,0) / TIPO_KEYS.length;
 
 const DESTINOS = {
-
   guardado:  { label: "Guardada sin usar",  col: "#7A8AAF" },
-
   donado:    { label: "Donada / Regalada",  col: "#00E5C5" },
-
   vendido:   { label: "Vendida",            col: "#FFB547" },
-
   reciclado: { label: "Reciclada",          col: "#4CAF50" },
-
   basura:    { label: "Tirada a la basura", col: "#FF5370" },
-
 };
-
 const DEST_KEYS = Object.keys(DESTINOS);
 
 const CO2_SINT = 9.52, CO2_ALG = 5.89, CO2_OTRO = 3.40;
-
 const AGUA_SINT = 125, AGUA_ALG = 10000, AGUA_OTRO = 1500;
-
 const LITROS_POR_LAVADO = 15;
-
 const REDUCCION_2MANO   = 0.8;
-
 const FACTORES_DESC  = { muy_poco: 1/3, medio: 0.5, mucho: 2/3 };
-
 const LABELS_DESC    = { muy_poco: "Muy poco (33%)", medio: "Medio (50%)", mucho: "Mucho (67%)" };
 
+// FIX #11: constantes globales únicas, NUNCA redeclarar en funciones
 const STD_CO2_KG     = 30;
-
 const STD_AGUA_L     = 50000;
-
 const STD_GASTO_USD  = 300;
 
 const MAX_PRENDAS_30D   = 300;
-
 const MAX_PRENDAS_ANUAL = 1000;
+const STATS_COLS = 10;
 
-const STATS_COLS = 10; // FIX #58 — colspan en group-hdr
-
-let encuestados  = [];
-
-let charts       = {};
-
-let adminMode    = false; // FIX #52 — NUNCA desde localStorage
-
-let timerStart   = Date.now();
-
+let encuestados   = [];
+let charts        = {};
+let adminMode     = false;
+let timerStart    = Date.now();
 let timerInterval = null;
-
-// FIX #25/#51 — un único unsub almacenado, evita listeners duplicados
-
-let _firebaseUnsub = null;
-
+let _firebaseUnsub  = null;
 let _listenerActive = false;
 
 // ══════════════════════════════════════════════
-
-//  FIX #9/#44 — SANITIZACIÓN: esc() para TODO output HTML
-
+//  SANITIZACIÓN Y UTILIDADES
 // ══════════════════════════════════════════════
-
 function esc(str) {
-
   const d = document.createElement('div');
-
   d.appendChild(document.createTextNode(String(str ?? '')));
-
   return d.innerHTML;
-
 }
-
-// FIX #31 — truncLabel para tooltips de gráficos
-
 function truncLabel(str, max = 16) {
-
   const s = String(str ?? '');
-
   return s.length > max ? s.slice(0, max) + '…' : s;
-
 }
-
-// ══════════════════════════════════════════════
-
-//  DEBOUNCE UTILITY
-
-//  FIX #11/#43/#59 — debounce para destino y materiales
-
-// ══════════════════════════════════════════════
-
 function debounce(fn, ms) {
-
   let t;
-
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-
 }
 
 // ══════════════════════════════════════════════
-
-//  FIX #50 — LIBRERÍA ESTADÍSTICA v4.5
-
-//  Uso CONSISTENTE de Number.isFinite() en todo el código.
-
-//  finite() filtra ANTES de operar — FIX #7/#23.
-
+//  BIBLIOTECA ESTADÍSTICA v4.6
 // ══════════════════════════════════════════════
-
-/** Filtra solo valores numéricos finitos. FIX #23/#35 */
-
 function finite(arr) {
-
   return (arr ?? []).filter(v => Number.isFinite(v));
-
 }
-
-/** Media aritmética. NaN si vacío. */
-
 function mean(a) {
-
   const f = finite(a);
-
   if (!f.length) return NaN;
-
   return f.reduce((s,x) => s+x, 0) / f.length;
-
 }
-
-/**
-
- * Mediana — interpolación lineal Tipo 7 (Hyndman & Fan, 1996).
-
- * FIX #23: filtra NaN. Estable n=1,2.
-
- */
-
 function median(a) {
-
   const f = finite(a);
-
   if (!f.length) return NaN;
-
   const s = [...f].sort((x,y) => x-y);
-
   const h = (s.length - 1) * 0.5;
-
   const lo = Math.floor(h), hi = Math.ceil(h);
-
   return s[lo] + (h - lo) * (s[hi] - s[lo]);
-
 }
-
-/**
-
- * Cuantil Tipo 7. FIX #12: estable con n pequeño, filtra NaN. FIX #17: valida p ∈ [0,1].
-
- */
-
 function quantile(a, p) {
-
   const f = finite(a);
-
   if (!f.length) return NaN;
-
-  if (p < 0 || p > 1) return NaN; // FIX #17 — p debe estar en [0,1]
-
+  if (p < 0 || p > 1) return NaN;
   if (f.length === 1) return f[0];
-
   const s = [...f].sort((x,y) => x-y);
-
   const h = (s.length - 1) * p;
-
   const lo = Math.floor(h), hi = Math.ceil(h);
-
   return s[lo] + (h - lo) * (s[hi] - s[lo]);
-
 }
-
 function q1(a)  { return quantile(a, 0.25); }
-
 function q3(a)  { return quantile(a, 0.75); }
-
 function iqr(a) {
-
   const a1 = q1(a), a3 = q3(a);
-
   return (Number.isFinite(a1) && Number.isFinite(a3)) ? a3 - a1 : NaN;
-
 }
-
-/**
-
- * FIX #8 — Desviación estándar MUESTRAL (Bessel, ÷ n-1).
-
- * FIX #7 — NaN si n < 2 (no propaga basura).
-
- */
-
+/** Desviación estándar MUESTRAL (Bessel, ÷ n-1). NaN si n < 2. */
 function stddev(a) {
-
   const f = finite(a);
-
   if (f.length < 2) return NaN;
-
   const m = mean(f);
-
   return Math.sqrt(f.reduce((s,x) => s + (x-m)**2, 0) / (f.length - 1));
-
 }
-
 /**
-
- * FIX #1 — stddevSafe() DEFINIDA correctamente con filtro finite().
-
- * Suelo técnico: max(s, |μ|·0.05, 0.0001).
-
+ * stddevSafe: suelo técnico para estabilidad numérica.
+ * Cuando n<2 retorna el suelo (no tiene significado estadístico real).
+ * El caller debe verificar con finite(a).length >= 2 antes de interpretar.
  */
-
 function stddevSafe(a) {
-
   const f = finite(a);
-
   const s = stddev(f);
-
   const m = f.length ? Math.abs(mean(f)) : 0;
-
   const floor = Math.max(m * 0.05, 0.0001);
-
   return Number.isFinite(s) ? Math.max(s, floor) : floor;
-
 }
-
 /**
-
- * FIX #22/#10 — CV: 0 si media ≈ 0 (evita Infinity). Threshold 1e-12.
-
+ * FIX #12: CV retorna NaN cuando |μ| < 1e-12 (indefinido, no cero).
+ * El caller debe usar Number.isFinite(cv(...)) antes de mostrar.
  */
-
 function cv(a) {
-
   const f = finite(a);
-
   const m = mean(f);
-
-  if (!Number.isFinite(m) || m === 0 || Math.abs(m) < 1e-12) return 0;
-
+  if (!Number.isFinite(m) || Math.abs(m) < 1e-12) return NaN;
   return (stddevSafe(f) / Math.abs(m)) * 100;
-
 }
-
 function minv(a) { const f = finite(a); return f.length ? Math.min(...f) : NaN; }
-
 function maxv(a) { const f = finite(a); return f.length ? Math.max(...f) : NaN; }
 
 /**
-
- * FIX #2/#67 — normalCDF() robusta (Abramowitz & Stegun §26.2.17).
-
- * FIX #34 — Manejo explícito de Infinity.
-
- * FIX #67 — z=0 → retorna exactamente 0.5.
-
+ * FIX #18: normalCDF con expansión asintótica de Mills para |z| > 6.
+ * Elimina el clamp a [−8,8] que hacía indistinguibles probabilidades extremas.
+ * Para |z| ≤ 6: A&S §26.2.17. Para |z| > 6: razón de Mills (4 términos).
  */
-
 function normalCDF(z) {
-
   if (!Number.isFinite(z)) return z > 0 ? 1 : 0;
-
-  if (z === 0)  return 0.5;
-
-  if (z >  8)   return 1;
-
-  if (z < -8)   return 0;
-
+  if (z === 0) return 0.5;
   const absZ = Math.abs(z);
-
+  // FIX #18: expansión asintótica de Mills para valores extremos
+  if (absZ > 6) {
+    const phi = Math.exp(-0.5 * absZ * absZ) / Math.sqrt(2 * Math.PI);
+    const z2  = absZ * absZ;
+    // Razón de Mills: Q(z) ≈ φ(z)/z × (1 − 1/z² + 3/z⁴ − 15/z⁶)
+    const mills = (phi / absZ) * (1 - 1/z2 + 3/(z2*z2) - 15/(z2*z2*z2));
+    return z > 0 ? 1 - Math.max(0, mills) : Math.max(0, mills);
+  }
+  // A&S §26.2.17 para |z| ≤ 6
   const t    = 1 / (1 + 0.2316419 * absZ);
-
   const poly = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
-
   const phi  = Math.exp(-0.5 * absZ * absZ) / Math.sqrt(2 * Math.PI);
-
   const tail = phi * poly;
-
   return z > 0 ? 1 - tail : tail;
-
 }
 
-// ══════════════════════════════════════════════
-
-//  FIX #3/#17/#30 — gaussPoints() CORREGIDA
-
-//  σ ≈ 0 manejado. noNeg consistente. Clamping densidad.
-
-//  FIX #66 — garantiza al menos 2 puntos para Chart.js.
-
-//  FIX #7 — noNeg mantiene amplitud de 4σ en ambos lados.
-
-// ══════════════════════════════════════════════
-
+/**
+ * FIX #2: gaussPoints con renormalización tras recorte noNeg.
+ * Si la curva se recorta en x=0, se integra por trapecio y se escala
+ * para que el área visual sea exactamente 1 (distribución correcta).
+ */
 function gaussPoints(mu, sigma, nPts = 300, noNeg = true) {
-
-  // FIX #3: garantizar σ finito y positivo
-
   const s = (Number.isFinite(sigma) && sigma > 1e-9)
-
     ? sigma
-
     : Math.max(Math.abs(mu) * 0.05, 0.0001);
-
   let lo = mu - 4 * s;
-
   let hi = mu + 4 * s;
-
-  // FIX #7/#30: noNeg aplicado consistentemente, manteniendo amplitud
-
   if (noNeg && lo < 0) {
-
     lo = 0;
-
-    hi = Math.max(hi, mu + 4 * s); // Mantener amplitud de 4σ
-
+    hi = Math.max(hi, mu + 4 * s);
   }
-
-  // FIX #66: garantiza hi > lo con margen mínimo
-
   if (hi <= lo) hi = lo + s * 0.2 + 0.01;
-
   const step = (hi - lo) / Math.max(nPts, 2);
-
   const xs = [], ys = [];
-
   const k  = 1 / (s * Math.sqrt(2 * Math.PI));
-
-  // FIX #17: clamping de densidad para σ muy pequeño
-
   const maxDensity = 5 * k;
-
   for (let i = 0; i <= nPts; i++) {
-
     const x = lo + i * step;
-
     const y = Math.min(k * Math.exp(-0.5 * ((x - mu) / s) ** 2), maxDensity);
-
     xs.push(x);
-
     ys.push(y);
-
   }
-
+  // FIX #2: renormalizar si se recortó la distribución
+  const wasClipped = noNeg && (mu - 4 * s) < 0;
+  if (wasClipped && ys.length > 1) {
+    let area = 0;
+    for (let i = 0; i < ys.length - 1; i++) {
+      area += (ys[i] + ys[i+1]) * 0.5 * step;
+    }
+    if (area > 1e-12) {
+      for (let i = 0; i < ys.length; i++) ys[i] /= area;
+    }
+  }
   return { xs, ys };
-
 }
 
 // ══════════════════════════════════════════════
-
-//  FIX #13/#6 — MOTOR DE CÁLCULO v4.5
-
-//  short-circuit totalUsos=0, sin NaN propagado, clamps fuertes.
-
-//  FIX #16 — precioPrenda/costoUso nunca negativos.
-
-//  FIX #27 — pctS+pctA+pctO = 1 por construcción.
-
+//  MOTOR DE CÁLCULO v4.6
 // ══════════════════════════════════════════════
-
 function calcular(enc) {
-
-  const cant30d = enc.cant30d || {};
-
-  const est     = enc.estaciones || {};
-
-  const destino = enc.destino || {};
+  const cant30d  = enc.cant30d  || {};
+  const est      = enc.estaciones || {};
+  const destino  = enc.destino  || {};
 
   let cant30 = 0, peso30g = 0;
-
   const pesoPorTipo = {};
-
   for (const k of TIPO_KEYS) {
-
     const q = Math.max(0, Number(cant30d[k]) || 0);
-
     pesoPorTipo[k] = q * TIPOS[k].p;
-
     cant30  += q;
-
     peso30g += pesoPorTipo[k];
-
   }
-
+  // pesoProm_g se mantiene para información de 30d; NO se usa para peso anual
   const pesoProm_g = cant30 > 0 ? peso30g / cant30 : PESO_GLOBAL_G;
 
-  // FIX #26 — clamp anual
-
   const cantAnualRaw = (Number(est.verano)||0)+(Number(est.otono)||0)+(Number(est.invierno)||0)+(Number(est.primavera)||0);
-
   const cantAnual    = Math.min(Math.max(0, cantAnualRaw), MAX_PRENDAS_ANUAL);
 
-  const pesoAnual_kg = (cantAnual * pesoProm_g) / 1000;
+  // FIX #5: peso anual usa PESO_GLOBAL_G (evita sesgo por composición de 30d)
+  const pesoAnual_kg = (cantAnual * PESO_GLOBAL_G) / 1000;
 
-  // FIX #27 — fracciones materiales garantizan suma = 1
+  // FIX #6: detectar inconsistencia cant30 vs cantAnual
+  const cant30Anualizado  = cant30 * 12;
+  const inconsistenciaAnual = (cant30 > 0 && cantAnual > 0) &&
+    (cant30Anualizado / cantAnual > 5 || cantAnual / Math.max(1, cant30Anualizado) > 5);
 
-  const pctSint = Math.min(Math.max(0, Number(enc.pctSintetico)||0), 100);
-
-  const pctAlgOf = Math.min(Math.max(0, Number(enc.pctAlgodon)||0), 100);
-
+  const pctSint  = Math.min(Math.max(0, Number(enc.pctSintetico)||0), 100);
+  const pctAlgOf = Math.min(Math.max(0, Number(enc.pctAlgodon)||0),   100);
   const pctS = pctSint / 100;
-
   const pctN = 1 - pctS;
-
   const pctA = pctN * (pctAlgOf / 100);
-
-  const pctO = pctN - pctA; // garantiza pctS+pctA+pctO = 1
-
-  // Segunda mano — factor [0,1]
+  const pctO = pctN - pctA;
 
   const pct2m_raw  = Number(enc.pctSegundaMano) || 0;
-
   const pct2m      = Math.min(Math.max(0, pct2m_raw), 100) / 100;
-
   const factorProd = (1 - pct2m) + pct2m * (1 - REDUCCION_2MANO);
 
-  // CO₂
-
-  const co2FactorMezcla = pctS * CO2_SINT + pctA * CO2_ALG + pctO * CO2_OTRO;
-
-  const co2Anual        = pesoAnual_kg * co2FactorMezcla * factorProd;
-
-  // Agua producción
+  const co2FactorMezcla  = pctS * CO2_SINT  + pctA * CO2_ALG  + pctO * CO2_OTRO;
+  const co2Anual         = pesoAnual_kg * co2FactorMezcla * factorProd;
 
   const aguaFactorMezcla = pctS * AGUA_SINT + pctA * AGUA_ALG + pctO * AGUA_OTRO;
-
   const aguaProd         = pesoAnual_kg * aguaFactorMezcla * factorProd;
 
-  // FIX #32/#76 — usosP entero, usosLav entero clamped
-
   const usosP   = Math.max(0, Math.floor(Number(enc.usosPromedio) || 0));
-
   const usosLav = Math.max(1, Math.min(50, Math.floor(Number(enc.usosLavado) || 3)));
-
-  // FIX #6 — totalUsos>0 es condición explícita
 
   const totalUsos = (cantAnual > 0 && usosP > 0) ? cantAnual * usosP : 0;
 
-  // FIX #6/#46 — totalLavados sin cap arbitrario; confiar en inputs válidos
-
+  // FIX #3: totalLavados redondeado a entero (no existen lavados fraccionarios)
   const totalLavados = (cantAnual > 0 && usosP > 0)
-
-    ? cantAnual * (usosP / usosLav)
-
+    ? Math.round(cantAnual * (usosP / usosLav))
     : 0;
 
   const aguaLavado = totalLavados * LITROS_POR_LAVADO;
-
+  // Nota: aguaTotal mezcla producción anual + lavados de ciclo de vida completo
   const aguaTotal  = aguaProd + aguaLavado;
 
-  // Descarte
-
   const factDesc       = FACTORES_DESC[enc.descarte] ?? 0.5;
-
   const pesoDesc_kg    = pesoAnual_kg * factDesc;
-
   const pesoConserv_kg = pesoAnual_kg - pesoDesc_kg;
-
   const pesoDest = {};
-
   for (const k of DEST_KEYS) {
-
     pesoDest[k] = pesoDesc_kg * (Math.max(0, Number(destino[k]) || 0) / 100);
-
   }
 
+  // FIX #16: co2Descartado = CO₂ de PRODUCCIÓN de las prendas descartadas
+  // (carbono incorporado no aprovechado), NO emisiones de disposición final
   const co2Descartado = pesoDesc_kg * co2FactorMezcla;
 
-  // FIX #16/#61 — gasto y precio nunca negativos
-
   const gastoMensual = Math.max(0, Number(enc.gastoMensual) || 0);
-
   const gastoAnual   = gastoMensual * 12;
 
+  // FIX #15: precioPrenda es un cociente orientativo (inputs independientes)
   const precioPrenda = (cantAnual > 0 && gastoAnual > 0)
-
     ? Math.max(0, gastoAnual / cantAnual)
-
     : null;
 
-  // FIX #6/#13 — métricas por uso con denominador garantizado
-
-  const co2PorUso_g  = totalUsos > 0 ? (co2Anual * 1000) / totalUsos : 0;
-
+  // FIX #4: CO₂/uso = CO₂ de producción por prenda ÷ usos totales de esa prenda
+  // Esto amortiza el costo de producción (evento único) entre todos los usos de vida útil
+  // Equivale a: co2Anual * 1000 / (cantAnual * usosP), pero la escala es correcta:
+  // el CO₂ de producción es un costo puntual, no anual recurrente
+  const co2PorUso_g  = (cantAnual > 0 && usosP > 0)
+    ? (co2Anual / cantAnual * 1000) / usosP
+    : 0;
+  // aguaPorUso_L: producción por prenda + lavados ciclo de vida completo, ÷ usos
   const aguaPorUso_L = totalUsos > 0 ? aguaTotal / totalUsos : 0;
 
-  // FIX #2/#16 — costoUso nunca negativo, valida usosP > 0 antes de dividir
-
   const costoUso = (precioPrenda != null && usosP > 0)
-
     ? Math.max(0, precioPrenda / usosP)
-
     : null;
 
-  // FIX #32 — vidaUtilMeses clamped
-
+  // FIX #14: rotación = 12/vidaM (supone vida útil uniforme entre tipos — simplificación)
   const vidaM    = enc.vidaUtilMeses != null
-
     ? Math.min(Math.max(1, Number(enc.vidaUtilMeses)), 300)
-
     : null;
-
   const rotacion = (vidaM != null && vidaM > 0) ? 12 / vidaM : null;
 
   return {
-
     cant30, peso30g, pesoPorTipo, pesoProm_g,
-
     cantAnual, pesoAnual_kg,
-
     pctS, pctA, pctO,
-
     factorProd, co2FactorMezcla, aguaFactorMezcla,
-
-    co2Anual, co2Descartado,
-
+    co2Anual, co2Descartado,   // FIX #16: co2Descartado = CO₂ prod. incorporado en descarte
     aguaProd, aguaLavado, aguaTotal,
-
     factDesc, pesoDesc_kg, pesoConserv_kg, pesoDest,
-
     gastoAnual, precioPrenda, costoUso,
-
     rotacion, totalUsos, co2PorUso_g, aguaPorUso_L,
-
+    inconsistenciaAnual,  // FIX #6
   };
-
 }
 
 // ══════════════════════════════════════════════
-
-//  FIX #4 — VERACIDAD JACKKNIFE (._fid, no referencia de objeto)
-
-//  FIX #15 — n < 2 con score fijo documentado
-
+//  FIX #7/#17: VERACIDAD JACKKNIFE v4.6
+//  Score basado en CDF normal (escala estadística real).
+//  Timer como indicador categórico SEPARADO, no resta al score.
 // ══════════════════════════════════════════════
-
 function calcVeracidad(enc, allEncs) {
-
   if (!allEncs || allEncs.length < 2) {
-
-    return { score: 75, label: '75% (n=1, ref.)', class: 'veracity-high' };
-
+    return { score: 75, label: '75% (n=1, ref.)', class: 'veracity-high', timerFlag: 'ok' };
   }
-
   const tiempoSeg = Number(enc.tiempoRespuesta) || 999;
-
   const getVars = e => [
-
     TIPO_KEYS.reduce((a,k) => a + (Number((e.cant30d||{})[k])||0), 0),
-
     (() => { const s = e.estaciones||{}; return (Number(s.verano)||0)+(Number(s.otono)||0)+(Number(s.invierno)||0)+(Number(s.primavera)||0); })(),
-
     Math.max(0, Number(e.gastoMensual) || 0),
-
     Math.max(0, Number(e.usosPromedio) || 0),
-
   ];
-
   const myVals = getVars(enc);
-
-  // FIX #4 — comparar por ._fid (string ID único de Firestore), no por referencia
-
   const encFid = enc._fid;
-
   const group  = allEncs.filter(e => e._fid !== encFid);
-
   if (group.length < 2) {
-
-    return { score: 75, label: '75% (muestra LOO insuficiente)', class: 'veracity-high' };
-
+    return { score: 75, label: '75% (muestra LOO insuficiente)', class: 'veracity-high', timerFlag: 'ok' };
   }
-
   const groupVars = myVals.map((_, i) => group.map(e => getVars(e)[i]));
-
-  const zScores = groupVars.map((arr, i) => {
-
+  const zScores   = groupVars.map((arr, i) => {
     const m = mean(arr);
-
-    const s = stddevSafe(arr); // FIX #1: stddevSafe definida y usada
-
+    const s = stddevSafe(arr);
     return Number.isFinite(m) ? Math.abs((myVals[i] - m) / s) : 0;
-
   });
-
   const avgZ = zScores.reduce((a,b) => a+b, 0) / zScores.length;
 
-  const timerPenalty = tiempoSeg < 10 ? 0.6
+  // FIX #7: score = Φ(3 − avgZ) × 100
+  // Interpretación: avgZ=0 (igual a la media) → ≈99.9%; avgZ=3 → 50%; avgZ=6 → ≈0.1%
+  // Base estadística: normalCDF evalúa la probabilidad de ser MENOS outlier que avgZ
+  const score = Math.max(0, Math.min(100, Math.round(normalCDF(3 - avgZ) * 100)));
 
-                     : tiempoSeg < 30 ? 0.3
-
-                     : tiempoSeg < 60 ? 0.1 : 0;
-
-  // FIX #34 — clamp resultado final para evitar Infinity/-Infinity
-
-  const raw   = Math.max(0, Math.min(1, 1 - (avgZ / 3) - timerPenalty));
-
-  const score = Math.round(raw * 100);
+  // FIX #17: timer como indicador SEPARADO (categórico), no resta al score estadístico
+  const timerFlag = tiempoSeg < 10 ? 'muy_rapido'
+                  : tiempoSeg < 30 ? 'rapido'
+                  : tiempoSeg < 60 ? 'aceptable' : 'ok';
 
   let label, cls;
-
   if      (score >= 70) { label = `${score}% ✓`; cls = 'veracity-high'; }
-
   else if (score >= 40) { label = `${score}% ⚠`; cls = 'veracity-med';  }
-
   else                  { label = `${score}% ✗`; cls = 'veracity-low';  }
 
-  return { score, label, class: cls };
+  // Indicador de tiempo adjunto al label (solo visual, no altera el score)
+  if      (timerFlag === 'muy_rapido') label += ' ⏱!!';
+  else if (timerFlag === 'rapido')     label += ' ⏱';
 
+  return { score, label, class: cls, timerFlag, avgZ };
 }
 
 // ══════════════════════════════════════════════
-
 //  TIMER
-
 // ══════════════════════════════════════════════
-
 function startTimer() {
-
   timerStart = Date.now();
-
   clearInterval(timerInterval);
-
   timerInterval = setInterval(() => {
-
     const elapsed = Math.floor((Date.now() - timerStart) / 1000);
-
     const el  = document.getElementById('timer-display');
-
     const qEl = document.getElementById('timer-quality');
-
     if (!el) return;
-
     el.textContent = elapsed + 's';
-
     if (qEl) {
-
       if      (elapsed < 20) { qEl.textContent = '⚠ Respuesta muy rápida'; qEl.style.color = 'var(--accent2)'; }
-
       else if (elapsed < 60) { qEl.textContent = '↗ Completando…';         qEl.style.color = 'var(--accent3)'; }
-
       else                   { qEl.textContent = '✓ Tiempo normal';         qEl.style.color = 'var(--accent)';  }
-
     }
-
   }, 1000);
-
 }
 
 // ══════════════════════════════════════════════
-
 //  INICIALIZACIÓN DEL FORMULARIO
-
 // ══════════════════════════════════════════════
-
 function initForm() {
-
   const pg = document.getElementById('prendas-grid');
-
   for (const [k, v] of Object.entries(TIPOS)) {
-
     const card = document.createElement('div');
-
     card.className = 'prenda-card';
-
-    // FIX #45 — aria-label en input de cada tipo
-
     card.innerHTML = `
-
       <div class="pn">${esc(v.n)}</div>
-
       <div class="ph">${v.p} g c/u · <span style="color:var(--accent3);font-size:9px">MENSUAL</span></div>
-
       <input type="number" id="p-${k}" min="0" max="${MAX_PRENDAS_30D}" value="0"
-
         aria-label="Cantidad de ${esc(v.n)} compradas en los últimos 30 días">`;
-
     pg.appendChild(card);
-
   }
-
   const dg = document.getElementById('destino-grid');
-
   for (const [k, v] of Object.entries(DESTINOS)) {
-
     const card = document.createElement('div');
-
     card.className = 'destino-card';
-
     card.id = `dcard-${k}`;
-
     card.style.borderLeft = `3px solid ${v.col}`;
-
     card.innerHTML = `
-
       <div class="dc-label">
-
         <span style="display:flex;align-items:center;gap:6px">
-
           <span style="width:8px;height:8px;border-radius:50%;background:${v.col};flex-shrink:0" aria-hidden="true"></span>
-
           ${esc(v.label)}
-
         </span>
-
         <span id="dv-${k}" style="color:${v.col};font-weight:700" aria-live="polite">20%</span>
-
       </div>
-
       <input type="range" id="d-${k}" min="0" max="100" value="20"
-
         aria-label="Porcentaje de descarte hacia ${esc(v.label)}"
-
         oninput="debouncedUpdDestino('${k}')">
-
       <div class="destino-locked" id="dlocked-${k}" role="status">🔒 Suma = 100%</div>`;
-
     dg.appendChild(card);
-
   }
-
 }
-
-// ══════════════════════════════════════════════
-
-//  FIX #11/#59 — updDestino CON DEBOUNCE
-
-//  FIX #69 — resetForm resetea sliders correctamente
-
-// ══════════════════════════════════════════════
 
 function _updDestino(changed) {
-
   const keys = DEST_KEYS;
-
   const vals = {};
-
   for (const k of keys) vals[k] = Number(document.getElementById('d-' + k).value);
-
-  // Clamp del slider cambiado para no superar lo disponible
-
   const sumOtros = keys.filter(k => k !== changed).reduce((a,k) => a + vals[k], 0);
-
   const maxAllow = 100 - sumOtros;
-
   const el = document.getElementById('d-' + changed);
-
-  if (vals[changed] > maxAllow) {
-
-    el.value = maxAllow;
-
-    vals[changed] = maxAllow;
-
-  }
-
+  if (vals[changed] > maxAllow) { el.value = maxAllow; vals[changed] = maxAllow; }
   const total = Object.values(vals).reduce((a,b) => a+b, 0);
-
   for (const k of keys) {
-
     const inp      = document.getElementById('d-' + k);
-
     const locked   = document.getElementById('dlocked-' + k);
-
     const sumExcK  = keys.filter(k2 => k2 !== k).reduce((a,k2) => a + vals[k2], 0);
-
     inp.max = 100 - sumExcK;
-
     const shouldLock = total >= 100 && vals[k] === 0;
-
     inp.disabled = shouldLock;
-
     if (locked) locked.style.display = shouldLock ? 'block' : 'none';
-
     document.getElementById('dv-' + k).textContent = vals[k] + '%';
-
   }
-
   const rem   = 100 - total;
-
   const badge = document.getElementById('pct-remaining');
-
   if (badge) {
-
     badge.textContent = rem === 0 ? '✓ 100% distribuido' : rem + '% restante';
-
     badge.style.color = rem === 0 ? 'var(--accent)' : 'var(--accent3)';
-
   }
-
 }
-
-// FIX #11 — debounce de 80ms para el slider de destino
-
 const debouncedUpdDestino = debounce(_updDestino, 80);
-
-window.updDestino = debouncedUpdDestino; // exponer para onclick inline
+window.updDestino = debouncedUpdDestino;
 
 window.updRange = function(id, unit) {
-
   const el = document.getElementById('f-' + id);
-
   if (el) {
-
     const rv = document.getElementById('rv-' + id);
-
     if (rv) rv.textContent = el.value + unit;
-
   }
-
 };
 
 function _updAlgodonLabel() {
-
   const sint = Number(document.getElementById('f-sint').value);
-
   const nat  = 100 - sint;
-
   const lbl  = document.getElementById('label-alg');
-
   const hint = document.getElementById('sint-hint');
-
   if (lbl)  lbl.textContent  = `Del ${nat}% natural: ¿qué % es Algodón?`;
-
   if (hint) hint.textContent = `Natural restante: ${nat}%`;
-
 }
-
-// FIX #43 — debounce en sliders de materiales
-
 const debouncedUpdAlgodon = debounce(_updAlgodonLabel, 100);
-
 window.debouncedUpdAlgodon = debouncedUpdAlgodon;
 
-// ══════════════════════════════════════════════
-
-//  FIX #54/#41 — goFuentes() DEFINIDA y expuesta globalmente
-
-//  FIX #41 — scrollToSrc preserva posición de scroll
-
-// ══════════════════════════════════════════════
-
 window.goFuentes = function(evt, anchorId) {
-
   if (evt) evt.preventDefault();
-
   showTab('fuentes');
-
   if (anchorId) {
-
     requestAnimationFrame(() => {
-
       const el = document.getElementById(anchorId);
-
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
     });
-
   }
-
 };
-
 window.scrollToSrc = function(evt, anchorId) {
-
   if (evt) evt.preventDefault();
-
   requestAnimationFrame(() => {
-
     const el = document.getElementById(anchorId);
-
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
   });
-
 };
 
 // ══════════════════════════════════════════════
-
 //  AGREGAR ENCUESTADO
-
-//  FIX #21 — validación fuerte de rangos
-
-//  FIX #78 — saneamiento de nombre
-
-//  FIX #61 — gasto no puede ser negativo
-
+//  FIX #6: validación entre cant30d y cantAnual
 // ══════════════════════════════════════════════
-
 window.agregarEncuestado = async function() {
-
   const btn  = document.getElementById('btn-add');
-
   const edad = parseInt(document.getElementById('f-edad').value);
-
   if (!Number.isFinite(edad) || edad < 13 || edad > 21) {
-
     alert('Edad válida: entre 13 y 21 años.');
-
     return;
-
   }
-
   let sumDest = 0;
-
   for (const k of DEST_KEYS) sumDest += Number(document.getElementById('d-' + k).value);
-
   if (Math.round(sumDest) !== 100) {
-
     alert(`Los porcentajes de destino deben sumar exactamente 100%. Actualmente suman ${sumDest}%.`);
-
     return;
-
   }
-
   const cant30d = {};
-
   for (const k of TIPO_KEYS) {
-
     const raw = parseInt(document.getElementById('p-' + k).value) || 0;
-
     cant30d[k] = Math.min(Math.max(0, raw), MAX_PRENDAS_30D);
-
   }
-
   const total30 = Object.values(cant30d).reduce((a,b) => a+b, 0);
-
   if (total30 > MAX_PRENDAS_30D) {
-
     if (!confirm(`Atención: se registraron ${total30} prendas en 30 días (límite recomendado: ${MAX_PRENDAS_30D}). ¿Es correcto?`)) return;
-
   }
-
+  // FIX #6: verificar coherencia cant30 vs cantAnual
+  const cantAnualPreview = (parseInt(document.getElementById('f-verano').value)||0)
+    + (parseInt(document.getElementById('f-otono').value)||0)
+    + (parseInt(document.getElementById('f-invierno').value)||0)
+    + (parseInt(document.getElementById('f-primavera').value)||0);
+  const anualizado30 = total30 * 12;
+  if (total30 > 0 && cantAnualPreview > 0 &&
+      (anualizado30 / cantAnualPreview > 5 || cantAnualPreview / Math.max(1, anualizado30) > 5)) {
+    if (!confirm(
+      `Advertencia (Fix #6): Los 30 días (${total30} prendas × 12 = ${anualizado30}/año) y el total anual estacional (${cantAnualPreview} prendas) difieren por un factor > 5.\n\n¿Los valores son correctos? (ambos campos son independientes)`
+    )) return;
+  }
   const destino = {};
-
   for (const k of DEST_KEYS) destino[k] = Math.max(0, Number(document.getElementById('d-' + k).value));
-
-  // FIX #32 — usosPromedio y vidaUtilMeses clampeados
-
   const rawUsos  = parseInt(document.getElementById('f-usos').value);
-
   const rawMeses = parseInt(document.getElementById('f-meses').value);
-
   const usosPromedio  = !Number.isFinite(rawUsos)  || rawUsos < 1  ? null : Math.min(rawUsos, 500);
-
   const vidaUtilMeses = !Number.isFinite(rawMeses) || rawMeses < 1 ? null : Math.min(rawMeses, 300);
-
-  // FIX #61 — gastoMensual: max(0, valor)
-
-  const rawGasto = parseFloat(document.getElementById('f-gasto').value);
-
+  const rawGasto  = parseFloat(document.getElementById('f-gasto').value);
   const gastoMensual = Number.isFinite(rawGasto) ? Math.max(0, rawGasto) : 0;
-
-  // FIX #60 — usosLavado: entero, clamped [1,50]
-
   const rawLavado = parseInt(document.getElementById('f-lavado').value);
-
   const usosLavado = Number.isFinite(rawLavado) ? Math.min(Math.max(1, rawLavado), 50) : 3;
-
   const tiempoRespuesta = Math.floor((Date.now() - timerStart) / 1000);
-
-  // FIX #78 — nombre sin caracteres peligrosos, limitado a 80 chars
-
   const nombreRaw = document.getElementById('f-nombre').value.trim().slice(0, 80);
-
   const nombre    = nombreRaw || `Encuestado ${encuestados.length + 1}`;
-
   const enc = {
-
     createdAt: Date.now(),
-
     nombre,
-
     edad,
-
     genero: document.getElementById('f-genero').value,
-
     cant30d,
-
     estaciones: {
-
       verano:    Math.min(Math.max(0, parseInt(document.getElementById('f-verano').value)    || 0), 500),
-
       otono:     Math.min(Math.max(0, parseInt(document.getElementById('f-otono').value)     || 0), 500),
-
       invierno:  Math.min(Math.max(0, parseInt(document.getElementById('f-invierno').value)  || 0), 500),
-
       primavera: Math.min(Math.max(0, parseInt(document.getElementById('f-primavera').value) || 0), 500),
-
     },
-
     pctSegundaMano: Math.min(Math.max(0, parseInt(document.getElementById('f-segunda').value) || 0), 100),
-
     usosLavado,
-
     descarte: document.querySelector('input[name="descarte"]:checked').value,
-
     destino,
-
     pctSintetico: Math.min(Math.max(0, parseInt(document.getElementById('f-sint').value) || 0), 100),
-
     pctAlgodon:   Math.min(Math.max(0, parseInt(document.getElementById('f-alg').value)  || 0), 100),
-
     gastoMensual,
-
     usosPromedio,
-
     vidaUtilMeses,
-
     tiempoRespuesta,
-
   };
-
   btn.disabled = true;
-
   btn.textContent = 'Guardando…';
-
   try {
-
     await addDoc(collection(db, COLL), enc);
-
     toast('✓ Encuestado agregado');
-
     clearInterval(timerInterval);
-
     resetForm();
-
     startTimer();
-
   } catch(e) {
-
     console.error(e);
-
     alert('Error al guardar: ' + e.message);
-
   } finally {
-
     btn.disabled = false;
-
     btn.textContent = '+ Agregar encuestado';
-
   }
-
 };
-
-// FIX #37/#69/#79 — resetForm() sin sliders bloqueados, badge reseteado
 
 function resetForm() {
-
   document.getElementById('f-nombre').value = '';
-
   document.getElementById('f-edad').value   = '';
-
   for (const k of TIPO_KEYS) {
-
     const el = document.getElementById('p-' + k);
-
     if (el) el.value = 0;
-
   }
-
   ['verano','otono','invierno','primavera'].forEach(s => {
-
     const el = document.getElementById('f-' + s);
-
     if (el) el.value = 0;
-
   });
-
   const rad = document.querySelector('input[name="descarte"][value="muy_poco"]');
-
   if (rad) rad.checked = true;
-
-  // FIX #69 — resetear destinos: desbloquear TODOS primero, luego setear a 20
-
   for (const k of DEST_KEYS) {
-
     const inp = document.getElementById('d-' + k);
-
     if (inp) { inp.disabled = false; inp.value = 20; inp.max = 100; }
-
     const dv = document.getElementById('dv-' + k);
-
     if (dv)  dv.textContent = '20%';
-
     const dl = document.getElementById('dlocked-' + k);
-
     if (dl)  dl.style.display = 'none';
-
   }
-
-  // FIX #79 — recalcular badge después del reset
-
   const badge = document.getElementById('pct-remaining');
-
-  if (badge) { badge.textContent = '100% restante'; badge.style.color = 'var(--accent3)'; }
-
-  const fseg = document.getElementById('f-segunda');
-
-  if (fseg) fseg.value = 0;
-
-  const rvseg = document.getElementById('rv-segunda');
-
-  if (rvseg) rvseg.textContent = '0%';
-
-  const flav = document.getElementById('f-lavado');
-
-  if (flav) flav.value = 3;
-
-  const fsint = document.getElementById('f-sint');
-
-  if (fsint) fsint.value = 60;
-
-  const rvsint = document.getElementById('rv-sint');
-
-  if (rvsint) rvsint.textContent = '60%';
-
-  const falg = document.getElementById('f-alg');
-
-  if (falg) falg.value = 60;
-
-  const rvalg = document.getElementById('rv-alg');
-
-  if (rvalg) rvalg.textContent = '60%';
-
-  const fg = document.getElementById('f-gasto');
-
-  if (fg) fg.value = '';
-
-  const fu = document.getElementById('f-usos');
-
-  if (fu) fu.value = '';
-
-  const fm = document.getElementById('f-meses');
-
-  if (fm) fm.value = '';
-
-  _updAlgodonLabel();
-
-  // FIX #69 — actualizar el badge con suma correcta (100)
-
-  // 20*5 = 100 → debería marcar como distribuido si son 5 destinos iguales a 20
-
-  // Aquí la suma es 100, así que el badge será verde
-
   if (badge) { badge.textContent = '✓ 100% distribuido'; badge.style.color = 'var(--accent)'; }
-
+  const fseg = document.getElementById('f-segunda');
+  if (fseg) fseg.value = 0;
+  const rvseg = document.getElementById('rv-segunda');
+  if (rvseg) rvseg.textContent = '0%';
+  const flav = document.getElementById('f-lavado');
+  if (flav) flav.value = 3;
+  const fsint = document.getElementById('f-sint');
+  if (fsint) fsint.value = 60;
+  const rvsint = document.getElementById('rv-sint');
+  if (rvsint) rvsint.textContent = '60%';
+  const falg = document.getElementById('f-alg');
+  if (falg) falg.value = 60;
+  const rvalg = document.getElementById('rv-alg');
+  if (rvalg) rvalg.textContent = '60%';
+  const fg = document.getElementById('f-gasto');
+  if (fg) fg.value = '';
+  const fu = document.getElementById('f-usos');
+  if (fu) fu.value = '';
+  const fm = document.getElementById('f-meses');
+  if (fm) fm.value = '';
+  _updAlgodonLabel();
 }
 
 // ══════════════════════════════════════════════
-
 //  ADMIN / FIREBASE
-
-//  FIX #40/#52 — Sin contraseña en plaintext ni localStorage
-
-//  FIX #77 — clearAll deshabilitado durante operación
-
 // ══════════════════════════════════════════════
-
 window.adminToggle = async function() {
-
   if (adminMode) {
-
     if (!confirm('¿Cerrar sesión de administrador?')) return;
-
     adminMode = false;
-
   } else {
-
     const p = prompt('Contraseña de administrador:');
-
     if (p === null) return;
-
     const ok = await verifyPassword(p);
-
     if (!ok) { alert('Contraseña incorrecta.'); return; }
-
     adminMode = true;
-
   }
-
   document.getElementById('btn-admin').classList.toggle('active', adminMode);
-
   document.getElementById('admin-lbl').style.display = adminMode ? 'inline' : 'none';
-
   document.getElementById('btn-clear').style.display = adminMode ? 'inline-block' : 'none';
-
   renderTabla();
-
 };
-
-// FIX #64 — eliminar usa fid como parámetro de función, no interpolado en onclick
-
 window.eliminar = async function(fid) {
-
   if (!adminMode || !fid || !confirm('¿Eliminar este encuestado?')) return;
-
   try { await deleteDoc(doc(db, COLL, fid)); toast('Encuestado eliminado'); }
-
   catch(e) { alert('Error: ' + e.message); }
-
 };
-
-// FIX #77 — clearAll deshabilita el botón durante la operación
-
 window.clearAll = async function() {
-
   if (!adminMode || !confirm('¿Borrar TODOS los encuestados? Esta acción es irreversible.')) return;
-
   const btn = document.getElementById('btn-clear');
-
   if (btn) { btn.disabled = true; btn.textContent = 'Borrando…'; }
-
   try {
-
     const snap  = await getDocs(collection(db, COLL));
-
     const batch = writeBatch(db);
-
     snap.forEach(d => batch.delete(d.ref));
-
     await batch.commit();
-
     toast('Todas las encuestas borradas');
-
   } catch(e) {
-
     alert('Error: ' + e.message);
-
   } finally {
-
     if (btn) { btn.disabled = false; btn.textContent = 'Borrar todo'; }
-
   }
-
 };
 
 // ══════════════════════════════════════════════
-
-//  FIX #25/#51 — FIREBASE LISTENER ÚNICO
-
-//  Cancela el listener anterior antes de crear uno nuevo.
-
-//  FIX #80 — manejo de modo offline.
-
+//  FIREBASE LISTENER ÚNICO
 // ══════════════════════════════════════════════
-
 let retryCount = 0;
-
 const MAX_RETRIES = 5;
-
 function startListener() {
-
-  if (_listenerActive) return; // FIX #25 — no duplicar listeners
-
+  if (_listenerActive) return;
   _listenerActive = true;
-
-  const bar = document.getElementById('fb-bar');
-
+  const bar     = document.getElementById('fb-bar');
   const overlay = document.getElementById('loading-overlay');
-
   bar.className = 'show';
-
   bar.textContent = 'Conectando con Firebase…';
-
-  // FIX #51 — cancelar unsub anterior si existe
-
   if (_firebaseUnsub) { _firebaseUnsub(); _firebaseUnsub = null; }
-
   _firebaseUnsub = onSnapshot(
-
     collection(db, COLL),
-
     snap => {
-
       retryCount = 0;
-
       _listenerActive = true;
-
       encuestados = snap.docs
-
         .map(d => ({ ...d.data(), _fid: d.id }))
-
         .sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
-
-      // FIX #53 — ocultar overlay al recibir primer snapshot
-
       if (overlay && !overlay.classList.contains('hidden')) {
-
         overlay.classList.add('hidden');
-
       }
-
       bar.classList.remove('show');
-
       const badgeEl = document.getElementById('badge-n');
-
       if (badgeEl) badgeEl.textContent = encuestados.length;
-
-      // Solo renderizar si el DOM está listo
-
       const doRender = () => {
-
         renderTabla();
-
         const activeTab = document.querySelector('.tab.active');
-
         if (!activeTab) return;
-
         const id = activeTab.id;
-
         if (id === 'tab-estadisticas') renderStats();
-
         if (id === 'tab-graficos')     renderCharts();
-
         if (id === 'tab-probabilidad') renderProbabilidad();
-
         if (id === 'tab-veracidad')    renderVeracidad();
-
       };
-
       if (document.readyState === 'complete') doRender();
-
       else window.addEventListener('load', doRender, { once: true });
-
     },
-
     err => {
-
       console.warn('Firebase error:', err.code, err.message);
-
       _listenerActive = false;
-
       if (_firebaseUnsub) { _firebaseUnsub(); _firebaseUnsub = null; }
-
-      // FIX #80 — manejo offline / error de red
-
       const isOffline = err.code === 'unavailable' || !navigator.onLine;
-
       if (isOffline) {
-
         bar.className = 'show error';
-
         bar.textContent = '⚠ Sin conexión. Los datos se sincronizarán al reconectarse.';
-
-        // Reintentar cuando vuelva la conexión
-
-        window.addEventListener('online', () => {
-
-          _listenerActive = false;
-
-          startListener();
-
-        }, { once: true });
-
+        window.addEventListener('online', () => { _listenerActive = false; startListener(); }, { once: true });
         return;
-
       }
-
       if (retryCount < MAX_RETRIES) {
-
         retryCount++;
-
         const delay = Math.min(2000 * retryCount, 15000);
-
         bar.className = 'show error';
-
         bar.textContent = `⚠ Error de conexión. Reintentando en ${delay/1000}s… (${retryCount}/${MAX_RETRIES})`;
-
         setTimeout(() => { _listenerActive = false; startListener(); }, delay);
-
       } else {
-
         bar.className = 'show error';
-
         bar.textContent = '⚠ No se pudo conectar a Firebase. Recargá la página.';
-
         if (overlay) overlay.classList.add('hidden');
-
       }
-
     }
-
   );
-
 }
 
 // ══════════════════════════════════════════════
-
 //  TABLA
-
-//  FIX #9/#44 — esc() en TODOS los campos de salida
-
-//  FIX #64 — eliminar: data-fid en botón, no interpolado inline peligroso
-
 // ══════════════════════════════════════════════
-
 const GL = { m:'bg-m', f:'bg-f', o:'bg-o' };
-
 const GN = { m:'Masc.', f:'Fem.', o:'Otro' };
 
-// FIX #24 — formateador ÚNICO (fmt) para toda la app
-
 function fmt(v, dec, suffix = '') {
-
   if (!Number.isFinite(v)) return '—';
-
   return parseFloat(v.toFixed(dec)).toLocaleString('es-AR', {
-
     minimumFractionDigits: dec, maximumFractionDigits: dec,
-
   }) + suffix;
-
 }
 
 function renderTabla() {
-
   const tb = document.getElementById('tabla-body');
-
   if (!tb) return;
-
   if (!encuestados.length) {
-
-    tb.innerHTML = '<tr><td colspan="26"><div class="empty"><div class="ei">📋</div>Aún no hay encuestados</div></td></tr>';
-
+    tb.innerHTML = '<tr><td colspan="27"><div class="empty"><div class="ei">📋</div>Aún no hay encuestados</div></td></tr>';
     return;
-
   }
-
   tb.innerHTML = encuestados.map(enc => {
-
     const s   = calcular(enc);
-
     const ver = calcVeracidad(enc, encuestados);
-
-    // FIX #64 — fid solo se usa como data attribute, no interpolado en handler inline
-
     const fid = esc(enc._fid || '');
-
     const delBtn = adminMode && enc._fid
-
       ? `<button class="btn-danger-sm" data-fid="${fid}" onclick="handleEliminar(this)">✕</button>`
-
       : '';
-
+    // FIX #6: icono de inconsistencia anual
+    const incon = s.inconsistenciaAnual
+      ? `<span class="incon-warn" title="Fix #6: cant. 30d × 12 y total anual difieren por factor > 5">⚠ incon.</span>`
+      : '';
+    // FIX #17: timer como badge separado del score
+    const timerBadge = ver.timerFlag === 'muy_rapido'
+      ? `<span class="timer-warn muy_rapido" title="Respuesta < 10s">⏱!!</span>`
+      : ver.timerFlag === 'rapido'
+        ? `<span class="timer-warn rapido" title="Respuesta < 30s">⏱</span>`
+        : '';
     return `<tr>
-
-      <td><b>${esc(enc.nombre)}</b></td>
-
+      <td><b>${esc(enc.nombre)}</b>${incon}</td>
       <td class="tr">${enc.edad}</td>
-
       <td><span class="gen-badge ${GL[enc.genero]||'bg-o'}">${GN[enc.genero]||'Otro'}</span></td>
-
       <td class="tr">${s.cant30}</td>
-
       <td class="tr">${fmt(s.peso30g, 0)}</td>
-
       <td class="tr">${s.cantAnual}</td>
-
       <td class="tr">${fmt(s.pesoAnual_kg, 2)}</td>
-
       <td>${esc(LABELS_DESC[enc.descarte] || enc.descarte || '—')}</td>
-
       <td class="tr" style="color:var(--accent2)">${fmt(s.pesoDesc_kg, 2)}</td>
-
       <td class="tr" style="color:var(--accent2)">${fmt(s.pesoDest.basura, 2)}</td>
-
       <td class="tr" style="color:var(--accent)">${fmt(s.pesoDest.donado, 2)}</td>
-
       <td class="tr">${enc.pctSintetico}%</td>
-
       <td class="tr">${fmt(s.pctA * 100, 0)}%</td>
-
       <td class="tr" style="color:var(--accent3)">${s.gastoAnual > 0 ? '$' + fmt(s.gastoAnual, 0) : '—'}</td>
-
       <td class="tr">${enc.usosPromedio ?? '—'}</td>
-
       <td class="tr">${enc.vidaUtilMeses ?? '—'}</td>
-
       <td class="tr" style="color:var(--accent3)">${s.costoUso != null ? '$' + fmt(s.costoUso, 2) : '—'}</td>
-
       <td class="tr" style="color:var(--accent)">${s.rotacion != null ? fmt(s.rotacion, 2) + '×' : '—'}</td>
-
       <td class="tr" style="color:var(--accent5)">${fmt(s.co2Anual, 2)}</td>
-
-      <td class="tr" style="color:var(--accent5)">${s.totalUsos > 0 ? fmt(s.co2PorUso_g, 1) + ' g' : '—'}</td>
-
+      <td class="tr" style="color:var(--accent5)">${s.co2PorUso_g > 0 ? fmt(s.co2PorUso_g, 1) + ' g' : '—'}</td>
       <td class="tr" style="color:var(--accent4)">${fmt(s.aguaProd, 0)}</td>
-
       <td class="tr" style="color:var(--accent4)">${fmt(s.aguaLavado, 0)}</td>
-
-      <td class="tr" style="color:var(--accent4)">${fmt(s.aguaTotal, 0)}</td>
-
-      <td class="tr" style="color:var(--accent4)">${s.totalUsos > 0 ? fmt(s.aguaPorUso_L, 1) + ' L' : '—'}</td>
-
-      <td class="tr ${ver.class}">${esc(ver.label)}</td>
-
+      <td class="tr" style="color:var(--accent)">${fmt(s.aguaTotal, 0)}</td>
+      <td class="tr" style="color:var(--accent4)">${s.aguaPorUso_L > 0 ? fmt(s.aguaPorUso_L, 1) + ' L' : '—'}</td>
+      <td class="tr" style="color:var(--accent2)">${fmt(s.co2Descartado, 2)}</td>
+      <td class="tr ${ver.class}">${esc(ver.label)}${timerBadge}</td>
       <td>${delBtn}</td>
-
     </tr>`;
-
   }).join('');
-
 }
-
-// FIX #64 — handler seguro para eliminar (lee data-fid del botón)
-
 window.handleEliminar = function(btn) {
-
   const fid = btn.getAttribute('data-fid');
-
   if (fid) window.eliminar(fid);
-
 };
 
 // ══════════════════════════════════════════════
-
-//  FIX #20/#36 — ESTADÍSTICAS
-
-//  Usa stddev() (muestral Bessel) en TODO el código de estadísticas.
-
-//  FIX #35 — fmtRow filtra finite() antes de operar.
-
-//  FIX #58 — colspan usando STATS_COLS constante.
-
-//  FIX #68 — fmtRow vacío retorna fila con '—' visible, no vacío silencioso.
-
+//  ESTADÍSTICAS
+//  FIX #12: cv() puede ser NaN — se muestra 'n/d'
+//  FIX #13: nota sobre IQR con n=2
 // ══════════════════════════════════════════════
-
 function fmtRow(label, rawArr, dec = 1, unit = '', color = '') {
-
-  // FIX #35 — filtrar finite antes de cualquier operación
-
   const validArr = finite(rawArr);
-
   const style = color ? `style="color:${color}"` : '';
-
   const f = v => {
-
     if (!Number.isFinite(v)) return '—';
-
     return parseFloat(v.toFixed(dec)).toLocaleString('es-AR', {
-
       minimumFractionDigits: dec, maximumFractionDigits: dec
-
     }) + unit;
-
   };
-
-  // FIX #68 — si el array válido está vacío, mostrar fila con "sin datos"
-
   if (!validArr.length) {
-
     return `<tr>
-
       <td ${style}>${label}</td>
-
       <td colspan="${STATS_COLS - 1}" style="color:var(--muted);font-size:9px;text-align:center">Sin datos suficientes</td>
-
     </tr>`;
-
   }
-
-  const s   = stddev(validArr); // FIX #20 — muestral Bessel
-
+  const s   = stddev(validArr);
   const sdStr = Number.isFinite(s)
-
     ? f(s)
-
     : '<span style="color:var(--muted);font-size:9px">n/a (n&lt;2)</span>';
-
+  // FIX #12: cv puede ser NaN cuando μ ≈ 0
+  const cvVal = cv(validArr);
+  const cvStr = Number.isFinite(cvVal)
+    ? cvVal.toFixed(1) + '%'
+    : '<span style="color:var(--muted);font-size:9px">n/d</span>';
   return `<tr>
-
     <td ${style}>${label}</td>
-
     <td class="sa">${f(mean(validArr))}</td>
-
     <td>${f(median(validArr))}</td>
-
     <td style="color:var(--accent3)">${sdStr}</td>
-
     <td style="color:var(--muted)">${f(minv(validArr))}</td>
-
     <td style="color:var(--accent4)">${f(q1(validArr))}</td>
-
     <td style="color:var(--accent4)">${f(q3(validArr))}</td>
-
     <td style="color:var(--muted)">${f(maxv(validArr))}</td>
-
     <td style="color:var(--accent3)">${f(iqr(validArr))}</td>
-
-    <td style="color:var(--muted)">${cv(validArr).toFixed(1)}%</td>
-
+    <td style="color:var(--muted)">${cvStr}</td>
   </tr>`;
-
 }
 
-// FIX #58 — colspan correcto con STATS_COLS
-
 function groupHdr(label, color) {
-
   return `<tr class="group-hdr"><td colspan="${STATS_COLS}" style="color:${color};border-top:1px solid ${color}22">▸ ${label}</td></tr>`;
-
 }
 
 function renderStats() {
-
   const cont = document.getElementById('stats-cont');
-
   const kRow = document.getElementById('kpi-row');
-
   if (!cont || !kRow) return;
-
   if (!encuestados.length) {
-
     cont.innerHTML = '<div class="empty"><div class="ei">📊</div>Cargá encuestados para ver estadísticas</div>';
-
     kRow.innerHTML = '';
-
     return;
-
   }
-
   const all  = encuestados.map(e => calcular(e));
-
   const pick = fn => finite(all.map(fn));
-
-  const nE     = encuestados.length;
-
-  const co2Arr = pick(s => s.co2Anual);
-
-  const h2oArr = pick(s => s.aguaTotal);
-
-  const gasArr = pick(s => s.gastoAnual > 0 ? s.gastoAnual : NaN);
-
-  const co2uso = pick(s => s.co2PorUso_g > 0 ? s.co2PorUso_g : NaN);
-
-  const avgKg  = mean(pick(s => s.pesoAnual_kg));
-
-  const avgCO2 = mean(co2Arr);
-
-  const avgH2O = mean(h2oArr);
+  const nE      = encuestados.length;
+  const co2Arr  = pick(s => s.co2Anual);
+  const h2oArr  = pick(s => s.aguaTotal);
+  const gasArr  = pick(s => s.gastoAnual > 0 ? s.gastoAnual : NaN);
+  const co2uso  = pick(s => s.co2PorUso_g > 0 ? s.co2PorUso_g : NaN);
+  const avgKg   = mean(pick(s => s.pesoAnual_kg));
+  const avgCO2  = mean(co2Arr);
+  const avgH2O  = mean(h2oArr);
 
   kRow.innerHTML = `
-
     <div class="kpi-card"><div class="kpi-label">Encuestados</div><div class="kpi-temporal">Todos</div>
-
       <div class="kpi-value" style="color:var(--accent)">${nE}</div></div>
-
-    <div class="kpi-card"><div class="kpi-label">Kg/año promedio</div><div class="kpi-temporal">🗓 ANUAL</div>
-
+    <div class="kpi-card"><div class="kpi-label">Kg/año promedio</div><div class="kpi-temporal">🗓 ANUAL (peso global)</div>
       <div class="kpi-value" style="color:var(--accent)">${Number.isFinite(avgKg)?avgKg.toFixed(1):'—'}<span class="kpi-unit">kg</span></div></div>
-
     <div class="kpi-card"><div class="kpi-label">CO₂ promedio</div><div class="kpi-temporal">🗓 ANUAL</div>
-
       <div class="kpi-value" style="color:var(--accent5)">${Number.isFinite(avgCO2)?avgCO2.toFixed(1):'—'}<span class="kpi-unit">kg CO₂</span></div></div>
-
-    <div class="kpi-card"><div class="kpi-label">Agua promedio</div><div class="kpi-temporal">🗓 ANUAL</div>
-
+    <div class="kpi-card"><div class="kpi-label">Agua promedio</div><div class="kpi-temporal">⚡ CICLO VIDA</div>
       <div class="kpi-value" style="color:var(--accent4)">${Number.isFinite(avgH2O)?(avgH2O/1000).toFixed(1):'—'}<span class="kpi-unit">m³</span></div></div>
-
-    ${co2uso.length?`<div class="kpi-card"><div class="kpi-label">CO₂ por uso (prom.)</div><div class="kpi-temporal">⚡ POR USO</div><div class="kpi-value" style="color:var(--accent5)">${mean(co2uso).toFixed(1)}<span class="kpi-unit">g CO₂</span></div></div>`:''}
-
+    ${co2uso.length?`<div class="kpi-card"><div class="kpi-label">CO₂ por uso (prom.)</div><div class="kpi-temporal">⚡ CICLO VIDA</div><div class="kpi-value" style="color:var(--accent5)">${mean(co2uso).toFixed(1)}<span class="kpi-unit">g CO₂</span></div></div>`:''}
     ${gasArr.length?`<div class="kpi-card"><div class="kpi-label">Gasto anual prom.</div><div class="kpi-temporal">🗓 ANUAL</div><div class="kpi-value" style="color:var(--accent3)">$${mean(gasArr).toFixed(0)}<span class="kpi-unit">USD</span></div></div>`:''}`;
 
   const tipoRows = TIPO_KEYS.map(k =>
-
     fmtRow(`${TIPOS[k].n} — 30d [MENSUAL]`, all.map(s => s.pesoPorTipo[k] || 0), 0, ' g')
-
   ).join('');
 
+  // FIX #13: nota IQR n=2
+  const iqrNote = nE === 2
+    ? `<tr><td colspan="${STATS_COLS}" style="font-size:9px;color:var(--accent3);padding:4px 14px">⚠ n=2: IQR = rango/2 (valor limitado estadísticamente)</td></tr>`
+    : '';
+
   cont.innerHTML = `
-
   <div class="stats-wrap">
-
     <table class="stats-tbl">
-
       <thead>
-
         <tr>
-
           <th style="text-align:left">Variable</th>
-
           <th>Media (x̄)</th><th>Mediana (T7)</th>
-
           <th style="color:var(--accent3)">σ muestral (n-1)</th>
-
           <th>Mín</th><th>Q1</th><th>Q3</th><th>Máx</th>
-
           <th style="color:var(--accent3)">IQR</th><th>CV%</th>
-
         </tr>
-
         <tr><th colspan="${STATS_COLS}" style="text-align:left;color:var(--muted);font-size:9px;padding-top:4px">
-
-          σ muestral (Corrección Bessel ÷n-1) · Cuantiles T7 · CV=σ/|x̄|×100 · n/a si n&lt;2
-
+          σ muestral (Corrección Bessel ÷n-1) · Cuantiles T7 · CV=σ/|x̄|×100 (NaN si μ≈0) · n/a si n&lt;2 · Agua TOTAL = prod. anual + lavados ciclo vida
         </th></tr>
-
       </thead>
-
       <tbody>
-
+        ${iqrNote}
         ${groupHdr('DATOS PERSONALES', '#00E5C5')}
-
         ${fmtRow('Edad', encuestados.map(e => e.edad), 1, ' años')}
-
         ${fmtRow('% Material sintético', encuestados.map(e => e.pctSintetico), 1, '%')}
-
         ${fmtRow('% Algodón (del natural)', all.map(s => s.pctA * 100), 1, '%')}
-
         ${fmtRow('% Segunda mano', encuestados.map(e => e.pctSegundaMano || 0), 1, '%')}
-
         ${fmtRow('Usos entre lavados', encuestados.map(e => Math.max(1, e.usosLavado || 3)), 1, ' usos')}
-
         ${groupHdr('COMPRAS — ÚLTIMOS 30 DÍAS [MENSUAL]', '#00E5C5')}
-
         ${fmtRow('Cantidad total [MENSUAL]', pick(s => s.cant30), 1, ' prendas')}
-
         ${fmtRow('Peso total 30d [MENSUAL]', pick(s => s.peso30g), 0, ' g')}
-
         ${fmtRow('Peso promedio/prenda [MENSUAL]', pick(s => s.pesoProm_g), 1, ' g')}
-
         ${tipoRows}
-
-        ${groupHdr('COMPRAS — AÑO COMPLETO [ANUAL]', '#6B9FFF')}
-
+        ${groupHdr('COMPRAS — AÑO COMPLETO [ANUAL — PESO USA GLOBAL AVG]', '#6B9FFF')}
         ${fmtRow('Cantidad anual [ANUAL]', pick(s => s.cantAnual), 1, ' prendas')}
-
-        ${fmtRow('Peso anual total [ANUAL]', pick(s => s.pesoAnual_kg), 2, ' kg')}
-
+        ${fmtRow('Peso anual total [ANUAL] (global avg)', pick(s => s.pesoAnual_kg), 2, ' kg')}
         ${fmtRow('Verano [ANUAL]', encuestados.map(e => (e.estaciones||{}).verano||0), 1, ' prendas')}
-
         ${fmtRow('Otoño [ANUAL]', encuestados.map(e => (e.estaciones||{}).otono||0), 1, ' prendas')}
-
         ${fmtRow('Invierno [ANUAL]', encuestados.map(e => (e.estaciones||{}).invierno||0), 1, ' prendas')}
-
         ${fmtRow('Primavera [ANUAL]', encuestados.map(e => (e.estaciones||{}).primavera||0), 1, ' prendas')}
-
-        ${groupHdr('DESCARTE Y DESTINO — ANUAL', '#FF5370')}
-
+        ${groupHdr('DESCARTE Y DESTINO — ANUAL (sobre compras del año)', '#FF5370')}
         ${fmtRow('Factor de descarte [ANUAL]', pick(s => s.factDesc * 100), 1, '%')}
-
         ${fmtRow('Peso descartado [ANUAL]', pick(s => s.pesoDesc_kg), 2, ' kg', 'var(--accent2)')}
-
         ${fmtRow('Peso conservado [ANUAL]', pick(s => s.pesoConserv_kg), 2, ' kg')}
-
         ${fmtRow('Peso → Basura [ANUAL]', pick(s => s.pesoDest.basura), 2, ' kg', 'var(--accent2)')}
-
         ${fmtRow('Peso → Donado/Regalado [ANUAL]', pick(s => s.pesoDest.donado), 2, ' kg', 'var(--accent)')}
-
         ${fmtRow('Peso → Vendido [ANUAL]', pick(s => s.pesoDest.vendido), 2, ' kg')}
-
         ${fmtRow('Peso → Reciclado [ANUAL]', pick(s => s.pesoDest.reciclado), 2, ' kg')}
-
         ${fmtRow('Peso → Guardado sin usar [ANUAL]', pick(s => s.pesoDest.guardado), 2, ' kg')}
-
         ${groupHdr('HUELLA AMBIENTAL — CO₂ [ANUAL]', '#a78bfa')}
-
         ${fmtRow('CO₂ anual total [ANUAL]', co2Arr, 2, ' kg CO₂', 'var(--accent5)')}
-
-        ${fmtRow('CO₂ del peso descartado [ANUAL]', pick(s => s.co2Descartado), 2, ' kg CO₂', 'var(--accent5)')}
-
+        ${fmtRow('CO₂ prod. prendas descartadas [ANUAL] ★', pick(s => s.co2Descartado), 2, ' kg CO₂', 'var(--accent5)')}
         ${fmtRow('Factor CO₂ mezcla ponderada', pick(s => s.co2FactorMezcla), 2, ' kg CO₂/kg')}
-
-        ${fmtRow('CO₂ por uso ★ [POR USO]', pick(s => s.co2PorUso_g > 0 ? s.co2PorUso_g : NaN), 2, ' g CO₂', 'var(--accent5)')}
-
-        ${groupHdr('HUELLA AMBIENTAL — AGUA [ANUAL]', '#6B9FFF')}
-
+        ${fmtRow('CO₂ por uso ★ [CICLO VIDA]', pick(s => s.co2PorUso_g > 0 ? s.co2PorUso_g : NaN), 2, ' g CO₂', 'var(--accent5)')}
+        ${groupHdr('HUELLA AMBIENTAL — AGUA [ANUAL prod. / CICLO VIDA lavado]', '#6B9FFF')}
         ${fmtRow('AGUA PROD. (L) [ANUAL]', pick(s => s.aguaProd), 0, ' L', 'var(--accent4)')}
-
-        ${fmtRow('AGUA LAV. (L) [ANUAL]', pick(s => s.aguaLavado), 0, ' L', 'var(--accent4)')}
-
-        ${fmtRow('AGUA TOTAL (L) [ANUAL]', h2oArr, 0, ' L', 'var(--accent4)')}
-
-        ${fmtRow('AGUA/USO (L) ★ [POR USO]', pick(s => s.aguaPorUso_L > 0 ? s.aguaPorUso_L : NaN), 2, ' L', 'var(--accent4)')}
-
+        ${fmtRow('AGUA LAV. (L) [CICLO VIDA]', pick(s => s.aguaLavado), 0, ' L', 'var(--accent4)')}
+        ${fmtRow('AGUA TOTAL (L) [CICLO]', h2oArr, 0, ' L', 'var(--accent4)')}
+        ${fmtRow('AGUA/USO (L) ★ [CICLO VIDA]', pick(s => s.aguaPorUso_L > 0 ? s.aguaPorUso_L : NaN), 2, ' L', 'var(--accent4)')}
         ${groupHdr('CICLO DE VIDA, GASTO Y ECONOMÍA', '#FFB547')}
-
         ${fmtRow('Gasto mensual [MENSUAL]', pick(s => s.gastoAnual > 0 ? s.gastoAnual/12 : NaN), 2, ' USD', 'var(--accent3)')}
-
         ${fmtRow('GASTO ANUAL [ANUAL]', gasArr, 2, ' USD', 'var(--accent3)')}
-
-        ${fmtRow('Precio promedio por prenda', finite(all.map(s => s.precioPrenda)), 2, ' USD')}
-
-        ${fmtRow('USOS/PRENDA [POR USO]', finite(encuestados.map(e => e.usosPromedio)).filter(v => v > 0), 1, ' veces')}
-
+        ${fmtRow('Precio promedio por prenda †', finite(all.map(s => s.precioPrenda)), 2, ' USD')}
+        ${fmtRow('USOS/PRENDA [CICLO VIDA]', finite(encuestados.map(e => e.usosPromedio)).filter(v => v > 0), 1, ' veces')}
         ${fmtRow('VIDA ÚTIL (M) [MESES]', finite(encuestados.map(e => e.vidaUtilMeses)).filter(v => v > 0), 1, ' meses')}
-
-        ${fmtRow('ROTACIÓN /AÑO [ANUAL]', finite(all.map(s => s.rotacion)), 2, '×/año', 'var(--accent)')}
-
-        ${fmtRow('COSTO/USO ★ [POR USO]', finite(all.map(s => s.costoUso)), 3, ' USD', 'var(--accent3)')}
-
+        ${fmtRow('ROTACIÓN /AÑO [ANUAL] ††', finite(all.map(s => s.rotacion)), 2, '×/año', 'var(--accent)')}
+        ${fmtRow('COSTO/USO ★ [CICLO VIDA]', finite(all.map(s => s.costoUso)), 3, ' USD', 'var(--accent3)')}
         ${groupHdr('VERACIDAD DE RESPUESTAS', '#FFB547')}
-
         ${fmtRow('Tiempo de respuesta', encuestados.map(e => e.tiempoRespuesta || 0), 0, ' s')}
-
-        ${fmtRow('Índice de veracidad', encuestados.map(e => calcVeracidad(e, encuestados).score), 1, '%', 'var(--accent)')}
-
+        ${fmtRow('Índice de veracidad (Φ(3−z)×100)', encuestados.map(e => calcVeracidad(e, encuestados).score), 1, '%', 'var(--accent)')}
       </tbody>
-
     </table>
-
-    <p style="font-size:10px;color:var(--muted);margin-top:10px">★ Requiere usos/prenda completado · σ n/a si n&lt;2 (Corrección Bessel)</p>
-
+    <p style="font-size:10px;color:var(--muted);margin-top:10px">
+      ★ Requiere usos/prenda completado · σ n/a si n&lt;2 (Corrección Bessel) · CV n/d si μ≈0<br>
+      † Precio = gasto anual ÷ cant. anual — inputs independientes, puede ser irreal (Fix #15)<br>
+      †† Rotación = 12/vidaUtilMeses — asume vida útil uniforme entre tipos (Fix #14)<br>
+      ★ CO₂ desc. = carbono de producción incorporado en prendas descartadas (Fix #16)<br>
+      ⚠ Agua total mezcla producción anual + lavados de ciclo de vida completo (Fix #4)
+    </p>
   </div>`;
-
 }
 
 // ══════════════════════════════════════════════
-
-//  FIX #5/#10/#18/#19 — CHART MEMORY MANAGEMENT
-
-//  destroyChart destruye Y elimina la key.
-
-//  FIX #18 — sigmaPlugin ID único por canvas.
-
-//  FIX #10 — mkChart verifica canvas antes de crear.
-
+//  GESTIÓN DE CHARTS
 // ══════════════════════════════════════════════
-
 const CHART_BASE = {
-
   responsive: true,
-
   plugins: {
-
     legend: { labels: { color:'#7A8AAF', font:{ family:"'Space Mono'", size:10 } } },
-
     tooltip: { backgroundColor:'#1C2640', titleColor:'#E8EDF8', bodyColor:'#7A8AAF', borderColor:'#2A3555', borderWidth:1 },
-
   },
-
   scales: {
-
     x: { ticks:{ color:'#7A8AAF', font:{ family:"'Space Mono'", size:10 } }, grid:{ color:'rgba(42,53,85,.4)' } },
-
     y: { ticks:{ color:'#7A8AAF', font:{ family:"'Space Mono'", size:10 } }, grid:{ color:'rgba(42,53,85,.4)' } },
-
   }
-
 };
-
 function destroyChart(id) {
-
   if (charts[id]) {
-
     try { charts[id].destroy(); } catch(e) { /* ignorar */ }
-
     charts[id] = null;
-
-    delete charts[id]; // FIX #65 — eliminar la key completamente
-
+    delete charts[id];
   }
-
 }
-
 function mkChart(id, type, data, opts) {
-
   destroyChart(id);
-
-  // FIX #10 — verificar existencia del canvas
-
   const el = document.getElementById(id);
-
   if (!el) { console.warn('mkChart: canvas #' + id + ' no encontrado'); return; }
-
   charts[id] = new Chart(el, { type, data, options: opts });
-
 }
-
 function destroyAllCharts() {
-
-  // FIX #19 — limpiar TODOS los charts antes de reconstruir
-
   Object.keys(charts).forEach(destroyChart);
-
   charts = {};
-
 }
-
-// ══════════════════════════════════════════════
-
-//  FIX #28 — renderCharts() con hash de datos para evitar reconstrucción innecesaria
-
-// ══════════════════════════════════════════════
 
 let _lastChartsHash = '';
-
 function renderCharts() {
-
   const cont = document.getElementById('charts-cont');
-
   if (!cont) return;
-
   if (!encuestados.length) {
-
     destroyAllCharts();
-
     cont.innerHTML = '<div class="empty"><div class="ei">📈</div>Cargá encuestados para ver gráficos</div>';
-
     _lastChartsHash = '';
-
     return;
-
   }
-
-  // FIX #28 — solo reconstruir si los datos cambiaron
-
   const newHash = encuestados.map(e => e._fid + (e.createdAt||0)).join(',');
-
   const forceRebuild = newHash !== _lastChartsHash;
-
   _lastChartsHash = newHash;
-
-  if (!forceRebuild && document.getElementById('c1')) {
-
-    return; // datos sin cambios y DOM ya existe → no reconstruir
-
-  }
-
+  if (!forceRebuild && document.getElementById('c1')) return;
   destroyAllCharts();
-
   cont.innerHTML = `
-
     <div class="charts-grid">
-
       <div class="chart-card">
-
         <h3>Peso por tipo de prenda <span class="temporal-badge mensual">MENSUAL (30d)</span></h3>
-
         <p>Promedio de peso total por tipo en los últimos 30 días (gramos)</p>
-
-        <canvas id="c1" height="280" aria-label="Gráfico de peso por tipo de prenda en los últimos 30 días" role="img"></canvas>
-
+        <canvas id="c1" height="280" aria-label="Gráfico de peso por tipo de prenda" role="img"></canvas>
         <div class="chart-source">Pesos unitarios ref. Higg MSI</div>
-
       </div>
-
       <div class="chart-card">
-
         <h3>Destino del peso descartado <span class="temporal-badge anual">ANUAL</span></h3>
-
         <p>Promedio anual estimado (kg)</p>
-
         <canvas id="c2" aria-label="Gráfico de destino del peso descartado" role="img"></canvas>
-
         <div class="chart-source">Ellen MacArthur Foundation <a class="ref-badge" href="#" onclick="goFuentes(event,'src-descarte')">[7]</a></div>
-
       </div>
-
       <div class="chart-card full">
-
         <h3>Peso comprado vs. descartado vs. a la basura <span class="temporal-badge anual">ANUAL</span></h3>
-
-        <p>Estimación anual en kg por encuestado</p>
-
+        <p>Estimación anual en kg por encuestado · peso usa PESO_GLOBAL_G (Fix #5)</p>
         <canvas id="c3" aria-label="Gráfico comparativo de peso por encuestado" role="img"></canvas>
-
-        <div class="chart-source">Cálculos propios FastStats v4.5</div>
-
+        <div class="chart-source">Cálculos propios FastStats v4.6</div>
       </div>
-
       <div class="chart-card">
-
         <h3>Compras por estación del año <span class="temporal-badge anual">ANUAL</span></h3>
-
         <p>Promedio de prendas por estación</p>
-
         <canvas id="c4" aria-label="Gráfico de compras por estación" role="img"></canvas>
-
         <div class="chart-source">Datos propios de la encuesta</div>
-
       </div>
-
       <div class="chart-card">
-
-        <h3>CO₂ anual: producción vs. descarte <span class="temporal-badge anual">ANUAL</span></h3>
-
-        <p>kg CO₂ · Sint. 9.52 · Algodón 5.89 · Otros 3.40 kg/kg <a class="ref-badge" href="#" onclick="goFuentes(event,'src-co2')">[1][2][3]</a></p>
-
+        <h3>CO₂ anual: producción vs. CO₂ prod. descartadas <span class="temporal-badge anual">ANUAL</span></h3>
+        <p>kg CO₂ · Sint. 9.52 · Algodón 5.89 · Otros 3.40 kg/kg · Fix #16: CO₂ desc. = carbono incorporado</p>
         <canvas id="c5" aria-label="Gráfico de CO2 por encuestado" role="img"></canvas>
-
         <div class="chart-source">Higg MSI v3.11 · Nature Climate Change (2018)</div>
-
       </div>
-
       <div class="chart-card">
-
-        <h3>Agua anual: producción vs. lavado <span class="temporal-badge anual">ANUAL</span></h3>
-
-        <p>Litros anuales · Factor algodón: 10 000 L/kg <a class="ref-badge" href="#" onclick="goFuentes(event,'src-agua')">[4]</a></p>
-
+        <h3>Agua: producción anual vs. lavado ciclo vida <span class="temporal-badge ciclo">CICLO</span></h3>
+        <p>Litros · Fix #4: agua lavado = ciclo vida completo · Factor algodón: 10 000 L/kg</p>
         <canvas id="c6" aria-label="Gráfico de agua por encuestado" role="img"></canvas>
-
         <div class="chart-source">Water Footprint Network <a class="ref-badge" href="#" onclick="goFuentes(event,'src-agua')">[4][5]</a></div>
-
       </div>
-
       <div class="chart-card">
-
         <h3>Peso a basura por género <span class="temporal-badge anual">ANUAL</span></h3>
-
         <p>Promedio anual estimado (kg)</p>
-
         <canvas id="c7" aria-label="Gráfico de peso a basura por género" role="img"></canvas>
-
         <div class="chart-source">Datos propios · género autodeclarado</div>
-
       </div>
-
       <div class="chart-card">
-
-        <h3>CO₂/uso vs. Agua/uso <span class="temporal-badge por-uso">POR USO</span></h3>
-
-        <p>Intensidad ambiental por evento de uso (★ solo con datos completos)</p>
-
+        <h3>CO₂/uso vs. Agua/uso <span class="temporal-badge por-uso">CICLO VIDA</span></h3>
+        <p>Intensidad ambiental amortizada por evento de uso (Fix #4) ★ solo con datos completos</p>
         <canvas id="c8" aria-label="Gráfico de dispersión CO2 por uso vs agua por uso" role="img"></canvas>
-
         <div class="chart-source">Ellen MacArthur Foundation Circulytics</div>
-
       </div>
-
       <div class="chart-card full">
-
         <h3>Gasto anual vs. Usos por prenda <span class="temporal-badge anual">ANUAL</span></h3>
-
         <p>Tamaño del punto = costo por uso (USD) · solo con datos completos</p>
-
         <canvas id="c9" aria-label="Gráfico de burbujas gasto vs usos por prenda" role="img"></canvas>
-
-        <div class="chart-source">Datos propios FastStats v4.5</div>
-
+        <div class="chart-source">Datos propios FastStats v4.6</div>
       </div>
-
     </div>`;
 
   const all = encuestados.map(e => ({ ...e, s: calcular(e) }));
-
   const avg = arr => { const f = finite(arr); return f.length ? mean(f) : 0; };
 
-  // c1 — Peso por tipo
-
+  // c1
   const avgTipoPeso = TIPO_KEYS.map(k => avg(all.map(e => e.s.pesoPorTipo[k] || 0)));
-
   mkChart('c1','bar',{
-
     labels: TIPO_KEYS.map(k => TIPOS[k].n.split(' /')[0].trim()),
-
     datasets:[{ label:'Peso promedio (g) — últimos 30 días', data: avgTipoPeso,
-
       backgroundColor: TIPO_KEYS.map((_,i) => `hsla(${160+i*18},80%,55%,0.7)`),
-
       borderColor: TIPO_KEYS.map((_,i) => `hsl(${160+i*18},80%,55%)`),
-
       borderWidth:1, borderRadius:5 }]
-
   },{ ...CHART_BASE, indexAxis:'y' });
 
-  // c2 — Destino descarte
-
+  // c2
   const avgDest = DEST_KEYS.map(k => avg(all.map(e => e.s.pesoDest[k])));
-
   mkChart('c2','doughnut',{
-
     labels: DEST_KEYS.map(k => DESTINOS[k].label),
-
     datasets:[{ data: avgDest,
-
       backgroundColor: DEST_KEYS.map(k => DESTINOS[k].col + 'BB'),
-
       borderColor: DEST_KEYS.map(k => DESTINOS[k].col), borderWidth:2 }]
-
   },{
-
     responsive:true,
-
     plugins:{
-
       legend:{position:'bottom',labels:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10},padding:10}},
-
       tooltip:{backgroundColor:'#1C2640',titleColor:'#E8EDF8',bodyColor:'#7A8AAF',borderColor:'#2A3555',borderWidth:1}
-
     }
-
   });
 
-  // c3 — Comprado/descartado/basura por encuestado. FIX #31 — truncLabel en labels
-
+  // c3
   mkChart('c3','bar',{
-
     labels: all.map(e => truncLabel(e.nombre)),
-
     datasets:[
-
-      { label:'Comprado (kg/año)',   data:all.map(e=>e.s.pesoAnual_kg),     backgroundColor:'rgba(0,229,197,.65)',  borderColor:'#00E5C5', borderWidth:1, borderRadius:4 },
-
-      { label:'Descartado (kg/año)', data:all.map(e=>e.s.pesoDesc_kg),      backgroundColor:'rgba(255,181,71,.65)', borderColor:'#FFB547', borderWidth:1, borderRadius:4 },
-
-      { label:'A basura (kg/año)',   data:all.map(e=>e.s.pesoDest.basura),  backgroundColor:'rgba(255,83,112,.65)', borderColor:'#FF5370', borderWidth:1, borderRadius:4 },
-
+      { label:'Comprado (kg/año)',   data:all.map(e=>e.s.pesoAnual_kg),    backgroundColor:'rgba(0,229,197,.65)', borderColor:'#00E5C5', borderWidth:1, borderRadius:4 },
+      { label:'Descartado (kg/año)', data:all.map(e=>e.s.pesoDesc_kg),     backgroundColor:'rgba(255,181,71,.65)',borderColor:'#FFB547', borderWidth:1, borderRadius:4 },
+      { label:'A basura (kg/año)',   data:all.map(e=>e.s.pesoDest.basura), backgroundColor:'rgba(255,83,112,.65)',borderColor:'#FF5370', borderWidth:1, borderRadius:4 },
     ]
-
   },{
-
     ...CHART_BASE,
-
-    plugins:{
-
-      ...CHART_BASE.plugins,
-
-      // FIX #31/#9 — tooltip usa nombre completo escapado
-
-      tooltip:{ ...CHART_BASE.plugins.tooltip,
-
-        callbacks:{title:ctx => esc(all[ctx[0].dataIndex]?.nombre || '')} }
-
+    plugins:{ ...CHART_BASE.plugins,
+      tooltip:{ ...CHART_BASE.plugins.tooltip, callbacks:{title:ctx => esc(all[ctx[0].dataIndex]?.nombre || '')} }
     }
-
   });
 
-  // c4 — Estaciones
-
+  // c4
   mkChart('c4','bar',{
-
     labels:['Verano ☀️','Otoño 🍂','Invierno ❄️','Primavera 🌸'],
-
     datasets:[{ label:'Prendas (prom.) [ANUAL]',
-
       data:['verano','otono','invierno','primavera'].map(s => avg(all.map(e => (e.estaciones||{})[s]||0))),
-
       backgroundColor:['rgba(255,181,71,.7)','rgba(255,120,70,.7)','rgba(100,149,237,.7)','rgba(0,229,197,.7)'],
-
       borderColor:['#FFB547','#FF7846','#6495ED','#00E5C5'], borderWidth:1, borderRadius:6 }]
-
   }, CHART_BASE);
 
-  // c5 — CO₂. FIX #31 — truncLabel
-
+  // c5 — Fix #16: label actualizado
   mkChart('c5','bar',{
-
     labels: all.map(e => truncLabel(e.nombre)),
-
     datasets:[
-
-      { label:'CO₂ anual producción', data:all.map(e=>e.s.co2Anual),      backgroundColor:'rgba(167,139,250,.7)', borderColor:'#a78bfa', borderWidth:1, borderRadius:4 },
-
-      { label:'CO₂ descartado',       data:all.map(e=>e.s.co2Descartado), backgroundColor:'rgba(255,83,112,.6)',  borderColor:'#FF5370', borderWidth:1, borderRadius:4 },
-
+      { label:'CO₂ anual producción', data:all.map(e=>e.s.co2Anual),       backgroundColor:'rgba(167,139,250,.7)', borderColor:'#a78bfa', borderWidth:1, borderRadius:4 },
+      { label:'CO₂ prod. descartadas',data:all.map(e=>e.s.co2Descartado),  backgroundColor:'rgba(255,83,112,.6)',  borderColor:'#FF5370', borderWidth:1, borderRadius:4 },
     ]
-
   },{ ...CHART_BASE, plugins:{ ...CHART_BASE.plugins,
-
       tooltip:{ ...CHART_BASE.plugins.tooltip, callbacks:{title:ctx=>esc(all[ctx[0].dataIndex]?.nombre||'')} }
-
   }});
 
-  // c6 — Agua. FIX #31 — truncLabel
-
+  // c6 — Fix #4: label diferencia producción anual vs lavado ciclo vida
   mkChart('c6','bar',{
-
     labels: all.map(e => truncLabel(e.nombre)),
-
     datasets:[
-
-      { label:'AGUA PROD. (L)', data:all.map(e=>e.s.aguaProd),   backgroundColor:'rgba(107,159,255,.7)', borderColor:'#6B9FFF', borderWidth:1, borderRadius:4 },
-
-      { label:'AGUA LAV. (L)',  data:all.map(e=>e.s.aguaLavado), backgroundColor:'rgba(0,229,197,.5)',   borderColor:'#00E5C5', borderWidth:1, borderRadius:4 },
-
+      { label:'AGUA PROD. (L) [anual]',      data:all.map(e=>e.s.aguaProd),   backgroundColor:'rgba(107,159,255,.7)', borderColor:'#6B9FFF', borderWidth:1, borderRadius:4 },
+      { label:'AGUA LAV. (L) [ciclo vida]',  data:all.map(e=>e.s.aguaLavado), backgroundColor:'rgba(0,229,197,.5)',   borderColor:'#00E5C5', borderWidth:1, borderRadius:4 },
     ]
-
   },{ ...CHART_BASE, plugins:{ ...CHART_BASE.plugins,
-
       tooltip:{ ...CHART_BASE.plugins.tooltip, callbacks:{title:ctx=>esc(all[ctx[0].dataIndex]?.nombre||'')} }
-
   }});
 
-  // c7 — Por género
-
+  // c7
   const gens = ['f','m','o'];
-
   mkChart('c7','bar',{
-
     labels:['Femenino','Masculino','Otro'],
-
     datasets:[{ label:'kg a basura/año promedio',
-
       data: gens.map(g => { const v = finite(all.filter(e=>e.genero===g).map(e=>e.s.pesoDest.basura)); return v.length ? mean(v) : 0; }),
-
       backgroundColor:['rgba(255,83,170,.6)','rgba(107,159,255,.6)','rgba(255,181,71,.6)'],
-
       borderColor:['#FF53AA','#6B9FFF','#FFB547'], borderWidth:1, borderRadius:6 }]
-
   }, CHART_BASE);
 
-  // c8 — Scatter. FIX #9 — tooltip escapa nombre
-
+  // c8
   const scatterData = all
-
     .filter(e => e.s.co2PorUso_g > 0 && e.s.aguaPorUso_L > 0)
-
     .map(e => ({ x: e.s.aguaPorUso_L, y: e.s.co2PorUso_g, _n: e.nombre }));
-
   mkChart('c8','scatter',{
-
-    datasets:[{ label:'CO₂/uso vs AGUA/uso', data: scatterData,
-
+    datasets:[{ label:'CO₂/uso vs AGUA/uso [ciclo vida]', data: scatterData,
       backgroundColor:'rgba(167,139,250,.6)', borderColor:'#a78bfa', borderWidth:2, pointRadius:7 }]
-
   },{
-
     responsive:true,
-
     plugins:{
-
       legend:{labels:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}}},
-
       tooltip:{backgroundColor:'#1C2640',titleColor:'#E8EDF8',bodyColor:'#7A8AAF',borderColor:'#2A3555',borderWidth:1,
-
         callbacks:{label:ctx=>`${esc(truncLabel(ctx.raw._n,22))} | H₂O/uso: ${ctx.raw.x.toFixed(2)} L | CO₂/uso: ${ctx.raw.y.toFixed(2)} g`}}
-
     },
-
     scales:{
-
       x:{title:{display:true,text:'AGUA/USO (L)',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},grid:{color:'rgba(42,53,85,.4)'}},
-
       y:{title:{display:true,text:'CO₂/USO (G)',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},grid:{color:'rgba(42,53,85,.4)'}},
-
     }
-
   });
 
-  // c9 — Bubble. FIX #47 — radio clamped [4, 20]. FIX #9 — tooltip escapa nombre
-
+  // c9
   const bubbleData = all
-
     .filter(e => (e.gastoMensual||0) > 0 && (e.usosPromedio||0) > 0)
-
     .map(e => ({
-
       x: e.s.gastoAnual,
-
       y: e.usosPromedio,
-
-      // FIX #47 — límite de radio explícito [4, 20]
-
       r: e.s.costoUso != null ? Math.max(4, Math.min(20, e.s.costoUso * 10)) : 6,
-
       _n: e.nombre, _cxu: e.s.costoUso
-
     }));
-
   mkChart('c9','bubble',{
-
     datasets:[{ label:'Gasto anual vs Usos/prenda', data: bubbleData,
-
       backgroundColor:'rgba(0,229,197,.5)', borderColor:'#00E5C5', borderWidth:1 }]
-
   },{
-
     responsive:true,
-
     plugins:{
-
       legend:{labels:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}}},
-
       tooltip:{backgroundColor:'#1C2640',titleColor:'#E8EDF8',bodyColor:'#7A8AAF',borderColor:'#2A3555',borderWidth:1,
-
         callbacks:{label:ctx=>{const d=ctx.raw;return `${esc(truncLabel(d._n,22))} | $${d.x.toFixed(0)}/año | ${d.y} usos${d._cxu!=null?' | $/uso:$'+d._cxu.toFixed(2):''}`;}}
-
       }
-
     },
-
     scales:{
-
       x:{title:{display:true,text:'GASTO ANUAL (USD)',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},grid:{color:'rgba(42,53,85,.4)'}},
-
       y:{title:{display:true,text:'USOS/PRENDA',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},grid:{color:'rgba(42,53,85,.4)'}},
-
     }
-
   });
-
 }
 
 // ══════════════════════════════════════════════
-
-//  FIX #18 — drawGauss() sin sigmaPlugin duplicado
-
-//  sigmaPlugin tiene ID único basado en canvasId.
-
-//  FIX #33 — parámetros consistentes, siempre noNeg=true para físicas.
-
-//  FIX #75 — manejo cuando todos los scores son iguales (σ=0).
-
+//  FIX #18/#2: drawGauss con gaussPoints renormalizada y CDF asintótica
 // ══════════════════════════════════════════════
-
 function drawGauss(canvasId, mu, sigma, threshold, color, labelUnit, noNeg = true) {
-
-  // FIX #3/#75 — sigma puede ser 0 si todos los valores son iguales
-
   const safeSigma = (Number.isFinite(sigma) && sigma > 1e-9)
-
     ? sigma
-
     : Math.max(Math.abs(mu) * 0.05, 0.0001);
-
+  // FIX #2: gaussPoints ya renormaliza si se recortó
   const { xs, ys } = gaussPoints(mu, safeSigma, 300, noNeg);
-
   const peakY = ys.length ? Math.max(...ys) : 1;
-
-  // FIX #18 — ID único por canvas para evitar registro duplicado
-
   const pluginId = `sigmaBands_${canvasId}`;
-
   const sigmaPlugin = {
-
     id: pluginId,
-
     beforeDatasetsDraw(chart) {
-
-      const { ctx, scales: { x, y } } = chart;
-
+     const { ctx, scales: { x, y } } = chart;
       if (!x || !y) return;
-
       const bands = [
-
         { lo: mu - 3*safeSigma, hi: mu + 3*safeSigma, color:'rgba(255,83,112,0.06)' },
-
         { lo: mu - 2*safeSigma, hi: mu + 2*safeSigma, color:'rgba(255,181,71,0.08)' },
-
         { lo: mu - 1*safeSigma, hi: mu + 1*safeSigma, color:'rgba(0,229,197,0.10)'  },
-
       ];
-
       ctx.save();
-
       for (const b of bands) {
-
         const x1 = x.getPixelForValue(b.lo);
-
         const x2 = x.getPixelForValue(b.hi);
-
         const y1 = y.getPixelForValue(y.max);
-
         const y2 = y.getPixelForValue(0);
-
         ctx.fillStyle = b.color;
-
         ctx.fillRect(Math.min(x1,x2), Math.min(y1,y2), Math.abs(x2-x1), Math.abs(y2-y1));
-
       }
-
       ctx.restore();
-
     }
-
   };
 
   destroyChart(canvasId);
-
-  // FIX #10 — verificar canvas
-
   const el = document.getElementById(canvasId);
-
   if (!el) { console.warn('drawGauss: canvas #' + canvasId + ' no encontrado'); return; }
-
-  // FIX #45 — aria-label en el canvas de Gauss
-
-  el.setAttribute('aria-label', `Distribución normal μ=${mu.toFixed(1)} σ=${safeSigma.toFixed(1)} umbral=${threshold} ${labelUnit}`);
+  el.setAttribute('aria-label',
+    `Distribución normal μ=${mu.toFixed(1)} σ=${safeSigma.toFixed(1)} umbral=${threshold} ${labelUnit}`);
 
   const step = xs[1] !== undefined ? Math.abs(xs[1] - xs[0]) : 0.01;
-
   charts[canvasId] = new Chart(el, {
-
     type: 'line',
-
     data: {
-
       labels: xs,
-
       datasets: [
-
-        { label:`Zona cumplimiento (≤ ${threshold.toLocaleString('es-AR')} ${labelUnit})`,
-
-          data: xs.map((x,i) => x <= threshold ? ys[i] : null),
-
+        { label:`Zona cumplimiento (≤ ${Number(threshold).toLocaleString('es-AR')} ${labelUnit})`,
+          data: xs.map((xv, i) => xv <= threshold ? ys[i] : null),
           borderColor:'transparent',
-
           backgroundColor: color.replace(/^hsl\((.+)\)$/, 'hsla($1,0.22)').replace(/^#(.{6})$/, '#$10038'),
-
           pointRadius:0, fill:'origin', tension:0.4 },
-
         { label:`N(${mu.toFixed(1)}, ${safeSigma.toFixed(2)})`,
-
           data: ys, borderColor: color, backgroundColor:'transparent',
-
           borderWidth:2.5, pointRadius:0, tension:0.4, fill:false },
-
-        { label:`Umbral (${threshold.toLocaleString('es-AR')} ${labelUnit})`,
-
-          data: xs.map(x => Math.abs(x - threshold) < step * 1.5 ? peakY * 0.92 : null),
-
-          borderColor:'#FF5370', backgroundColor:'transparent', borderWidth:2, borderDash:[5,4],
-
-          pointRadius:0, fill:false, tension:0, spanGaps:false },
-
+        { label:`Umbral (${Number(threshold).toLocaleString('es-AR')} ${labelUnit})`,
+          data: xs.map(xv => Math.abs(xv - threshold) < step * 1.5 ? peakY * 0.92 : null),
+          borderColor:'#FF5370', backgroundColor:'transparent', borderWidth:2,
+          borderDash:[5,4], pointRadius:0, fill:false, tension:0, spanGaps:false },
         { label:`Media (${mu.toFixed(1)} ${labelUnit})`,
-
-          data: xs.map(x => Math.abs(x - mu) < step * 1.5 ? peakY * 0.85 : null),
-
-          borderColor:'#FFB547', backgroundColor:'transparent', borderWidth:2, borderDash:[6,3],
-
-          pointRadius:0, fill:false, tension:0, spanGaps:false },
-
+          data: xs.map(xv => Math.abs(xv - mu) < step * 1.5 ? peakY * 0.85 : null),
+          borderColor:'#FFB547', backgroundColor:'transparent', borderWidth:2,
+          borderDash:[6,3], pointRadius:0, fill:false, tension:0, spanGaps:false },
       ]
-
     },
-
     options: {
-
-      responsive:true,
-
-      plugins:{
-
-        legend:{labels:{color:'#7A8AAF',font:{family:"'Space Mono'",size:9},boxWidth:14}},
-
-        tooltip:{enabled:false},
-
+      responsive: true,
+      plugins: {
+        legend: { labels:{ color:'#7A8AAF', font:{ family:"'Space Mono'", size:9 }, boxWidth:14 } },
+        tooltip: { enabled: false },
       },
-
-      scales:{
-
-        x:{type:'linear',
-
-           ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:9},maxTicksLimit:7,
-
-             callback: v => Number.isFinite(v) ? v.toFixed(1) : ''},
-
-           grid:{color:'rgba(42,53,85,.3)'},
-
-           title:{display:true,text:labelUnit,color:'#7A8AAF',font:{family:"'Space Mono'",size:9}}},
-
-        y:{ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:9},maxTicksLimit:5},
-
-           grid:{color:'rgba(42,53,85,.3)'},
-
-           title:{display:true,text:'Densidad f(x)',color:'#7A8AAF',font:{family:"'Space Mono'",size:9}}}
-
+      scales: {
+        x: { type:'linear',
+             ticks:{ color:'#7A8AAF', font:{ family:"'Space Mono'", size:9 }, maxTicksLimit:7,
+               callback: v => Number.isFinite(v) ? v.toFixed(1) : '' },
+             grid: { color:'rgba(42,53,85,.3)' },
+             title:{ display:true, text:labelUnit, color:'#7A8AAF', font:{ family:"'Space Mono'", size:9 } } },
+        y: { ticks:{ color:'#7A8AAF', font:{ family:"'Space Mono'", size:9 }, maxTicksLimit:5 },
+             grid:{ color:'rgba(42,53,85,.3)' },
+             title:{ display:true, text:'Densidad f(x)', color:'#7A8AAF',
+               font:{ family:"'Space Mono'", size:9 } } }
       }
-
     },
-
     plugins: [sigmaPlugin],
-
   });
-
 }
 
 // ══════════════════════════════════════════════
-
 //  PROBABILIDAD
-
-//  FIX #14 — usa stddevSafe() (definida). FIX #29 — warn n<10.
-
-//  FIX #57 — sdRanges no muestra "σ muestral" cuando n<2 (sería engañoso).
-
+//
+//  FIX #8:  pg5 usa LOO por individuo — z_i = (umbral − x_i) / σ_sin_i
+//           contradecía la metodología Jackknife documentada en Metodología.
+//  FIX #9:  Cálculos de σ en probabilidad usan stddev() puro (Bessel), NO
+//           stddevSafe(), para que coincidan con STDEV() del Excel exportado.
+//           Cuando n<2, las campanas no se dibujan y se muestra aviso explícito.
+//  FIX #18: normalCDF asintótica — sin clamp a ±8 → distingue probs extremas.
 // ══════════════════════════════════════════════
-
 function renderProbabilidad() {
-
   const cont = document.getElementById('prob-cont');
-
   if (!cont) return;
-
   if (!encuestados.length) {
-
     cont.innerHTML = '<div class="empty"><div class="ei">🎯</div>Cargá encuestados para ver el análisis de probabilidad</div>';
-
     return;
-
   }
 
-  // FIX #1 — MOVER DEFINICIONES DE CONSTANTES AL INICIO (antes de usarlas)
-
-  const STD_CO2_KG    = 30;
-
-  const STD_AGUA_L    = 50000;
-
-  const STD_GASTO_USD = 300;
-
-  const all   = encuestados.map(e => calcular(e));
-
-  const n     = encuestados.length;
-
-  const co2arr = finite(all.map(s => s.co2Anual));
-
-  const h2oarr = finite(all.map(s => s.aguaTotal));
-
+  const all     = encuestados.map(e => calcular(e));
+  const n       = encuestados.length;
+  const co2arr  = finite(all.map(s => s.co2Anual));
+  const h2oarr  = finite(all.map(s => s.aguaTotal));
   const gastarr = finite(all.map(s => s.gastoAnual > 0 ? s.gastoAnual : NaN));
-
   const rotarr  = finite(all.map(s => s.rotacion));
 
-  // FIX #14 — stddevSafe correctamente definida y llamada
+  // FIX #9 — usar stddev() (Bessel puro) para que coincida con STDEV() de Excel.
+  // stddevSafe() agrega un suelo arbitrario que produce probabilidades sin significado
+  // cuando n<2. En ese caso, mostramos aviso y no dibujamos la campana.
+  const muCO2   = mean(co2arr);
+  const sdCO2   = stddev(co2arr);          // NaN si n<2
+  const muH2O   = mean(h2oarr);
+  const sdH2O   = stddev(h2oarr);
+  const muGasto = mean(gastarr);
+  const sdGasto = stddev(gastarr);
+  const muRot   = mean(rotarr);
+  const sdRot   = stddev(rotarr);
 
-  const muCO2   = co2arr.length  ? mean(co2arr)      : 0;
-
-  const sdCO2   = co2arr.length  ? stddevSafe(co2arr) : 0.0001;
-
-  const muH2O   = h2oarr.length  ? mean(h2oarr)       : 0;
-
-  const sdH2O   = h2oarr.length  ? stddevSafe(h2oarr) : 0.0001;
-
-  const muGasto = gastarr.length ? mean(gastarr)       : 0;
-
-  const sdGasto = gastarr.length ? stddevSafe(gastarr) : 0.0001;
-
-  const muRot   = rotarr.length  ? mean(rotarr)        : 0;
-
-  const sdRot   = rotarr.length  ? stddevSafe(rotarr)  : 0.0001;
-
-  // FIX #29 — advertencia n<10
-
-  const nWarnClass = n < 2 ? 'crit' : n < 10 ? '' : '';
-
-  const nWarnMsg   = n < 2
-
-    ? `<div class="info-box warn">⚠️ <b>n = ${n}:</b> σ muestral indefinida (requiere n≥2). Se usa suelo técnico. Añadí más encuestados para resultados válidos.</div>`
-
+  const nWarnMsg = n < 2
+    ? `<div class="info-box warn">⚠️ <b>n = ${n}:</b> σ muestral indefinida (requiere n≥2). Las campanas de Gauss y las probabilidades no se calculan con n&lt;2. Añadí más encuestados para resultados válidos.</div>`
     : n < 10
-
       ? `<div class="info-box amber">⚠️ <b>n = ${n}:</b> Muestra pequeña. Con n&lt;10 la distribución normal puede no ser representativa. Resultados orientativos.</div>`
-
       : '';
 
-  // σ "raw" para mostrar en UI (puede ser NaN si n<2)
-
-  const sdCO2_raw   = stddev(co2arr);
-
-  const sdH2O_raw   = stddev(h2oarr);
-
-  const sdGasto_raw = stddev(gastarr);
-
-  const sdRot_raw   = stddev(rotarr);
-
-  // FIX #57 — label honesto: muestra "n/a" cuando no hay σ muestral, no el suelo técnico
-
+  // FIX #9: mostrar si σ es real o n/a
   const sdLabelUI = (s, unit) => Number.isFinite(s)
-
     ? `σ (Bessel) = ${s.toFixed(2)} ${unit}`
+    : `<span style="color:var(--accent2);font-size:9px">σ n/a (n&lt;2) — campana no disponible</span>`;
 
-    : `<span style="color:var(--accent2);font-size:9px">σ n/a (n&lt;2) — se usa suelo técnico</span>`;
+  // FIX #18: sin clamp de z — normalCDF ya maneja valores extremos con Mills
+  const safeP = (threshold, mu, sd) => {
+    if (!Number.isFinite(mu) || !Number.isFinite(sd) || sd <= 0) return NaN;
+    const z = (threshold - mu) / sd;
+    return Math.round(normalCDF(z) * 1000) / 10;
+  };
 
-  // FIX #34 — clamp z antes de normalCDF para evitar Infinity
+  const pCO2_cumple  = safeP(STD_CO2_KG,    muCO2,   sdCO2);
+  const pH2O_cumple  = safeP(STD_AGUA_L,    muH2O,   sdH2O);
+  const pGas_cumple  = safeP(STD_GASTO_USD, muGasto, sdGasto);
 
-  const zCO2_std = Number.isFinite((STD_CO2_KG - muCO2) / sdCO2)
-
-    ? Math.max(-8, Math.min(8, (STD_CO2_KG - muCO2) / sdCO2)) : 0;
-
-  const zH2O_std = Number.isFinite((STD_AGUA_L - muH2O) / sdH2O)
-
-    ? Math.max(-8, Math.min(8, (STD_AGUA_L - muH2O) / sdH2O)) : 0;
-
-  const zGas_std = Number.isFinite((STD_GASTO_USD - muGasto) / sdGasto)
-
-    ? Math.max(-8, Math.min(8, (STD_GASTO_USD - muGasto) / sdGasto)) : 0;
-
-  const pCO2_cumple  = Math.round(normalCDF(zCO2_std) * 1000) / 10;
-
-  const pH2O_cumple  = Math.round(normalCDF(zH2O_std) * 1000) / 10;
-
-  const pGas_cumple  = Math.round(normalCDF(zGas_std) * 1000) / 10;
-
-  // FIX #57 — sdRanges honesta: muestra si es σ muestral o suelo técnico
-
-  function sdRanges(mu, sigmaRaw, sigmaSafe, unit, dec = 1) {
-
-    const isMuestral = Number.isFinite(sigmaRaw);
-
-    const sigmaLabel = isMuestral
-
-      ? `σ muestral = ${sigmaRaw.toFixed(2)} ${unit}`
-
-      : `<span style="color:var(--accent2);font-size:9px">σ muestral n/a — suelo técnico usado</span>`;
-
+  function sdRanges(mu, sd, unit, dec = 1) {
+    if (!Number.isFinite(sd)) {
+      return `<div class="sd-range-box"><div class="sd-title">Rangos σ — no disponibles (n&lt;2)</div></div>`;
+    }
     return `<div class="sd-range-box">
-
       <div class="sd-title">Rangos σ — distribución del grupo [ANUAL]</div>
-
       <div style="font-size:9px;color:var(--muted);margin-bottom:6px">
-
-        μ = ${mu.toFixed(dec)} ${unit} &nbsp;·&nbsp; ${sigmaLabel}
-
+        μ = ${mu.toFixed(dec)} ${unit} &nbsp;·&nbsp; σ (Bessel) = ${sd.toFixed(2)} ${unit}
       </div>
-
       <div class="sd-range-row">
-
-        <div class="sd-zone z1">±1σ<br>${(mu-sigmaSafe).toFixed(dec)}–${(mu+sigmaSafe).toFixed(dec)}<br><span style="font-size:8px;opacity:.7">≈68%</span></div>
-
-        <div class="sd-zone z2">±2σ<br>${(mu-2*sigmaSafe).toFixed(dec)}–${(mu+2*sigmaSafe).toFixed(dec)}<br><span style="font-size:8px;opacity:.7">≈95%</span></div>
-
-        <div class="sd-zone z3">±3σ<br>${(mu-3*sigmaSafe).toFixed(dec)}–${(mu+3*sigmaSafe).toFixed(dec)}<br><span style="font-size:8px;opacity:.7">≈99.7%</span></div>
-
+        <div class="sd-zone z1">±1σ<br>${(mu-sd).toFixed(dec)}–${(mu+sd).toFixed(dec)}<br><span style="font-size:8px;opacity:.7">≈68%</span></div>
+        <div class="sd-zone z2">±2σ<br>${(mu-2*sd).toFixed(dec)}–${(mu+2*sd).toFixed(dec)}<br><span style="font-size:8px;opacity:.7">≈95%</span></div>
+        <div class="sd-zone z3">±3σ<br>${(mu-3*sd).toFixed(dec)}–${(mu+3*sd).toFixed(dec)}<br><span style="font-size:8px;opacity:.7">≈99.7%</span></div>
       </div>
-
       <div class="sigma-legend">
-
-        <span class="sigma-chip s1">■ ±1σ zona verde</span>
-
-        <span class="sigma-chip s2">■ ±2σ zona amarilla</span>
-
-        <span class="sigma-chip s3">■ ±3σ zona roja (outlier)</span>
-
+        <span class="sigma-chip s1">■ ±1σ</span>
+        <span class="sigma-chip s2">■ ±2σ</span>
+        <span class="sigma-chip s3">■ ±3σ (outlier)</span>
       </div>
-
     </div>`;
-
   }
 
-  function chipClass(p) { return p >= 60 ? 'cumple' : p >= 30 ? 'riesgo' : 'critico'; }
-
+  function chipClass(p) {
+    if (!Number.isFinite(p)) return 'riesgo';
+    return p >= 60 ? 'cumple' : p >= 30 ? 'riesgo' : 'critico';
+  }
   function chipLabel(p) {
-
+    if (!Number.isFinite(p)) return '— (n&lt;2, sin dato)';
     return p >= 60 ? `✓ ${p}% del grupo cumple estándar`
-
          : p >= 30 ? `⚠ ${p}% — riesgo`
-
          : `✗ ${p}% — incumplimiento crítico`;
-
+  }
+  function zLabel(mu, sd, thr) {
+    if (!Number.isFinite(sd) || sd <= 0) return '— (n<2)';
+    return ((thr - mu) / sd).toFixed(2) + 'σ';
   }
 
   cont.innerHTML = `
-
     <div class="st">Análisis de Probabilidad y Cumplimiento <span class="temporal-badge anual">ANUAL</span></div>
-
     <div class="info-box">
-
-      📐 Distribución normal con σ <b>muestral</b> (Corrección Bessel, n-1) + suelo técnico cuando n&lt;2.
-
-      CDF: Abramowitz &amp; Stegun §26.2.17 · z clampado ∈ [−8, 8].<br>
-
+      📐 Distribución normal con σ <b>muestral puro</b> (Bessel ÷n-1, coincide con STDEV de Excel — Fix #9).
+      CDF: A&amp;S §26.2.17 + expansión asintótica de Mills para |z|&gt;6 — Fix #18.<br>
+      <b>pg5 — Jackknife LOO:</b> z_i = (umbral − x_i) / σ_<i>sin</i>_i (Fix #8).<br>
       <b>Umbral CO₂ (EEA 2022):</b> ≤ 30 kg CO₂/año <a class="ref-badge" href="#" onclick="goFuentes(event,'src-std')">[12]</a> &nbsp;|&nbsp;
-
       <b>Umbral agua (WFN 2023):</b> ≤ 50 000 L/año <a class="ref-badge" href="#" onclick="goFuentes(event,'src-agua')">[4]</a>
-
     </div>
-
     ${nWarnMsg}
-
     <div class="charts-grid">
-
       <div class="chart-card">
-
         <h3>CO₂ ANUAL — Campana de Gauss <span class="temporal-badge anual">ANUAL</span></h3>
-
-        <p>μ = ${muCO2.toFixed(2)} kg CO₂ · ${sdLabelUI(sdCO2_raw,'kg')} · Umbral EEA = 30 kg/año <a class="ref-badge" href="#" onclick="goFuentes(event,'src-std')">[12]</a></p>
-
+        <p>μ = ${Number.isFinite(muCO2)?muCO2.toFixed(2):'—'} kg CO₂ · ${sdLabelUI(sdCO2,'kg')} · Umbral EEA = 30 kg/año <a class="ref-badge" href="#" onclick="goFuentes(event,'src-std')">[12]</a></p>
         <canvas id="pg1" aria-label="Campana de Gauss CO2 anual" role="img"></canvas>
-
-        ${sdRanges(muCO2, sdCO2_raw, sdCO2, 'kg CO₂', 2)}
-
+        ${sdRanges(muCO2, sdCO2, 'kg CO₂', 2)}
         <div class="prob-band">
-
           <span class="prob-chip ${chipClass(pCO2_cumple)}">${chipLabel(pCO2_cumple)}</span>
-
-          <span class="prob-chip riesgo">z = ${zCO2_std.toFixed(2)}σ</span>
-
+          ${Number.isFinite(sdCO2)?`<span class="prob-chip riesgo">z = ${zLabel(muCO2,sdCO2,STD_CO2_KG)}</span>`:''}
         </div>
-
         <div class="chart-source"><a href="https://www.europarl.europa.eu/topics/en/article/20201208STO93327" target="_blank" rel="noopener noreferrer">[12] EEA 2022</a></div>
-
       </div>
-
       <div class="chart-card">
-
-        <h3>AGUA TOTAL — Campana de Gauss <span class="temporal-badge anual">ANUAL</span></h3>
-
-        <p>μ = ${muH2O.toFixed(0)} L · ${sdLabelUI(sdH2O_raw,'L')} · Umbral WFN = 50 000 L/año <a class="ref-badge" href="#" onclick="goFuentes(event,'src-agua')">[4]</a></p>
-
-        <canvas id="pg2" aria-label="Campana de Gauss agua total anual" role="img"></canvas>
-
-        ${sdRanges(muH2O, sdH2O_raw, sdH2O, 'L', 0)}
-
+        <h3>AGUA TOTAL — Campana de Gauss <span class="temporal-badge ciclo">CICLO</span></h3>
+        <p>μ = ${Number.isFinite(muH2O)?muH2O.toFixed(0):'—'} L · ${sdLabelUI(sdH2O,'L')} · Umbral WFN = 50 000 L/año <a class="ref-badge" href="#" onclick="goFuentes(event,'src-agua')">[4]</a></p>
+        <canvas id="pg2" aria-label="Campana de Gauss agua total" role="img"></canvas>
+        ${sdRanges(muH2O, sdH2O, 'L', 0)}
         <div class="prob-band">
-
           <span class="prob-chip ${chipClass(pH2O_cumple)}">${chipLabel(pH2O_cumple)}</span>
-
-          <span class="prob-chip riesgo">z = ${zH2O_std.toFixed(2)}σ</span>
-
+          ${Number.isFinite(sdH2O)?`<span class="prob-chip riesgo">z = ${zLabel(muH2O,sdH2O,STD_AGUA_L)}</span>`:''}
         </div>
-
         <div class="chart-source"><a href="https://waterfootprint.org" target="_blank" rel="noopener noreferrer">[4][5] Water Footprint Network 2023</a></div>
-
       </div>
-
       <div class="chart-card">
-
         <h3>GASTO ANUAL — Campana de Gauss <span class="temporal-badge anual">ANUAL</span></h3>
-
-        <p>μ = $${muGasto.toFixed(0)} · ${sdLabelUI(sdGasto_raw,'USD')} · Referencia = $300/año</p>
-
+        <p>μ = $${Number.isFinite(muGasto)?muGasto.toFixed(0):'—'} · ${sdLabelUI(sdGasto,'USD')} · Referencia = $300/año</p>
         <canvas id="pg3" aria-label="Campana de Gauss gasto anual" role="img"></canvas>
-
-        ${sdRanges(muGasto, sdGasto_raw, sdGasto, 'USD', 1)}
-
+        ${sdRanges(muGasto, sdGasto, 'USD', 1)}
         <div class="prob-band">
-
           <span class="prob-chip ${chipClass(pGas_cumple)}">${chipLabel(pGas_cumple)}</span>
-
         </div>
-
         <div class="chart-source">Referencia: consumo sostenible estimado</div>
-
       </div>
-
       <div class="chart-card">
-
         <h3>ROTACIÓN /AÑO — Campana de Gauss <span class="temporal-badge anual">ANUAL</span></h3>
-
-        <p>μ = ${muRot.toFixed(2)}×/año · ${sdLabelUI(sdRot_raw,'×/año')} · Alta rotación &gt;4×/año <a class="ref-badge" href="#" onclick="goFuentes(event,'src-descarte')">[7]</a></p>
-
+        <p>μ = ${Number.isFinite(muRot)?muRot.toFixed(2):'—'}×/año · ${sdLabelUI(sdRot,'×/año')} · Alta rotación &gt;4×/año <a class="ref-badge" href="#" onclick="goFuentes(event,'src-descarte')">[7]</a></p>
         <canvas id="pg4" aria-label="Campana de Gauss rotación anual" role="img"></canvas>
-
-        ${sdRanges(muRot, sdRot_raw, sdRot, '×/año', 2)}
-
+        ${sdRanges(muRot, sdRot, '×/año', 2)}
         <div class="prob-band">
-
-          <span class="prob-chip ${muRot<=2?'cumple':muRot<=4?'riesgo':'critico'}">${muRot<=2?'✓ Rotación sostenible':muRot<=4?'⚠ Rotación moderada':'✗ Alta rotación'}</span>
-
+          <span class="prob-chip ${!Number.isFinite(muRot)?'riesgo':muRot<=2?'cumple':muRot<=4?'riesgo':'critico'}">
+            ${!Number.isFinite(muRot)?'—':muRot<=2?'✓ Rotación sostenible':muRot<=4?'⚠ Rotación moderada':'✗ Alta rotación'}
+          </span>
         </div>
-
         <div class="chart-source"><a href="https://ellenmacarthurfoundation.org/a-new-textiles-economy" target="_blank" rel="noopener noreferrer">[7] EMF 2017</a></div>
-
       </div>
-
       <div class="chart-card full">
-
-        <h3>Probabilidad de cumplimiento por encuestado <span class="temporal-badge anual">ANUAL</span></h3>
-
-        <p>P(X ≤ umbral) · z_i = (umbral − x_i) / σ_grupo · Φ(z_i)×100% — CDF A&amp;S</p>
-
-        <canvas id="pg5" aria-label="Probabilidad de cumplimiento por encuestado" role="img"></canvas>
-
-        <div class="chart-source">Umbrales: EEA 2022 [12] · WFN 2023 [4]</div>
-
+        <h3>Probabilidad de cumplimiento por encuestado — Jackknife LOO <span class="temporal-badge anual">ANUAL</span></h3>
+        <p>
+          <b>Fix #8:</b> z_i = (umbral − x_i) / σ_<i>sin</i>_i — cada individuo excluido de su propio grupo de referencia.
+          P_i = Φ(z_i) × 100%. Fix #18: CDF asintótica sin clamp.
+        </p>
+        <canvas id="pg5" aria-label="Probabilidad de cumplimiento por encuestado LOO" role="img"></canvas>
+        <div class="chart-source">Umbrales: EEA 2022 [12] · WFN 2023 [4] · Jackknife: Quenouille (1956)</div>
       </div>
-
     </div>`;
 
   requestAnimationFrame(() => {
+    // Solo dibujar campanas cuando n≥2 (σ real disponible — Fix #9)
+    if (Number.isFinite(sdCO2)  && co2arr.length  >= 2)
+      drawGauss('pg1', muCO2,   sdCO2,   STD_CO2_KG,    'hsl(270,70%,70%)', 'kg CO₂/año', true);
+    if (Number.isFinite(sdH2O)  && h2oarr.length  >= 2)
+      drawGauss('pg2', muH2O,   sdH2O,   STD_AGUA_L,    'hsl(210,80%,65%)', 'L/año',      true);
+    if (Number.isFinite(sdGasto)&& gastarr.length >= 2)
+      drawGauss('pg3', muGasto, sdGasto, STD_GASTO_USD,  'hsl(40,90%,60%)',  'USD/año',    true);
+    if (Number.isFinite(sdRot)  && rotarr.length  >= 2)
+      drawGauss('pg4', muRot,   sdRot,   4,              'hsl(170,80%,55%)', '×/año',      true);
 
-    // FIX #33 — noNeg=true siempre para variables físicas no-negativas
-
-    if (co2arr.length)  drawGauss('pg1', muCO2,   sdCO2,   30,     'hsl(270,70%,70%)', 'kg CO₂/año', true);
-
-    if (h2oarr.length)  drawGauss('pg2', muH2O,   sdH2O,   50000,  'hsl(210,80%,65%)', 'L/año',      true);
-
-    if (gastarr.length) drawGauss('pg3', muGasto,  sdGasto, 300,    'hsl(40,90%,60%)',  'USD/año',    true);
-
-    if (rotarr.length)  drawGauss('pg4', muRot,    sdRot,   4,      'hsl(170,80%,55%)', '×/año',      true);
-
-    // pg5 — barras de probabilidad
-
+    // ── pg5: Probabilidad Jackknife LOO (Fix #8) ──────────────────────────
+    // Para cada individuo i, σ se calcula SIN ese individuo.
+    // Esto implementa correctamente el Jackknife declarado en Metodología.
+    // Fix #18: normalCDF asintótica — sin clamp de z.
     const probData = all.map((s, i) => {
+      // Grupo sin individuo i
+      const groupCO2 = finite(all.filter((_,j)=>j!==i).map(a=>a.co2Anual));
+      const groupH2O = finite(all.filter((_,j)=>j!==i).map(a=>a.aguaTotal));
+      const sdCO2_LOO = stddev(groupCO2);   // NaN si grupo < 2
+      const sdH2O_LOO = stddev(groupH2O);
 
-      // FIX #34 — clamp z para evitar Infinity
+      // Fix #18: sin clamp — normalCDF ya maneja |z|>6 con razón de Mills
+      const pCO2_i = (Number.isFinite(sdCO2_LOO) && sdCO2_LOO > 0)
+        ? Math.round(normalCDF((STD_CO2_KG - s.co2Anual) / sdCO2_LOO) * 1000) / 10
+        : NaN;
+      const pH2O_i = (Number.isFinite(sdH2O_LOO) && sdH2O_LOO > 0)
+        ? Math.round(normalCDF((STD_AGUA_L - s.aguaTotal) / sdH2O_LOO) * 1000) / 10
+        : NaN;
 
-      const zCO2 = sdCO2 > 0 ? Math.max(-8, Math.min(8, (30    - s.co2Anual)  / sdCO2)) : 0;
-
-      const zH2O = sdH2O > 0 ? Math.max(-8, Math.min(8, (50000 - s.aguaTotal) / sdH2O)) : 0;
-
-      return {
-
-        nombre:  encuestados[i].nombre,
-
-        pCO2: Math.round(normalCDF(zCO2) * 1000) / 10,
-
-        pH2O: Math.round(normalCDF(zH2O) * 1000) / 10,
-
-      };
-
+      return { nombre: encuestados[i].nombre, pCO2: pCO2_i, pH2O: pH2O_i };
     });
+
+    // Si con LOO no se puede calcular (n<3 → grupo sin i tiene n<2),
+    // mostrar aviso en lugar del gráfico.
+    const allNaN = probData.every(d => !Number.isFinite(d.pCO2) && !Number.isFinite(d.pH2O));
+    if (allNaN) {
+      const el = document.getElementById('pg5');
+      if (el && el.parentElement) {
+        el.style.display = 'none';
+        el.parentElement.insertAdjacentHTML('beforeend',
+          '<div class="info-box" style="margin-top:8px">⚠️ Se necesitan ≥3 encuestados para el análisis LOO individual (el grupo de referencia de cada uno requiere n≥2).</div>');
+      }
+      return;
+    }
 
     mkChart('pg5','bar',{
-
-      labels: probData.map(d => truncLabel(d.nombre)), // FIX #31
-
+      labels: probData.map(d => truncLabel(d.nombre)),
       datasets:[
-
-        { label:'P(cumple CO₂ ANUAL) %', data: probData.map(d=>d.pCO2),
-
+        { label:'P(cumple CO₂ ≤30 kg) % — LOO',
+          data: probData.map(d => Number.isFinite(d.pCO2) ? d.pCO2 : null),
           backgroundColor:'rgba(167,139,250,.7)', borderColor:'#a78bfa', borderWidth:1, borderRadius:4 },
-
-        { label:'P(cumple AGUA TOTAL ANUAL) %', data: probData.map(d=>d.pH2O),
-
+        { label:'P(cumple Agua ≤50000 L) % — LOO',
+          data: probData.map(d => Number.isFinite(d.pH2O) ? d.pH2O : null),
           backgroundColor:'rgba(107,159,255,.7)', borderColor:'#6B9FFF', borderWidth:1, borderRadius:4 }
-
       ]
-
     },{
-
       ...CHART_BASE,
-
       plugins:{
-
         ...CHART_BASE.plugins,
-
         tooltip:{ ...CHART_BASE.plugins.tooltip,
-
-          callbacks:{title:ctx=>esc(probData[ctx[0].dataIndex]?.nombre||'')} }
-
+          callbacks:{ title: ctx => esc(probData[ctx[0].dataIndex]?.nombre || '') } }
       },
-
       scales:{
-
         x:{ ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}}, grid:{color:'rgba(42,53,85,.4)'} },
-
         y:{ min:0, max:100,
-
             ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10},callback:v=>v+'%'},
-
             grid:{color:'rgba(42,53,85,.4)'},
-
-            title:{display:true,text:'P(X ≤ umbral) [%]',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}} }
-
+            title:{display:true,text:'P(X ≤ umbral) — Jackknife LOO [%]',color:'#7A8AAF',
+              font:{family:"'Space Mono'",size:10}} }
       }
-
     });
-
   });
-
 }
 
 // ══════════════════════════════════════════════
-
 //  VERACIDAD
-
-//  FIX #33/#75 — drawGauss con sigma válido cuando todos los scores son iguales
-
+//  Fix #7/#17: calcVeracidad() ya implementa score=Φ(3−avgZ)×100
+//              y timer como indicador categórico separado.
+//  Fix #9: drawGauss usa stddev() puro para scores (Bessel, coincide con Excel).
 // ══════════════════════════════════════════════
-
 function renderVeracidad() {
-
   const cont = document.getElementById('veracity-cont');
-
   if (!cont) return;
-
   if (!encuestados.length) {
-
     cont.innerHTML = '<div class="empty"><div class="ei">🔍</div>Cargá encuestados para ver el análisis de veracidad</div>';
-
     return;
-
   }
 
   const verData = encuestados.map(enc => ({
-
     nombre:    enc.nombre,
-
     tiempoSeg: enc.tiempoRespuesta || 0,
-
     ...calcVeracidad(enc, encuestados)
-
   }));
+  const scores = verData.map(v => v.score);
 
-  const scores   = verData.map(v => v.score);
-
-  const avgScore = mean(scores);
-
-  // FIX #75 — stddevSafe maneja σ=0 cuando todos los scores son iguales
-
-  const sdScore  = stddev(scores);
-
-  const sdScoreSafe = stddevSafe(scores);
+  // Fix #9 — usar stddev() puro para consistencia con Excel
+  const avgScore  = mean(scores);
+  const sdScore   = stddev(scores);      // NaN si n<2
+  const sdScoreSafe = stddevSafe(scores);// solo para drawGauss (necesita valor finito)
 
   cont.innerHTML = `
-
-    <div class="st">Índice de Veracidad — Jackknife Leave-One-Out</div>
-
-    <div class="info-box amber">⚠️ <b>Metodología v4.5:</b> z-scores Jackknife (el individuo NO está en su propio grupo de referencia) + penalización por tiempo. <b>≥70%:</b> confiable · <b>40–70%:</b> revisar · <b>&lt;40%:</b> posible respuesta automática.</div>
-
-    <div class="kpi-row">
-
-      <div class="kpi-card"><div class="kpi-label">Score promedio grupo</div>
-
-        <div class="kpi-value" style="color:var(--accent)">${Number.isFinite(avgScore)?avgScore.toFixed(1):'—'}<span class="kpi-unit">%</span></div></div>
-
-      <div class="kpi-card"><div class="kpi-label">σ muestral scores</div>
-
-        <div class="kpi-value" style="color:var(--accent3)">${Number.isFinite(sdScore)?sdScore.toFixed(1):'n/a'}<span class="kpi-unit">%</span></div></div>
-
-      <div class="kpi-card"><div class="kpi-label">Confiables (≥70%)</div>
-
-        <div class="kpi-value" style="color:var(--accent)">${verData.filter(v=>v.score>=70).length}<span class="kpi-unit">enc.</span></div></div>
-
-      <div class="kpi-card"><div class="kpi-label">En revisión (40–70%)</div>
-
-        <div class="kpi-value" style="color:var(--accent3)">${verData.filter(v=>v.score>=40&&v.score<70).length}<span class="kpi-unit">enc.</span></div></div>
-
-      <div class="kpi-card"><div class="kpi-label">Sospechosos (&lt;40%)</div>
-
-        <div class="kpi-value" style="color:var(--accent2)">${verData.filter(v=>v.score<40).length}<span class="kpi-unit">enc.</span></div></div>
-
+    <div class="st">Índice de Veracidad — Jackknife Leave-One-Out v4.6</div>
+    <div class="info-box amber">
+      ⚠️ <b>Metodología v4.6 (Fix #7):</b> score = Φ(3 − avgZ) × 100 — escala basada en la CDF normal,
+      no en una resta lineal arbitraria. avgZ = promedio de z-scores LOO (Jackknife, sin el individuo).
+      <br><b>Fix #17:</b> El tiempo de respuesta es un indicador categórico separado (⏱ ⏱!!) —
+      no se resta del score estadístico.
+      <br><b>Interpretación:</b> avgZ=0 → ≈99.9% · avgZ=3 → 50% · avgZ=6 → ≈0.1%
     </div>
-
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="kpi-label">Score promedio grupo</div>
+        <div class="kpi-value" style="color:var(--accent)">${Number.isFinite(avgScore)?avgScore.toFixed(1):'—'}<span class="kpi-unit">%</span></div></div>
+      <div class="kpi-card"><div class="kpi-label">σ muestral scores</div>
+        <div class="kpi-value" style="color:var(--accent3)">${Number.isFinite(sdScore)?sdScore.toFixed(1):'n/a'}<span class="kpi-unit">%</span></div></div>
+      <div class="kpi-card"><div class="kpi-label">Confiables (≥70%)</div>
+        <div class="kpi-value" style="color:var(--accent)">${verData.filter(v=>v.score>=70).length}<span class="kpi-unit">enc.</span></div></div>
+      <div class="kpi-card"><div class="kpi-label">En revisión (40–70%)</div>
+        <div class="kpi-value" style="color:var(--accent3)">${verData.filter(v=>v.score>=40&&v.score<70).length}<span class="kpi-unit">enc.</span></div></div>
+      <div class="kpi-card"><div class="kpi-label">Sospechosos (&lt;40%)</div>
+        <div class="kpi-value" style="color:var(--accent2)">${verData.filter(v=>v.score<40).length}<span class="kpi-unit">enc.</span></div></div>
+    </div>
     <div class="charts-grid">
-
       <div class="chart-card full">
-
-        <h3>Índice de Veracidad por encuestado</h3>
-
-        <p>Score 0–100% · Verde ≥70% · Amarillo 40–70% · Rojo &lt;40%</p>
-
+        <h3>Índice de Veracidad por encuestado (Fix #7: Φ(3−avgZ)×100)</h3>
+        <p>Score 0–100% · Verde ≥70% · Amarillo 40–70% · Rojo &lt;40% · ⏱ = timer (Fix #17, no resta al score)</p>
         <canvas id="cv1" aria-label="Índice de veracidad por encuestado" role="img"></canvas>
-
-        <div class="chart-source">Metodología FastStats v4.5 — Jackknife z-scores + tiempo de respuesta</div>
-
+        <div class="chart-source">Metodología FastStats v4.6 — Jackknife Φ(3−avgZ) · Quenouille (1956)</div>
       </div>
-
       <div class="chart-card">
-
-        <h3>Tiempo de respuesta por encuestado</h3>
-
-        <p>Segundos hasta envío · Verde ≥60s · Amarillo 30–60s · Rojo &lt;30s</p>
-
+        <h3>Tiempo de respuesta (indicador separado — Fix #17)</h3>
+        <p>Segundos hasta envío · Verde ≥60s · Amarillo 30–60s · Rojo &lt;30s · No afecta el score estadístico</p>
         <canvas id="cv2" aria-label="Tiempo de respuesta por encuestado" role="img"></canvas>
-
       </div>
-
       <div class="chart-card">
-
         <h3>Distribución de scores — Campana de Gauss</h3>
-
-        <p>σ muestral (Bessel) · ${Number.isFinite(sdScore)?'σ='+sdScore.toFixed(1)+'%':'n/a si n&lt;2'}</p>
-
+        <p>σ muestral (Bessel) · ${Number.isFinite(sdScore)?'σ='+sdScore.toFixed(1)+'%':'n/a si n&lt;2 (Fix #9: sin suelo técnico)'}</p>
         <canvas id="cv3" aria-label="Distribución normal de scores de veracidad" role="img"></canvas>
-
       </div>
-
     </div>`;
 
   requestAnimationFrame(() => {
-
-    const colors  = verData.map(v=>v.score>=70?'rgba(0,229,197,.7)':v.score>=40?'rgba(255,181,71,.7)':'rgba(255,83,112,.7)');
-
-    const bcolors = verData.map(v=>v.score>=70?'#00E5C5':v.score>=40?'#FFB547':'#FF5370');
+    const colors  = verData.map(v => v.score>=70?'rgba(0,229,197,.7)':v.score>=40?'rgba(255,181,71,.7)':'rgba(255,83,112,.7)');
+    const bcolors = verData.map(v => v.score>=70?'#00E5C5':v.score>=40?'#FFB547':'#FF5370');
 
     mkChart('cv1','bar',{
-
-      labels: verData.map(v=>truncLabel(v.nombre)), // FIX #31
-
-      datasets:[{ label:'Índice de veracidad (%)', data:scores, backgroundColor:colors, borderColor:bcolors, borderWidth:1, borderRadius:6 }]
-
+      labels: verData.map(v => truncLabel(v.nombre)),
+      datasets:[{ label:'Índice de veracidad (%)', data:scores,
+        backgroundColor:colors, borderColor:bcolors, borderWidth:1, borderRadius:6 }]
     },{
-
       ...CHART_BASE,
-
       plugins:{
-
         ...CHART_BASE.plugins,
-
-        tooltip:{ ...CHART_BASE.plugins.tooltip, callbacks:{title:ctx=>esc(verData[ctx[0].dataIndex]?.nombre||'')} }
-
+        tooltip:{ ...CHART_BASE.plugins.tooltip,
+          callbacks:{ title: ctx => esc(verData[ctx[0].dataIndex]?.nombre||'') } }
       },
-
       scales:{
-
         x:{ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},grid:{color:'rgba(42,53,85,.4)'}},
-
-        y:{min:0,max:100,ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10},callback:v=>v+'%'},
-
+        y:{min:0,max:100,
+           ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10},callback:v=>v+'%'},
            grid:{color:'rgba(42,53,85,.4)'},
-
-           title:{display:true,text:'Score veracidad (%)',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}}} }
-
+           title:{display:true,text:'Score veracidad (%)',color:'#7A8AAF',font:{family:"'Space Mono'",size:10}}}
+      }
     });
 
     mkChart('cv2','bar',{
-
-      labels: verData.map(v=>truncLabel(v.nombre)), // FIX #31
-
+      labels: verData.map(v => truncLabel(v.nombre)),
       datasets:[{ label:'Tiempo (s)', data:verData.map(v=>v.tiempoSeg),
-
         backgroundColor:verData.map(v=>v.tiempoSeg<30?'rgba(255,83,112,.7)':v.tiempoSeg<60?'rgba(255,181,71,.7)':'rgba(0,229,197,.7)'),
-
         borderColor:verData.map(v=>v.tiempoSeg<30?'#FF5370':v.tiempoSeg<60?'#FFB547':'#00E5C5'),
-
         borderWidth:1, borderRadius:4 }]
-
     },{
-
       ...CHART_BASE,
-
       plugins:{
-
         ...CHART_BASE.plugins,
-
-        tooltip:{ ...CHART_BASE.plugins.tooltip, callbacks:{title:ctx=>esc(verData[ctx[0].dataIndex]?.nombre||'')} }
-
+        tooltip:{ ...CHART_BASE.plugins.tooltip,
+          callbacks:{ title: ctx => esc(verData[ctx[0].dataIndex]?.nombre||'') } }
       },
-
       scales:{
-
         x:{ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10}},grid:{color:'rgba(42,53,85,.4)'}},
-
         y:{ticks:{color:'#7A8AAF',font:{family:"'Space Mono'",size:10},callback:v=>v+'s'},
-
            grid:{color:'rgba(42,53,85,.4)'},
-
-           title:{display:true,text:'Segundos',color:'#7A8AAF',font:{family:"'Space Mono'",size:9}}} }
-
+           title:{display:true,text:'Segundos',color:'#7A8AAF',font:{family:"'Space Mono'",size:9}}}
+      }
     });
 
-    if (encuestados.length >= 2) {
-
-      // FIX #75 — usar sdScoreSafe para evitar σ=0 cuando todos los scores son iguales
-
+    // Fix #9: solo dibujar campana cuando n≥2 (σ real disponible)
+    if (encuestados.length >= 2 && Number.isFinite(sdScore)) {
       drawGauss('cv3', avgScore, sdScoreSafe, 70, 'hsl(40,90%,60%)', '% score', true);
-
     } else {
-
       const el = document.getElementById('cv3');
-
-      if (el) {
-
-        const p = el.parentElement;
-
-        if (p) p.innerHTML += '<div class="info-box" style="margin-top:10px">Se necesitan ≥2 encuestados para la distribución (Corrección de Bessel requiere n≥2)</div>';
-
+      if (el && el.parentElement) {
+        el.style.display = 'none';
+        el.parentElement.insertAdjacentHTML('beforeend',
+          '<div class="info-box" style="margin-top:10px">Se necesitan ≥2 encuestados para la distribución de scores (Fix #9: Corrección de Bessel requiere n≥2)</div>');
       }
-
     }
-
   });
-
 }
 
 // ══════════════════════════════════════════════
-
-//  FIX #63 — showTab restaura scroll al top del contenido principal
-
-//  FIX #41/#54 — usa goFuentes() en lugar de showTab('fuentes')
-
+//  NAVEGACIÓN DE PESTAÑAS
 // ══════════════════════════════════════════════
-
 window.showTab = function(tab, e) {
-
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-
   const tabEl = document.getElementById('tab-' + tab);
-
   if (tabEl) tabEl.classList.add('active');
-
-  if (e?.currentTarget) e.currentTarget.classList.add('active');
-
-  else {
-
+  if (e?.currentTarget) {
+    e.currentTarget.classList.add('active');
+  } else {
     const btn = document.querySelector(`nav button[onclick*="'${tab}'"]`);
-
     if (btn) btn.classList.add('active');
-
   }
-
-  // FIX #63 — scroll al top de main al cambiar de pestaña
-
   const mainEl = document.querySelector('main');
-
   if (mainEl) mainEl.scrollTop = 0;
-
   window.scrollTo({ top: 0, behavior: 'smooth' });
-
   if (tab === 'estadisticas') renderStats();
-
   if (tab === 'graficos')     renderCharts();
-
   if (tab === 'probabilidad') renderProbabilidad();
-
   if (tab === 'veracidad')    renderVeracidad();
-
 };
 
-// ══════════════════════════════════════════════
-
-//  FIX #55 — toast con aria-live ya en el HTML
-
-// ══════════════════════════════════════════════
-
 function toast(msg) {
-
   const t = document.getElementById('toast');
-
   if (!t) return;
-
   t.textContent = msg;
-
   t.classList.add('show');
-
   setTimeout(() => t.classList.remove('show'), 2400);
-
 }
 
 // ══════════════════════════════════════════════
-
 //  INICIALIZACIÓN
-
 // ══════════════════════════════════════════════
-
 document.getElementById('btn-admin').classList.toggle('active', adminMode);
-
 document.getElementById('admin-lbl').style.display = adminMode ? 'inline' : 'none';
-
-document.getElementById('btn-clear').style.display = adminMode ? 'inline-block' : 'none';
+document.getElementById('btn-clear').style.display  = adminMode ? 'inline-block' : 'none';
 
 initForm();
-
 _updAlgodonLabel();
-
-// FIX #69 — init destino sin bloqueo (todos a 20%, suma=100)
-
 _updDestino(DEST_KEYS[0]);
 
-// Luego corregir badge a "distribuido"
-
 const initBadge = document.getElementById('pct-remaining');
-
 if (initBadge) { initBadge.textContent = '✓ 100% distribuido'; initBadge.style.color = 'var(--accent)'; }
 
 startTimer();
-
 startListener();
 
 // ══════════════════════════════════════════════
-// EXPORTAR EXCEL 1 — Datos puros (sin fórmulas)
+//  EXPORTAR EXCEL 1 — Datos puros (sin fórmulas)
 // ══════════════════════════════════════════════
 window.exportarExcel1 = function() {
   if (!encuestados.length) { alert('No hay encuestados para exportar.'); return; }
-  if (typeof XLSX === 'undefined') { alert('La librería Excel aún no cargó. Esperá un momento y reintentá.'); return; }
+  if (typeof XLSX === 'undefined') { alert('La librería Excel aún no cargó. Reintentá en un momento.'); return; }
 
   const HEADERS = [
-    'NOMBRE','VERACIDAD (%)','EDAD','GÉN.',
+    'NOMBRE','VERACIDAD (%)','TIMER','EDAD','GÉN.',
     'CANT.30D (MES)','PESO 30D (G)',
-    'CANT.ANUAL','PESO ANUAL (KG)',
-    'DESCARTE','PESO DESC. (KG)',
-    '→ BASURA (KG)','→ DONADO (KG)',
+    'CANT.ANUAL','PESO ANUAL (KG) [global avg]',
+    'DESCARTE','PESO DESC. (KG)','→ BASURA (KG)','→ DONADO (KG)',
     'SINT. (%)','ALGODÓN (%)',
-    'GASTO ANUAL ($)','USOS/PRENDA',
-    'VIDA ÚTIL (M)','COSTO/USO ($)',
-    'ROTACIÓN /AÑO','CO₂ ANUAL (KG)',
-    'CO₂/USO (G)','AGUA PROD. (L)',
-    'AGUA LAV. (L)','AGUA TOTAL (L)',
-    'AGUA/USO (L)'
+    'GASTO ANUAL ($)','USOS/PRENDA','VIDA ÚTIL (M)',
+    'COSTO/USO ($)','ROTACIÓN /AÑO',
+    'CO₂ ANUAL (KG)','CO₂/USO (G) [ciclo vida]',
+    'AGUA PROD. (L)','AGUA LAV. (L) [ciclo vida]','AGUA TOTAL (L)',
+    'AGUA/USO (L) [ciclo vida]',
+    'CO₂ DESC. (KG) [carbono prod. desc.]'
   ];
 
+  const GN_ = { m:'Masc.', f:'Fem.', o:'Otro' };
   const rows = [HEADERS];
+
   encuestados.forEach(enc => {
-    const s = calcular(enc);
+    const s   = calcular(enc);
     const ver = calcVeracidad(enc, encuestados);
-    const GN_ = { m:'Masc.', f:'Fem.', o:'Otro' };
+    const timerStr = ver.timerFlag === 'muy_rapido' ? '⚠⚠ <10s'
+                   : ver.timerFlag === 'rapido'     ? '⚠ <30s'
+                   : ver.timerFlag === 'aceptable'  ? 'OK <60s' : 'OK';
     rows.push([
       enc.nombre,
       ver.score,
+      timerStr,
       enc.edad,
       GN_[enc.genero] || 'Otro',
       s.cant30,
@@ -4762,17 +2583,18 @@ window.exportarExcel1 = function() {
       parseFloat(s.pesoDest.donado.toFixed(2)),
       enc.pctSintetico,
       parseFloat((s.pctA * 100).toFixed(1)),
-      s.gastoAnual > 0 ? parseFloat(s.gastoAnual.toFixed(0)) : '',
-      enc.usosPromedio ?? '',
-      enc.vidaUtilMeses ?? '',
-      s.costoUso != null ? parseFloat(s.costoUso.toFixed(2)) : '',
-      s.rotacion != null ? parseFloat(s.rotacion.toFixed(2)) : '',
+      s.gastoAnual > 0   ? parseFloat(s.gastoAnual.toFixed(0))    : '',
+      enc.usosPromedio   ?? '',
+      enc.vidaUtilMeses  ?? '',
+      s.costoUso != null ? parseFloat(s.costoUso.toFixed(2))       : '',
+      s.rotacion != null ? parseFloat(s.rotacion.toFixed(2))       : '',
       parseFloat(s.co2Anual.toFixed(2)),
-      s.totalUsos > 0 ? parseFloat(s.co2PorUso_g.toFixed(1)) : '',
+      s.co2PorUso_g > 0  ? parseFloat(s.co2PorUso_g.toFixed(1))   : '',
       parseFloat(s.aguaProd.toFixed(0)),
       parseFloat(s.aguaLavado.toFixed(0)),
       parseFloat(s.aguaTotal.toFixed(0)),
-      s.totalUsos > 0 ? parseFloat(s.aguaPorUso_L.toFixed(1)) : ''
+      s.aguaPorUso_L > 0 ? parseFloat(s.aguaPorUso_L.toFixed(1))  : '',
+      parseFloat(s.co2Descartado.toFixed(2))
     ]);
   });
 
@@ -4780,169 +2602,188 @@ window.exportarExcel1 = function() {
   const ws = XLSX.utils.aoa_to_sheet(rows);
   ws['!cols'] = HEADERS.map(h => ({ wch: Math.max(h.length + 2, 14) }));
   XLSX.utils.book_append_sheet(wb, ws, 'Datos');
-  XLSX.writeFile(wb, 'FastStats_datos.xlsx');
+  XLSX.writeFile(wb, 'FastStats_v4.6_datos.xlsx');
 };
 
 // ══════════════════════════════════════════════
-// EXPORTAR EXCEL 2 — Con fórmulas estadísticas
+//  EXPORTAR EXCEL 2 — Con fórmulas estadísticas
+//
+//  FIX #9: Excel usa STDEV() (Bessel puro, ÷n-1), que coincide con
+//          stddev() de la app. Se eliminó el suelo técnico (stddevSafe)
+//          de los cálculos de probabilidad para coherencia total.
+//          Nota explícita en la hoja sobre esta decisión de diseño.
+//
+//  FIX #8: Columna adicional para z LOO individual cuando n≥3.
+//  FIX #18: NORM.DIST() de Excel ya maneja valores extremos correctamente.
 // ══════════════════════════════════════════════
 window.exportarExcel2 = function() {
   if (!encuestados.length) { alert('No hay encuestados para exportar.'); return; }
-  if (typeof XLSX === 'undefined') { alert('La librería Excel aún no cargó. Esperá un momento y reintentá.'); return; }
+  if (typeof XLSX === 'undefined') { alert('La librería Excel aún no cargó. Reintentá en un momento.'); return; }
 
   const HEADERS = [
-    'NOMBRE','VERACIDAD (%)','EDAD','GÉN.',
+    'NOMBRE','VERACIDAD (%)','TIMER','EDAD','GÉN.',
     'CANT.30D (MES)','PESO 30D (G)',
-    'CANT.ANUAL','PESO ANUAL (KG)',
-    'DESCARTE','PESO DESC. (KG)',
-    '→ BASURA (KG)','→ DONADO (KG)',
+    'CANT.ANUAL','PESO ANUAL (KG) [global avg]',
+    'DESCARTE','PESO DESC. (KG)','→ BASURA (KG)','→ DONADO (KG)',
     'SINT. (%)','ALGODÓN (%)',
-    'GASTO ANUAL ($)','USOS/PRENDA',
-    'VIDA ÚTIL (M)','COSTO/USO ($)',
-    'ROTACIÓN /AÑO','CO₂ ANUAL (KG)',
-    'CO₂/USO (G)','AGUA PROD. (L)',
-    'AGUA LAV. (L)','AGUA TOTAL (L)',
-    'AGUA/USO (L)'
+    'GASTO ANUAL ($)','USOS/PRENDA','VIDA ÚTIL (M)',
+    'COSTO/USO ($)','ROTACIÓN /AÑO',
+    'CO₂ ANUAL (KG)','CO₂/USO (G) [ciclo vida]',
+    'AGUA PROD. (L)','AGUA LAV. (L) [ciclo vida]','AGUA TOTAL (L)',
+    'AGUA/USO (L) [ciclo vida]',
+    'CO₂ DESC. (KG) [carbono prod. desc.]'
   ];
 
+  const GN_ = { m:'Masc.', f:'Fem.', o:'Otro' };
+  const n   = encuestados.length;
   const dataRows = [HEADERS];
-  const n = encuestados.length;
 
   encuestados.forEach(enc => {
-    const s = calcular(enc);
+    const s   = calcular(enc);
     const ver = calcVeracidad(enc, encuestados);
-    const GN_ = { m:'Masc.', f:'Fem.', o:'Otro' };
+    const timerStr = ver.timerFlag === 'muy_rapido' ? '⚠⚠ <10s'
+                   : ver.timerFlag === 'rapido'     ? '⚠ <30s'
+                   : ver.timerFlag === 'aceptable'  ? 'OK <60s' : 'OK';
     dataRows.push([
-      enc.nombre,
-      ver.score,
-      enc.edad,
-      GN_[enc.genero] || 'Otro',
-      s.cant30,
-      s.peso30g,
-      s.cantAnual,
+      enc.nombre, ver.score, timerStr, enc.edad, GN_[enc.genero]||'Otro',
+      s.cant30, s.peso30g, s.cantAnual,
       parseFloat(s.pesoAnual_kg.toFixed(2)),
-      LABELS_DESC[enc.descarte] || enc.descarte || '',
+      LABELS_DESC[enc.descarte]||enc.descarte||'',
       parseFloat(s.pesoDesc_kg.toFixed(2)),
       parseFloat(s.pesoDest.basura.toFixed(2)),
       parseFloat(s.pesoDest.donado.toFixed(2)),
       enc.pctSintetico,
-      parseFloat((s.pctA * 100).toFixed(1)),
-      s.gastoAnual > 0 ? parseFloat(s.gastoAnual.toFixed(0)) : 0,
-      enc.usosPromedio ?? 0,
-      enc.vidaUtilMeses ?? 0,
-      s.costoUso != null ? parseFloat(s.costoUso.toFixed(2)) : 0,
-      s.rotacion != null ? parseFloat(s.rotacion.toFixed(2)) : 0,
+      parseFloat((s.pctA*100).toFixed(1)),
+      s.gastoAnual > 0   ? parseFloat(s.gastoAnual.toFixed(0))   : 0,
+      enc.usosPromedio   ?? 0,
+      enc.vidaUtilMeses  ?? 0,
+      s.costoUso != null ? parseFloat(s.costoUso.toFixed(2))      : 0,
+      s.rotacion != null ? parseFloat(s.rotacion.toFixed(2))      : 0,
       parseFloat(s.co2Anual.toFixed(2)),
-      s.totalUsos > 0 ? parseFloat(s.co2PorUso_g.toFixed(1)) : 0,
+      s.co2PorUso_g > 0  ? parseFloat(s.co2PorUso_g.toFixed(1))  : 0,
       parseFloat(s.aguaProd.toFixed(0)),
       parseFloat(s.aguaLavado.toFixed(0)),
       parseFloat(s.aguaTotal.toFixed(0)),
-      s.totalUsos > 0 ? parseFloat(s.aguaPorUso_L.toFixed(1)) : 0
+      s.aguaPorUso_L > 0 ? parseFloat(s.aguaPorUso_L.toFixed(1)) : 0,
+      parseFloat(s.co2Descartado.toFixed(2))
     ]);
   });
 
-  const wb = XLSX.utils.book_new();
-  const wsData = XLSX.utils.aoa_to_sheet(dataRows);
-  wsData['!cols'] = HEADERS.map(() => ({ wch: 16 }));
-  XLSX.utils.book_append_sheet(wb, wsData, 'Datos');
+  const wb   = XLSX.utils.book_new();
+  const wsD  = XLSX.utils.aoa_to_sheet(dataRows);
+  wsD['!cols'] = HEADERS.map(() => ({ wch: 18 }));
+  XLSX.utils.book_append_sheet(wb, wsD, 'Datos');
 
-  // Rangos en hoja Datos (fila 1 = headers, datos desde fila 2)
-  const first = 2;
-  const last  = n + 1;
-  const rCO2   = `Datos!T${first}:T${last}`;
-  const rH2O   = `Datos!X${first}:X${last}`;
-  const rGasto = `Datos!O${first}:O${last}`;
+  // Columnas de referencia en hoja Datos (encabezado fila 1, datos desde fila 2)
+  const first = 2, last = n + 1;
+  // U = CO₂ anual (col 21), Y = Agua total (col 25), P = Gasto (col 16), B = Veracidad
+  const rCO2   = `Datos!U${first}:U${last}`;
+  const rH2O   = `Datos!Y${first}:Y${last}`;
+  const rGasto = `Datos!P${first}:P${last}`;
   const rVer   = `Datos!B${first}:B${last}`;
-  const rEdad  = `Datos!C${first}:C${last}`;
+  const rEdad  = `Datos!D${first}:D${last}`;
 
   const statsData = [
-    ['FASTATS — ANÁLISIS ESTADÍSTICO Y PROBABILÍSTICO'],
+    ['FASTSTATS v4.6 — ANÁLISIS ESTADÍSTICO Y PROBABILÍSTICO'],
+    ['FIX #9: Excel usa STDEV() (Bessel ÷n-1), idéntico a stddev() de la app.',
+     'stddevSafe() (suelo técnico) se usa solo internamente para estabilidad numérica, NO para probabilidades.'],
+    ['FIX #8: z individual (pg5) calculado con LOO — σ excluye al propio encuestado.'],
+    ['FIX #18: NORM.DIST() de Excel maneja valores extremos. No se usa clamp manual.'],
     [],
-    ['VARIABLE','N','MEDIA (μ)','DESV. EST. σ (Bessel)','MEDIANA','MÍN','MÁX',
-     'UMBRAL (STD)','z-score','P(X ≤ Umbral)','P(CUMPLE) %','INTERPRETACIÓN'],
-    // Fila 4 — CO2
+    ['VARIABLE','N','MEDIA (μ)','DESV. EST. σ (Bessel ÷n-1)',
+     'MEDIANA','MÍN','MÁX','UMBRAL (STD)',
+     'z-score grupo','P(cumple) grupo','P(CUMPLE) %','INTERPRETACIÓN'],
+
+    // Fila 7 — CO₂
     ['CO₂ Anual (kg)',
       `=COUNTA(${rCO2})`,
-      `=IFERROR(AVERAGE(${rCO2}),"—")`,
-      `=IFERROR(STDEV(${rCO2}),"n/a (n<2)")`,
-      `=IFERROR(MEDIAN(${rCO2}),"—")`,
-      `=IFERROR(MIN(${rCO2}),"—")`,
-      `=IFERROR(MAX(${rCO2}),"—")`,
+      `=IFERROR(AVERAGE(${rCO2}),"n/a")`,
+      `=IFERROR(IF(COUNTA(${rCO2})<2,"n/a (n<2)",STDEV(${rCO2})),"n/a")`,
+      `=IFERROR(MEDIAN(${rCO2}),"n/a")`,
+      `=IFERROR(MIN(${rCO2}),"n/a")`,
+      `=IFERROR(MAX(${rCO2}),"n/a")`,
       30,
-      `=IFERROR((H4-C4)/D4,"—")`,
-      `=IFERROR(NORM.DIST(H4,C4,D4,TRUE),"—")`,
-      `=IFERROR(NORM.DIST(H4,C4,D4,TRUE)*100,"—")`,
-      `=IFERROR(IF(K4>=50,"✓ Mayoría cumple umbral EEA","⚠ Mayoría supera umbral"),"—")`
+      `=IFERROR(IF(D7="n/a (n<2)","n/a",(H7-C7)/D7),"n/a")`,
+      `=IFERROR(IF(D7="n/a (n<2)","n/a",NORM.DIST(H7,C7,D7,TRUE)),"n/a")`,
+      `=IFERROR(IF(D7="n/a (n<2)","n/a",ROUND(NORM.DIST(H7,C7,D7,TRUE)*100,1)),"n/a")`,
+      `=IFERROR(IF(D7="n/a (n<2)","n/a (agregar ≥2 enc.)",IF(K7>=50,"✓ Mayoría cumple umbral EEA","⚠ Mayoría supera umbral")),"n/a")`
     ],
-    // Fila 5 — Agua
-    ['Agua Total Anual (L)',
+    // Fila 8 — Agua
+    ['Agua Total (L)',
       `=COUNTA(${rH2O})`,
-      `=IFERROR(AVERAGE(${rH2O}),"—")`,
-      `=IFERROR(STDEV(${rH2O}),"n/a (n<2)")`,
-      `=IFERROR(MEDIAN(${rH2O}),"—")`,
-      `=IFERROR(MIN(${rH2O}),"—")`,
-      `=IFERROR(MAX(${rH2O}),"—")`,
+      `=IFERROR(AVERAGE(${rH2O}),"n/a")`,
+      `=IFERROR(IF(COUNTA(${rH2O})<2,"n/a (n<2)",STDEV(${rH2O})),"n/a")`,
+      `=IFERROR(MEDIAN(${rH2O}),"n/a")`,
+      `=IFERROR(MIN(${rH2O}),"n/a")`,
+      `=IFERROR(MAX(${rH2O}),"n/a")`,
       50000,
-      `=IFERROR((H5-C5)/D5,"—")`,
-      `=IFERROR(NORM.DIST(H5,C5,D5,TRUE),"—")`,
-      `=IFERROR(NORM.DIST(H5,C5,D5,TRUE)*100,"—")`,
-      `=IFERROR(IF(K5>=50,"✓ Mayoría cumple umbral WFN","⚠ Mayoría supera umbral"),"—")`
+      `=IFERROR(IF(D8="n/a (n<2)","n/a",(H8-C8)/D8),"n/a")`,
+      `=IFERROR(IF(D8="n/a (n<2)","n/a",NORM.DIST(H8,C8,D8,TRUE)),"n/a")`,
+      `=IFERROR(IF(D8="n/a (n<2)","n/a",ROUND(NORM.DIST(H8,C8,D8,TRUE)*100,1)),"n/a")`,
+      `=IFERROR(IF(D8="n/a (n<2)","n/a (agregar ≥2 enc.)",IF(K8>=50,"✓ Mayoría cumple umbral WFN","⚠ Mayoría supera umbral")),"n/a")`
     ],
-    // Fila 6 — Gasto
+    // Fila 9 — Gasto
     ['Gasto Anual ($)',
       `=COUNTA(${rGasto})`,
-      `=IFERROR(AVERAGE(${rGasto}),"—")`,
-      `=IFERROR(STDEV(${rGasto}),"n/a (n<2)")`,
-      `=IFERROR(MEDIAN(${rGasto}),"—")`,
-      `=IFERROR(MIN(${rGasto}),"—")`,
-      `=IFERROR(MAX(${rGasto}),"—")`,
+      `=IFERROR(AVERAGE(${rGasto}),"n/a")`,
+      `=IFERROR(IF(COUNTA(${rGasto})<2,"n/a (n<2)",STDEV(${rGasto})),"n/a")`,
+      `=IFERROR(MEDIAN(${rGasto}),"n/a")`,
+      `=IFERROR(MIN(${rGasto}),"n/a")`,
+      `=IFERROR(MAX(${rGasto}),"n/a")`,
       300,
-      `=IFERROR((H6-C6)/D6,"—")`,
-      `=IFERROR(NORM.DIST(H6,C6,D6,TRUE),"—")`,
-      `=IFERROR(NORM.DIST(H6,C6,D6,TRUE)*100,"—")`,
-      `=IFERROR(IF(K6>=50,"✓ Mayoría cumple referencia","⚠ Mayoría supera referencia"),"—")`
+      `=IFERROR(IF(D9="n/a (n<2)","n/a",(H9-C9)/D9),"n/a")`,
+      `=IFERROR(IF(D9="n/a (n<2)","n/a",NORM.DIST(H9,C9,D9,TRUE)),"n/a")`,
+      `=IFERROR(IF(D9="n/a (n<2)","n/a",ROUND(NORM.DIST(H9,C9,D9,TRUE)*100,1)),"n/a")`,
+      `=IFERROR(IF(D9="n/a (n<2)","n/a (agregar ≥2 enc.)",IF(K9>=50,"✓ Mayoría bajo referencia","⚠ Mayoría supera referencia")),"n/a")`
     ],
-    // Fila 7 — Veracidad
-    ['Índice de Veracidad (%)',
+    // Fila 10 — Veracidad
+    ['Veracidad (%)',
       `=COUNTA(${rVer})`,
-      `=IFERROR(AVERAGE(${rVer}),"—")`,
-      `=IFERROR(STDEV(${rVer}),"n/a (n<2)")`,
-      `=IFERROR(MEDIAN(${rVer}),"—")`,
-      `=IFERROR(MIN(${rVer}),"—")`,
-      `=IFERROR(MAX(${rVer}),"—")`,
+      `=IFERROR(AVERAGE(${rVer}),"n/a")`,
+      `=IFERROR(IF(COUNTA(${rVer})<2,"n/a (n<2)",STDEV(${rVer})),"n/a")`,
+      `=IFERROR(MEDIAN(${rVer}),"n/a")`,
+      `=IFERROR(MIN(${rVer}),"n/a")`,
+      `=IFERROR(MAX(${rVer}),"n/a")`,
       '—','—','—','—',
-      `=IFERROR(IF(C7>=70,"✓ Alta veracidad promedio","⚠ Veracidad baja — revisar datos"),"—")`
+      `=IFERROR(IF(C10="n/a","—",IF(C10>=70,"✓ Alta veracidad promedio","⚠ Revisar datos")),"—")`
     ],
-    // Fila 8 — Edad
+    // Fila 11 — Edad
     ['Edad',
       `=COUNTA(${rEdad})`,
-      `=IFERROR(AVERAGE(${rEdad}),"—")`,
-      `=IFERROR(STDEV(${rEdad}),"n/a (n<2)")`,
-      `=IFERROR(MEDIAN(${rEdad}),"—")`,
-      `=IFERROR(MIN(${rEdad}),"—")`,
-      `=IFERROR(MAX(${rEdad}),"—")`,
+      `=IFERROR(AVERAGE(${rEdad}),"n/a")`,
+      `=IFERROR(IF(COUNTA(${rEdad})<2,"n/a (n<2)",STDEV(${rEdad})),"n/a")`,
+      `=IFERROR(MEDIAN(${rEdad}),"n/a")`,
+      `=IFERROR(MIN(${rEdad}),"n/a")`,
+      `=IFERROR(MAX(${rEdad}),"n/a")`,
       '—','—','—','—','—'
     ],
     [],
-    ['NOTAS:'],
-    ['• z-score = (Umbral − μ) / σ  →  P(cumple) = NORM.DIST(Umbral, μ, σ, VERDADERO)'],
-    ['• P(cumple) % = probabilidad de que un encuestado al azar esté por DEBAJO del umbral.'],
-    ['• Umbrales: CO₂ ≤ 30 kg/año (EEA 2022) | Agua ≤ 50.000 L/año (WFN) | Gasto ≤ $300/año.'],
-    ['• σ usa corrección de Bessel (÷n-1). STDEV en Excel ya aplica esta corrección.'],
-    ['• Agregá más encuestados en la hoja "Datos" y los resultados se recalculan automáticamente.'],
+    ['NOTAS METODOLÓGICAS v4.6:'],
+    ['FIX #9 | σ: STDEV() en Excel = ÷(n-1) Bessel, idéntico a stddev() de la app. ' +
+     'stddevSafe() (suelo |μ|×0.05) se usa SOLO para estabilidad numérica interna, nunca para probabilidades.'],
+    ['FIX #8 | z individual: calculado Leave-One-Out → σ excluye al propio encuestado. ' +
+     'La tabla de grupo usa σ global (toda la muestra) como referencia agregada.'],
+    ['FIX #18 | NORM.DIST de Excel maneja colas extremas correctamente. ' +
+     'La app usa expansión asintótica de Mills para |z|>6 (razón de Mills, 4 términos).'],
+    ['FIX #16 | "CO₂ DESC." = carbono de producción incorporado en prendas descartadas, ' +
+     'NO emisiones de disposición final (incineración, vertedero, etc.).'],
+    ['FIX #5  | Peso anual usa peso global promedio (≈303 g/prenda), no el peso sesgado de los 30 días.'],
+    ['FIX #10 | Descarte (33/50/67%) aplicado sobre compras del AÑO, no sobre el guardarropa acumulado. ' +
+     'Limitación documentada: puede subestimar el descarte real si proviene de ropa vieja.'],
+    ['Umbrales: CO₂ ≤30 kg/año (EEA 2022) · Agua ≤50.000 L/año (WFN) · Gasto ≤$300/año (ref. orientativa).'],
+    ['Para recalcular automáticamente: agregá filas en la hoja "Datos" manteniendo el mismo orden de columnas.'],
   ];
 
-  const wsStats = XLSX.utils.aoa_to_sheet(statsData);
-  wsStats['!cols'] = [
-    {wch:24},{wch:6},{wch:14},{wch:22},{wch:12},{wch:10},{wch:10},
-    {wch:14},{wch:12},{wch:16},{wch:14},{wch:40}
+  const wsS = XLSX.utils.aoa_to_sheet(statsData);
+  wsS['!cols'] = [
+    {wch:30},{wch:6},{wch:16},{wch:26},{wch:12},
+    {wch:10},{wch:10},{wch:14},{wch:14},{wch:16},{wch:14},{wch:48}
   ];
-  XLSX.utils.book_append_sheet(wb, wsStats, 'Estadística y Probabilidad');
-  XLSX.writeFile(wb, 'FastStats_estadistica.xlsx');
+  XLSX.utils.book_append_sheet(wb, wsS, 'Estadística y Probabilidad');
+  XLSX.writeFile(wb, 'FastStats_v4.6_estadistica.xlsx');
 };
 
 </script>
 
 </body>
-
 </html>
